@@ -1,0 +1,49 @@
+0. python.exe -m pip install --upgrade pip
+1. python -m venv venv #create virtual environment in windows
+venv\Scripts\activate
+python3 -m venv venv
+source venv/bin/activate # in linux
+2. pip install django #install django
+3. django-admin startproject backend # start django project
+4. python manage.py startapp api # create app in django
+5. python manage.py migrate
+6. python manage.py runserver
+7. pip freeze > requirements.txt
+8. pip install django-cors-headers
+9. pip install psycopg2
+10. model:
+update User model with atributes: email(optional), email1(ottional),is_active(ttue as default),is_staff(false as default),is_superuser(false as defaulr),gender(M:Male,F:Femal),rwandan_name,middle_name(optional),first_name,phone(optional),phone1(optional),password,image_url(optional),reg_number(must),dob(optional),username(must)
+11. pip install djangorestframework
+12. The API endpoints created by the router will be:
+
+GET /api/users/ - List all users
+POST /api/users/ - Create a new user
+GET /api/users/{id}/ - Retrieve a specific user
+PUT /api/users/{id}/ - Update a user
+PATCH /api/users/{id}/ - Partially update a user
+DELETE /api/users/{id}/ - Delete a user
+
+{
+    "username": "john_doe",
+    "reg_number": "REG123456",
+    "first_name": "John",
+    "rwandan_name": "Mugisha",
+    "middle_name": "Robert",
+    "email": "john.doe@example.com",
+    "email1": "john.work@example.com",
+    "phone": "+250785123456",
+    "phone1": "+250785123457",
+    "image_url": "https://example.com/profile.jpg",
+    "dob": "1990-01-01",
+    "gender": "M",
+    "password": "StrongPass123!",
+    "password_confirm": "StrongPass123!"
+}
+update_data = {
+    "middle_name": "William",
+    "email1": "john.personal@example.com",
+    "phone1": "+250785123458"
+}
+
+pip install djangorestframework djangorestframework-simplejwt PyJWT
+pip install pandas openpyxl djangorestframework:
