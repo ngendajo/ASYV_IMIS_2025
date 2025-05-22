@@ -277,6 +277,11 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['phone1'] = self.user.phone1
         token['phone'] = self.user.phone
         token['is_superuser'] = self.user.is_superuser
+        token['is_alumni'] = self.user.is_alumni
+        token['is_mama'] = self.user.is_mama
+        token['is_librarian'] = self.user.is_librarian
+        token['is_student'] = self.user.is_student
+        token['is_teacher'] = self.user.is_teacher
         token['username'] = self.user.username
         token['reg_number'] = self.user.reg_number
         token['middle_name'] = self.user.middle_name
