@@ -27,6 +27,8 @@ urlpatterns = [
     ), 
     path('password-reset/', views.PasswordReset.as_view(), name="password-reset"),
     
+    path('updateuserimage/<str:pk>', views.update_user_image, name='update-userimage'),
+    
     path('logout/', views.LogoutView.as_view(), name='logout'),
     
     #Upload data

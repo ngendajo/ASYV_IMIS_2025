@@ -13,7 +13,7 @@ from rest_framework import generics
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 from django.urls import reverse
-from rest_framework.decorators import api_view #, permission_classes
+from rest_framework.decorators import api_view , permission_classes
 from datetime import datetime, date
 from rest_framework_simplejwt.exceptions import AuthenticationFailed
 from django.utils.translation import gettext_lazy as _
@@ -138,6 +138,19 @@ class UserViewSet(viewsets.ModelViewSet):
                 {"status": "error", "message": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+            
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def update_user_image(request, pk):
+    user = User.objects.get(pk=pk)
+    data = UpdateUserImageUrlSerializer(instance=user, data=request.data)
+
+    if data.is_valid():
+        data.save()
+        return Response(data.data)
+    else:
+        print(data.errors)
+        return Response(error=data.errors,status=status.HTTP_404_NOT_FOUND)
             
 #Upload staff with .xlsx file
 class StaffExcelUploadView(APIView):
@@ -285,7 +298,6 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['username'] = self.user.username
         token['reg_number'] = self.user.reg_number
         token['middle_name'] = self.user.middle_name
-        token['image_url'] = self.user.image_url
         token['dob'] = serialize_date(self.user.dob)
         token['gender'] = self.user.gender 
         token['is_staff'] = self.user.is_staff

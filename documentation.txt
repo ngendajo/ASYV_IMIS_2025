@@ -47,3 +47,4 @@ update_data = {
 
 pip install djangorestframework djangorestframework-simplejwt PyJWT
 pip install pandas openpyxl djangorestframework:
+pip install Pillow

@@ -62,6 +62,11 @@ class UserSerializer(serializers.ModelSerializer):
         except Exception as e:
             raise serializers.ValidationError(f"Error updating user: {str(e)}")
         
+class UpdateUserImageUrlSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('image_url',)
+        
 #end of users crud serializers
 
 #User login serialisers

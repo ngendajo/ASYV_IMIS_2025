@@ -52,7 +52,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         max_length=30, blank=True, null=True, unique=True,
         validators=[RegexValidator(regex=r'^\+?\d{1,4}[\d\s()-]{7,30}$')]
     )
-    image_url = models.URLField(blank=True, null=True)
+    image_url = models.ImageField(upload_to='profiles', default='profiles/default.jpeg')
     dob = models.CharField(
         max_length=50, blank=True, null=True)
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, default='N')
@@ -156,7 +156,8 @@ class Leap(models.Model):
         ('art_center', 'Art Center'),
         ('sport', 'Sport'),
         ('club', 'Club'),
-        ('professional', 'Professional'),
+        ('programming', 'Programming'),#python
+        ('professional', 'Professional'),#practical skills
     ]
     
     ep = models.CharField(max_length=100)
@@ -165,6 +166,16 @@ class Leap(models.Model):
         choices=CATEGORY_CHOICES,
         default='club'
     )
+    # NEW FIELDS - Add these first
+    recorded_by = models.ForeignKey(
+        User, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name='recorded_leaps'
+    )
+    is_approved = models.BooleanField(default=False)
+    approved_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -196,7 +207,14 @@ class Kid(models.Model):
     
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='kids')
     family = models.ForeignKey(Family, on_delete=models.CASCADE, related_name='kids',null=True, blank=True)
-    leaps = models.ManyToManyField(Leap, related_name='kids')
+    
+    # Add new managed relationship with approval system
+    leaps = models.ManyToManyField(
+        Leap, 
+        related_name='managed_kids', 
+        through='KidLeap',
+        blank=True
+    )
     graduation_status = models.CharField(
         max_length=50, 
         choices=GRADUATION_STATUS_CHOICES,
@@ -218,6 +236,24 @@ class Kid(models.Model):
     
     def __str__(self):
         return f"{self.user.get_full_name()} - {self.family.family_name}"
+    
+class KidLeap(models.Model):
+    kid = models.ForeignKey(Kid, on_delete=models.CASCADE)
+    leap = models.ForeignKey(Leap, on_delete=models.CASCADE)
+    recorded_by = models.ForeignKey(
+        User, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name='recorded_kid_leaps'
+    )
+    is_approved = models.BooleanField(default=False)
+    approved_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ('kid', 'leap')
 
 class KidAcademics(models.Model):
     LEVEL_CHOICES = [
@@ -255,3 +291,90 @@ class NationalSubjectResult(models.Model):
 
     class Meta:
         unique_together = ('kid', 'subject')
+        
+class Employment(models.Model):
+    title = models.CharField(max_length=5000)
+    alumn = models.ForeignKey(Kid, on_delete=models.PROTECT, related_name='employ')
+    
+    EMPLOYMENT_CHOICES = (
+        ('F', 'Full-time'),
+        ('P', 'Part-time'),
+        ('S', 'Self-employed'),
+        ('I', 'Intern'),
+    ) 
+    status = models.CharField(max_length=2, choices=EMPLOYMENT_CHOICES)
+    industry = models.CharField(max_length=2000, default="")
+    description = models.CharField(max_length=2000, default="")
+    company = models.CharField(max_length=2000)
+    on_going = models.BooleanField(default=False)
+    crc_support = models.BooleanField(default=False)
+    # NEW FIELDS - Add these first  
+    recorded_by = models.ForeignKey(
+        User, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name='recorded_employments'
+    )
+    is_approved = models.BooleanField(default=False)
+    approved_at = models.DateTimeField(null=True, blank=True)
+    contributing_leaps = models.ManyToManyField(
+        Leap, 
+        blank=True,
+        related_name='related_employments'
+    )
+    start_date = models.CharField(max_length=100, default="")
+    end_date = models.CharField(max_length=100, default="")
+
+    def __str__(self):
+        return self.title
+    
+class College(models.Model):
+    college_name = models.CharField(max_length=100)
+    country = models.CharField(max_length=100)
+    city = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.combination_name
+
+class FurtherEducation(models.Model):
+    alumn = models.ForeignKey('Kid', on_delete=models.PROTECT, related_name='studiedrafts')
+    
+    LEVEL_CHOICES = (
+        ('C', 'Certificate'),
+        ('A1', 'Advanced diploma'),
+        ('A0', 'Bachelors'),
+        ('M', 'Masters'),
+        ('PHD', 'PHD'),
+    )
+    level = models.CharField(max_length=3, choices=LEVEL_CHOICES, default='NMS')#Examples:Bachelors,Masters,PHD
+    degree = models.CharField(max_length=2500)
+    college = models.ForeignKey(College,default=None,null=True, on_delete=models.PROTECT, related_name='college')
+    APPLICATION_RESULT_CHOICES = (
+        ('A', 'Accepted'),
+        ('R', 'Rejected'),
+        ('W', 'Withdrow'),
+        ('P', 'Pending'),
+    )
+    application_result = models.CharField(max_length=1,default='P', choices=APPLICATION_RESULT_CHOICES)
+    waitlisted = models.BooleanField(default=False)
+    enrolled = models.BooleanField(default=False)
+    SCHOLARSHIP_CHOICES = (
+        ('F', 'Full'),
+        ('P', 'Partial'),
+        ('S', 'Self-Sponsor'),
+    )
+    scholarship = models.CharField(max_length=3, choices=SCHOLARSHIP_CHOICES)
+    scholarship_details = models.CharField(max_length=2000, default="")
+    
+    STATUS_CHOICES = (
+        ('D', 'Dropped_Out'),
+        ('S', 'Suspended'),
+        ('O', 'On_going'),
+        ('G', 'Graduated'),
+        ('N', 'NA'),
+    )
+    status = models.CharField(max_length=3, choices=STATUS_CHOICES)
+
+    def __str__(self):
+        return str(self.alumn.user.first_name + ' - ' + self.university)
