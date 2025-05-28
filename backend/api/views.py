@@ -24,6 +24,9 @@ from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from .filters import *
+import logging
+
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
@@ -1421,3 +1424,177 @@ class DataUploadViewSet(viewsets.ViewSet):
                 'error': str(e),
                 'message': 'An error occurred during processing'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
+class KidAcademicsViewSet(viewsets.ModelViewSet):
+    queryset = KidAcademics.objects.select_related('kid', 'combination').all()
+    serializer_class = KidAcademicsSerializer
+    
+    def create(self, request, *args, **kwargs):
+        try:
+            with transaction.atomic():
+                serializer = self.get_serializer(data=request.data)
+                serializer.is_valid(raise_exception=True)
+                self.perform_create(serializer)
+                
+                return Response(
+                    {
+                        'success': True,
+                        'message': 'Kid academics record created successfully',
+                        'data': serializer.data
+                    },
+                    status=status.HTTP_201_CREATED
+                )
+        except serializers.ValidationError as e:
+            logger.error(f"Validation error creating kid academics: {e}")
+            return Response(
+                {
+                    'success': False,
+                    'message': 'Validation error',
+                    'errors': e.detail
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except IntegrityError as e:
+            logger.error(f"Database integrity error: {e}")
+            return Response(
+                {
+                    'success': False,
+                    'message': 'Database error occurred',
+                    'errors': ['A record for this kid and academic year already exists']
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            logger.error(f"Unexpected error creating kid academics: {e}")
+            return Response(
+                {
+                    'success': False,
+                    'message': 'An unexpected error occurred',
+                    'errors': ['Please try again later']
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    def list(self, request, *args, **kwargs):
+        try:
+            queryset = self.filter_queryset(self.get_queryset())
+            page = self.paginate_queryset(queryset)
+            
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+                return self.get_paginated_response({
+                    'success': True,
+                    'data': serializer.data
+                })
+            
+            serializer = self.get_serializer(queryset, many=True)
+            return Response(
+                {
+                    'success': True,
+                    'data': serializer.data
+                },
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            logger.error(f"Error retrieving kid academics: {e}")
+            return Response(
+                {
+                    'success': False,
+                    'message': 'Error retrieving kid academics records',
+                    'errors': ['Please try again later']
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    def retrieve(self, request, *args, **kwargs):
+        try:
+            instance = self.get_object()
+            serializer = self.get_serializer(instance)
+            return Response(
+                {
+                    'success': True,
+                    'data': serializer.data
+                },
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            logger.error(f"Error retrieving kid academics record: {e}")
+            return Response(
+                {
+                    'success': False,
+                    'message': 'Kid academics record not found',
+                    'errors': ['The requested record does not exist']
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+    
+    def update(self, request, *args, **kwargs):
+        try:
+            with transaction.atomic():
+                partial = kwargs.pop('partial', False)
+                instance = self.get_object()
+                serializer = self.get_serializer(instance, data=request.data, partial=partial)
+                serializer.is_valid(raise_exception=True)
+                self.perform_update(serializer)
+                
+                return Response(
+                    {
+                        'success': True,
+                        'message': 'Kid academics record updated successfully',
+                        'data': serializer.data
+                    },
+                    status=status.HTTP_200_OK
+                )
+        except serializers.ValidationError as e:
+            logger.error(f"Validation error updating kid academics: {e}")
+            return Response(
+                {
+                    'success': False,
+                    'message': 'Validation error',
+                    'errors': e.detail
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except IntegrityError as e:
+            logger.error(f"Database integrity error: {e}")
+            return Response(
+                {
+                    'success': False,
+                    'message': 'Database error occurred',
+                    'errors': ['A record for this kid and academic year already exists']
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            logger.error(f"Unexpected error updating kid academics: {e}")
+            return Response(
+                {
+                    'success': False,
+                    'message': 'An unexpected error occurred',
+                    'errors': ['Please try again later']
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    def destroy(self, request, *args, **kwargs):
+        try:
+            with transaction.atomic():
+                instance = self.get_object()
+                self.perform_destroy(instance)
+                return Response(
+                    {
+                        'success': True,
+                        'message': 'Kid academics record deleted successfully'
+                    },
+                    status=status.HTTP_204_NO_CONTENT
+                )
+        except Exception as e:
+            logger.error(f"Error deleting kid academics record: {e}")
+            return Response(
+                {
+                    'success': False,
+                    'message': 'Error deleting kid academics record',
+                    'errors': ['Please try again later']
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )

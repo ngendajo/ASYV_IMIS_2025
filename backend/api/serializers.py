@@ -162,3 +162,40 @@ class KidSerializer(serializers.ModelSerializer):
         model = Kid
         fields = '__all__'
         read_only_fields = ('created_at', 'updated_at')
+        
+#Crud for KidAcademic
+class KidAcademicsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = KidAcademics
+        fields = ['id', 'kid', 'academic_year', 'level', 'combination']
+        
+    def validate_academic_year(self, value):
+        current_year = 2025  # You might want to use datetime.now().year
+        if value < 2000 or value > current_year + 10:
+            raise serializers.ValidationError(f"Academic year must be between 2000 and {current_year + 10}.")
+        return value
+    
+    def validate(self, data):
+        # Check for unique constraint
+        kid = data.get('kid')
+        academic_year = data.get('academic_year')
+        
+        if self.instance:
+            # Update case - exclude current instance
+            existing = KidAcademics.objects.filter(
+                kid=kid, 
+                academic_year=academic_year
+            ).exclude(id=self.instance.id)
+        else:
+            # Create case
+            existing = KidAcademics.objects.filter(
+                kid=kid, 
+                academic_year=academic_year
+            )
+        
+        if existing.exists():
+            raise serializers.ValidationError(
+                "A record for this kid and academic year already exists."
+            )
+        
+        return data
