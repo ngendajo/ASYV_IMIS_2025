@@ -27,6 +27,8 @@ SET default_table_access_method = heap;
 -- Name: api_combination; Type: TABLE; Schema: public; Owner: postgres
 --
 
+DROP TABLE IF EXISTS public.api_combination CASCADE;
+
 CREATE TABLE public.api_combination (
     id bigint NOT NULL,
     combination_name character varying(100) NOT NULL,

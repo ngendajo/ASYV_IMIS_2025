@@ -48,3 +48,12 @@ update_data = {
 pip install djangorestframework djangorestframework-simplejwt PyJWT
 pip install pandas openpyxl djangorestframework:
 pip install Pillow
+
+
+Populating PostgresSQL Database:
+0. get a sql dump of database
+1. psql --version 
+2. brew services start postgresql 
+3. psql postgres
+4. CREATE DATABASE asyvimis; ALTER USER postgres WITH PASSWORD 'asyvams'; GRANT ALL PRIVILEGES ON DATABASE asyvimis TO postgres; \q
+5. psql -U postgres -d asyvimis -f asyvimis_database.sql 

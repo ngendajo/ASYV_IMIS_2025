@@ -44,5 +44,9 @@ urlpatterns = [
     path('', include(router.urls)),
 
     
-    path('', views.getRoutes)
+    path('', views.getRoutes),
+
+    path('alumnilist/', views.AlumniListView.as_view(), name='alumini'), #It is used in new ams
+    path('gender-distribution/', views.gender_distribution, name='gender_distribution'),
+    path('combination-counts/', views.combination_counts, name='combination_counts')
 ]

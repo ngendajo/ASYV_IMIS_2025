@@ -27,6 +27,8 @@ SET default_table_access_method = heap;
 -- Name: api_kidacademics; Type: TABLE; Schema: public; Owner: postgres
 --
 
+DROP TABLE IF EXISTS public.api_kidacademics;
+
 CREATE TABLE public.api_kidacademics (
     id bigint NOT NULL,
     academic_year integer NOT NULL,

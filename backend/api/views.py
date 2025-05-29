@@ -27,6 +27,8 @@ from .filters import *
 import logging
 
 logger = logging.getLogger(__name__)
+from .models import *
+from django.db.models import Count
 
 User = get_user_model()
 
@@ -1598,3 +1600,43 @@ class KidAcademicsViewSet(viewsets.ModelViewSet):
                 },
                 status=status.HTTP_400_BAD_REQUEST
             )
+        
+
+class AlumniListView(APIView):
+    #permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        queryset = Kid.objects.filter(graduation_status="graduated").select_related(
+            'user', 'family'
+        )
+
+        serializer = AlumniListsSerializer(queryset, many=True)
+        return Response(serializer.data)
+    
+@api_view(['GET'])
+def gender_distribution(request):
+    # Filter only graduated kids
+    graduated_kids = Kid.objects.filter(graduation_status='graduated')
+    # Follow FK to user and count gender
+    male_count = graduated_kids.filter(user__gender='M').count()
+    female_count = graduated_kids.filter(user__gender='F').count()
+
+    return Response({
+        'males': male_count,
+        'females': female_count
+    })
+
+@api_view(['GET'])
+def combination_counts(request):
+    # Filter if you want only graduated alumni, else remove the filter
+    queryset = KidAcademics.objects.filter(
+        kid__graduation_status='graduated'
+    ).values(
+        'combination__abbreviation'
+    ).annotate(
+        alumni_count=Count('kid', distinct=True)
+    ).order_by('combination__abbreviation')
+
+    # Format data as list of dicts for JSON
+    data = list(queryset)
+    return Response(data)

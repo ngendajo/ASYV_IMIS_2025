@@ -35,9 +35,9 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     # Required fields
     username = models.CharField(max_length=150, unique=True)
-    reg_number = models.CharField(max_length=50, unique=True, null=True)
-    first_name = models.CharField(max_length=150, null=True)
-    rwandan_name = models.CharField(max_length=150, null=True)
+    reg_number = models.CharField(max_length=50, unique=True, null=True) #unique identifier 
+    first_name = models.CharField(max_length=150, null=True) 
+    rwandan_name = models.CharField(max_length=150, null=True) #do not inherit family name - no last name
     password = models.CharField(max_length=128)
 
     # Optional fields
@@ -59,7 +59,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     # Default fields
     is_active = models.BooleanField(default=True)
-    is_staff = models.BooleanField(default=False)
+    is_staff = models.BooleanField(default=False) #any interested staff - includes M&E 
     is_superuser = models.BooleanField(default=False)
     is_crc = models.BooleanField(default=False)
     is_alumni = models.BooleanField(default=False)
@@ -118,7 +118,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     
 #Grades Model
     
-class Grade(models.Model):
+class Grade(models.Model): #each graduation class
     grade_name = models.CharField(max_length=100)
     admission_year_to_asyv = models.IntegerField()
     graduation_year_to_asyv = models.IntegerField()
@@ -135,9 +135,9 @@ class Grade(models.Model):
 
 class Family(models.Model):
     family_name = models.CharField(max_length=100)
-    family_number = models.CharField(max_length=50)
+    family_number = models.CharField(max_length=50) #1 to 6
     mother = models.ForeignKey(User, on_delete=models.CASCADE, related_name='families')
-    grade = models.ForeignKey(Grade, on_delete=models.CASCADE, related_name='families',null=True, blank=True)
+    grade = models.ForeignKey(Grade, on_delete=models.CASCADE, related_name='families',null=True, blank=True) # 6 families to a grade
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -160,7 +160,7 @@ class Leap(models.Model):
         ('professional', 'Professional'),#practical skills
     ]
     
-    ep = models.CharField(max_length=100)
+    ep = models.CharField(max_length=100) #name
     leap_category = models.CharField(
         max_length=20,
         choices=CATEGORY_CHOICES,
