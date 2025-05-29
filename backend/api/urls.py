@@ -40,6 +40,7 @@ urlpatterns = [
     path('kids-data-upload-xlsx/', 
          views.DataUploadViewSet.as_view({'post': 'upload_xlsx'}), 
          name='kids-data-upload-xlsx'),#kids-data-upload-xlsx
+    path('upload-employment/', views.EmploymentExcelUploadView.as_view(), name='upload-employment'),
 
     path('', include(router.urls)),
 
