@@ -41,9 +41,16 @@ urlpatterns = [
          views.DataUploadViewSet.as_view({'post': 'upload_xlsx'}), 
          name='kids-data-upload-xlsx'),#kids-data-upload-xlsx
     path('kid-academics/import/', views.KidAcademicsImportView.as_view(), name='kid-academics-import'),
+    path('upload-employment/', views.EmploymentExcelUploadView.as_view(), name='upload-employment'),
+    path('upload-college/', views.CollegeExcelUploadView.as_view(), name='upload-college'),
+    path('upload-further-education/', views.FurtherEducationExcelUploadView.as_view(), name='upload-further-education'),
 
     path('', include(router.urls)),
 
     
-    path('', views.getRoutes)
+    path('', views.getRoutes),
+
+    path('alumnilist/', views.AlumniListView.as_view(), name='alumini'), #It is used in new ams
+    path('gender-distribution/', views.gender_distribution, name='gender_distribution'),
+    path('combination-counts/', views.combination_counts, name='combination_counts')
 ]

@@ -199,3 +199,36 @@ class KidAcademicsSerializer(serializers.ModelSerializer):
             )
         
         return data
+
+class AlumniListsSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(source='user.email')
+    image_url = serializers.CharField(source='user.image_url')  # assuming image_url is on user model
+    first_name = serializers.CharField(source='user.first_name')
+    #last_name = serializers.CharField(source='user.last_name')
+    phone1 = serializers.CharField(source='user.phone1')
+    #reg_number = serializers.CharField(source='user.reg_number', allow_null=True, default='')  # if this is on user or kid?
+    #alumn_id = serializers.IntegerField(source='id')  # your kid's id or alumni id? adjust accordingly
+    
+    grade_name = serializers.CharField(source='family.grade.grade_name', allow_null=True, default='')
+    grade_id = serializers.IntegerField(source='family.grade.id', allow_null=True)
+    family_name = serializers.CharField(source='family.family_name', allow_null=True, default='')
+    family_id = serializers.IntegerField(source='family.id', allow_null=True)
+    combination_name = serializers.CharField(source='combination.combination_name', allow_null=True, default='')
+    combination_id = serializers.IntegerField(source='combination.id', allow_null=True)
+    
+    
+    class Meta:
+        model = Kid
+        fields = [
+            'id',
+            'email',
+            'image_url',
+            'first_name',
+            'phone1',
+            'grade_name',
+            'grade_id',
+            'family_name',
+            'family_id',
+            'combination_name',
+            'combination_id',
+        ]

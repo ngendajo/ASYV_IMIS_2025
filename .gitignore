@@ -1,0 +1,26 @@
+# Ignore virtual environment
+backend/venv/
+
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+*.so
+*.pyc
+
+# Django stuff:
+*.log
+*.pot
+*.pyc
+*.sqlite3
+
+# Ignore IDE/editor settings
+.vscode/
+.idea/
+
+# Environment variables
+.env
+.env.*
+
+# OS files
+.DS_Store
+Thumbs.db

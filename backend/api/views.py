@@ -28,6 +28,8 @@ from .filters import *
 import logging
 
 logger = logging.getLogger(__name__)
+from .models import *
+from django.db.models import Count
 
 User = get_user_model()
 
@@ -812,7 +814,7 @@ class LeapExcelUploadView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-#Kids crud
+#Subjects crud
 class SubjectViewSet(viewsets.ModelViewSet):
     queryset = Subject.objects.all()
     serializer_class = SubjectSerializer
@@ -891,7 +893,7 @@ class SubjectViewSet(viewsets.ModelViewSet):
                 {'error': f'Failed to fetch subject: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-            
+#Combination CRUD          
 class CombinationViewSet(viewsets.ModelViewSet):
     queryset = Combination.objects.all()
     serializer_class = CombinationSerializer
@@ -960,7 +962,7 @@ class CombinationViewSet(viewsets.ModelViewSet):
                 {'error': f'Failed to delete combination: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-            
+#Kid CRUD       
 class KidViewSet(viewsets.ModelViewSet):
     """
     ViewSet for viewing and editing Kid instances.
@@ -1425,7 +1427,7 @@ class DataUploadViewSet(viewsets.ViewSet):
                 'error': str(e),
                 'message': 'An error occurred during processing'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-            
+#KidAcademics CRUD  
 class KidAcademicsViewSet(viewsets.ModelViewSet):
     queryset = KidAcademics.objects.select_related('kid', 'combination').all()
     serializer_class = KidAcademicsSerializer
@@ -1998,3 +2000,381 @@ class KidAcademicsImportView(APIView):
                 'S6_2026': 'Creates S4(2024), S5(2025), S6(2026)'
             }
         })
+        
+#view alumni list
+class AlumniListView(APIView):
+    #permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        queryset = Kid.objects.filter(graduation_status="graduated").select_related(
+            'user', 'family'
+        )
+
+        serializer = AlumniListsSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+#alumni gender distribution
+@api_view(['GET'])
+def gender_distribution(request):
+    # Filter only graduated kids
+    graduated_kids = Kid.objects.filter(graduation_status='graduated')
+    # Follow FK to user and count gender
+    male_count = graduated_kids.filter(user__gender='M').count()
+    female_count = graduated_kids.filter(user__gender='F').count()
+
+    return Response({
+        'males': male_count,
+        'females': female_count
+    })
+
+#Alumni combination distribution 
+@api_view(['GET'])
+def combination_counts(request):
+    queryset = KidAcademics.objects.filter(
+        kid__graduation_status='graduated'
+    ).values(
+        'combination__abbreviation'
+    ).annotate(
+        alumni_count=Count('kid', distinct=True)
+    ).order_by('combination__abbreviation')
+
+    # Format data as list of dicts for JSON
+    data = list(queryset)
+    return Response(data)
+
+        
+#Upload Employment using .xlsx file
+class EmploymentExcelUploadView(APIView):
+    def post(self, request):
+        if 'file' not in request.FILES:
+            return Response({'error': 'No file uploaded'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        excel_file = request.FILES['file']
+        
+        if not excel_file.name.endswith('.xlsx'):
+            return Response({'error': 'Please upload an Excel file'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            df = pd.read_excel(excel_file)
+            
+            required_columns = ['title', 'alumn_reg', 'status', 'industry', 
+                'description', 'company', 'on_going', 'crc_support',
+                'recorded_by', 'is_approved', 'approved_at', 'contributing_leaps',
+                'start_date', 'end_date'] # registration number passed in as identifier for user
+            #Do we need recorded_by, is_approved, approved_at just for passing in excel?
+            
+            if not all(column in df.columns for column in required_columns):
+                return Response(
+                    {'error': f'Excel file must contain these columns: {", ".join(required_columns)}'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            valid_employments = []
+            errors = []
+            
+            # Bulk fetch alumn by username
+            alumn_reg_numbers = df['alumn_reg'].dropna().unique()
+            # Bulk fetch recorders by username 
+            recorder_reg_numbers = df['recorded_by'].dropna().unique()
+            #creates dictionary for reg_number : user object 
+            all_reg_numbers = set(alumn_reg_numbers) | set(recorder_reg_numbers)
+            users_by_reg_number = {
+                user.reg_number: user
+                for user in User.objects.filter(reg_number__in=all_reg_numbers)
+            }
+            #get list of valid status options 
+            valid_statuses = {choice[0] for choice in Employment.EMPLOYMENT_CHOICES}
+           
+            #clean any boolean values into True/False 
+            def parse_bool(val):
+                if pd.isna(val):
+                    return False
+                if isinstance(val, bool):
+                    return val
+                if isinstance(val, (int, float)):
+                    return val == 1
+                if isinstance(val, str):
+                    return val.strip().lower() in ['true', '1', 'yes']
+                return False
+            
+            #check inputted data 
+            for index, row in df.iterrows():
+                try:
+                    #check alumn is a user 
+                    alumn_reg = row['alumn_reg']
+                    if alumn_reg not in users_by_reg_number:
+                        raise ValueError(f"User (alumn) with username '{alumn_reg}' does not exist")
+                    alumn_user = users_by_reg_number[alumn_reg] #get alumn user object with reg number key
+
+                    # Get Kid linked to User
+                    try:
+                        alumn_kid = Kid.objects.get(user=alumn_user)
+                    except Kid.DoesNotExist:
+                        raise ValueError(f"No Kid record found for user '{alumn_reg}'")
+
+                    # Validate graduation status
+                    if alumn_kid.graduation_status.lower() != 'graduated':
+                        raise ValueError(f"User '{alumn_reg}' is not graduated and cannot be an alumn")
+                    
+                    # Validate Leap names (contributing_leaps column expected as comma-separated ep names)
+                    ep_raw = str(row.get('contributing_leaps', '')).strip()
+                    leap_names = [x.strip() for x in ep_raw.split(',') if x.strip()] #leap names provided in data
+                    existing_leaps_qs = Leap.objects.filter(ep__in=leap_names) #queryset of all leap objects that matches
+                    existing_leaps = set(existing_leaps_qs.values_list('ep', flat=True)) #set of existing eps 
+                    missing_leaps = set(leap_names) - existing_leaps #eps not in leap model 
+                    if missing_leaps:
+                        return Response(
+                            {'error': f'These ep names do not exist: {missing_leaps}'},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+                    
+                    # Validate employment status
+                    status_val = row['status']
+                    if status_val not in valid_statuses:
+                        raise ValueError(f"Status '{status_val}' is invalid. Valid choices: {valid_statuses}")
+                    
+                    recorded_by_user = None
+                    if pd.notna(row['recorded_by']):
+                        rec_reg= row['recorded_by']
+                        if rec_reg not in users_by_reg_number:
+                            raise ValueError(f"User (recorded_by) with username '{rec_reg}' does not exist")
+                        recorded_by_user = users_by_reg_number[rec_reg]
+
+                    on_going = parse_bool(row['on_going'])
+                    crc_support = parse_bool(row['crc_support'])
+                    is_approved = parse_bool(row['is_approved'])
+
+                    approved_at = None
+                    if pd.notna(row['approved_at']):
+                        approved_at = pd.to_datetime(row['approved_at'])
+                    
+                    # Prepare employement data
+                    employment_data = Employment(
+                        title=row['title'].strip(),
+                        alumn=alumn_kid, #kid object 
+                        status=status_val,
+                        industry=row.get('industry', '').strip() if pd.notna(row.get('industry')) else '',
+                        description=row.get('description', '').strip() if pd.notna(row.get('description')) else '',
+                        company=row['company'].strip(),
+                        on_going=on_going,
+                        crc_support=crc_support,
+                        recorded_by=recorded_by_user,
+                        is_approved=is_approved,
+                        approved_at=approved_at,
+                        start_date=row.get('start_date', '').strip() if pd.notna(row.get('start_date')) else '',
+                        end_date=row.get('end_date', '').strip() if pd.notna(row.get('end_date')) else '',
+                    )
+                    
+                    valid_employments.append(employment_data)
+                    
+                except Exception as e:
+                    errors.append(f"Row {index + 2}: {str(e)}")
+            
+            if errors:
+                return Response({
+                    'message': 'Validation failed. No records were created.',
+                    'errors': errors
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            try:
+                with transaction.atomic():
+                    for employement_data in valid_employments:
+                        Employment.objects.bulk_create(valid_employments)
+
+                return Response({
+                    'message': f'Successfully created {len(valid_employments)} employment records',
+                }, status=status.HTTP_200_OK)
+                
+            except Exception as e:
+                return Response({
+                    'error': f'Error creating employment records: {str(e)}'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+        except Exception as e:
+            return Response({
+                'error': f'Error processing file: {str(e)}'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+class CollegeExcelUploadView(APIView): 
+    def post(self, request): 
+        if 'file' not in request.FILES:
+            return Response({'error': 'No file uploaded'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        excel_file = request.FILES['file']
+        
+        if not excel_file.name.endswith('.xlsx'):
+            return Response({'error': 'Please upload an Excel file'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            df = pd.read_excel(excel_file)
+            required_columns = ['college_name', 'country', 'city']
+
+            if not all(column in df.columns for column in required_columns):
+                return Response(
+                    {'error': f'Excel file must contain these columns: {", ".join(required_columns)}'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            valid_colleges = []
+            for _, row in df.iterrows():
+                college = College(
+                    college_name=row['college_name'],
+                    country=row['country'],
+                    city=row['city']
+                )
+                valid_colleges.append(college)
+
+            College.objects.bulk_create(valid_colleges)
+
+            return Response({'message': f'Successfully uploaded {len(valid_colleges)} colleges.'})
+
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
+
+class FurtherEducationExcelUploadView(APIView): 
+    def post(self, request): 
+        if 'file' not in request.FILES:
+            return Response({'error': 'No file uploaded'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        excel_file = request.FILES['file']
+        
+        if not excel_file.name.endswith('.xlsx'):
+            return Response({'error': 'Please upload an Excel file'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            df = pd.read_excel(excel_file)
+            required_columns = ['alumn_reg', 'level', 'degree', 'college', 
+                'application_result', 'waitlisted', 'enrolled', 'scholarship',
+                'scholarship_details', 'status', 'crc_support']
+            
+            if not all(column in df.columns for column in required_columns):
+                return Response(
+                    {'error': f'Excel file must contain these columns: {", ".join(required_columns)}'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            valid_further_education = []
+            errors = []
+
+            # Bulk fetch alumn by username
+            alumn_reg = df['alumn_reg'].dropna().unique()
+            #creates dictionary for username : user object 
+            users_by_reg_number = {
+                user.reg_number: user
+                for user in User.objects.filter(reg_number__in=alumn_reg)
+            }
+
+            #get list of valid choices 
+            valid_level = {choice[0] for choice in FurtherEducation.LEVEL_CHOICES}
+            valid_application_result = {choice[0] for choice in FurtherEducation.APPLICATION_RESULT_CHOICES}
+            valid_scholarship = {choice[0] for choice in FurtherEducation.SCHOLARSHIP_CHOICES} 
+            valid_status = {choice[0] for choice in FurtherEducation.STATUS_CHOICES}
+
+            #Clean boolean values into True/False
+            def parse_bool(val):
+                if pd.isna(val):
+                    return False
+                if isinstance(val, bool):
+                    return val
+                if isinstance(val, (int, float)):
+                    return val == 1
+                if isinstance(val, str):
+                    return val.strip().lower() in ['true', '1', 'yes']
+                return False
+            
+              #check inputted data 
+            for index, row in df.iterrows():
+                try:
+                    #check alumn is a user 
+                    alumn_reg = row['alumn']
+                    if alumn_reg not in users_by_reg_number:
+                        raise ValueError(f"User (alumn) with reg number '{alumn_reg}' does not exist")
+                    alumn_user = users_by_reg_number[alumn_reg]
+
+                    # Get Kid linked to User
+                    try:
+                        alumn_kid = Kid.objects.get(user=alumn_user)
+                    except Kid.DoesNotExist:
+                        raise ValueError(f"No Kid record found for user '{alumn_reg}'")
+                    
+                    # Validate graduation status
+                    if alumn_kid.graduation_status.lower() != 'graduated':
+                        raise ValueError(f"User '{alumn_reg}' is not graduated and cannot be an alumn")
+                    
+                    #check if college exists 
+                    college_name = row['college_name']
+                    try: 
+                        college_obj = College.objects.get(college_name=college_name)
+                    except College.DoesNotExist: 
+                        raise ValueError(f"No College record found for college ' {college_name}'")
+
+                    #validate level 
+                    level_val = row['level'] 
+                    if level_val not in valid_level: 
+                        raise ValueError(f"Level ' {level_val}' is invalid, Valid choices: {valid_level}") 
+                    
+                    #validate application result 
+                    application_result_val = row['application_result'] 
+                    if application_result_val not in valid_application_result: 
+                        raise ValueError(f"Application Result ' {application_result_val}' is invalid, Valid choices: {valid_application_result}") 
+                    
+                    #validate scholarship 
+                    scholarship_val = row['scholarship'] 
+                    if scholarship_val not in valid_scholarship: 
+                        raise ValueError(f"Scholarship ' {scholarship_val}' is invalid, Valid choices: {valid_scholarship}") 
+                    
+                    #validate status
+                    status_val = row['status']
+                    if status_val not in valid_status: 
+                        raise ValueError(f"Status ' {status_val}' is invalid, Valid choices: {valid_status}") 
+                    
+                    #validate boolean fields
+                    crc_support = parse_bool(row['crc_support'])
+                    waitlisted = parse_bool(row['waitlisted']) 
+                    enrolled = parse_bool(row['enrolled']) 
+
+                    #prepare further education data
+                    further_education_data = FurtherEducation(
+                        alumn=alumn_kid, #Kid object 
+                        level=level_val,
+                        degree=row.get('degree', '').strip() if pd.notna(row.get('degree')) else '',
+                        college=college_obj,
+                        application_result=application_result_val, 
+                        waitlisted=waitlisted, 
+                        enrolled=enrolled, 
+                        scholarship=scholarship_val, 
+                        scholarship_details=row.get('scholarship_details', '').strip() if pd.notna(row.get('scholarship_details')) else '', 
+                        status=status_val,
+                        crc_support=crc_support
+                    )
+
+                    valid_further_education.append(further_education_data)
+
+                except Exception as e:
+                    errors.append(f"Row {index + 2}: {str(e)}")
+            
+            if errors:
+                return Response({
+                    'message': 'Validation failed. No records were created.',
+                    'errors': errors
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            try: #creates the objects
+                with transaction.atomic():
+                    for further_education_data in valid_further_education:
+                        FurtherEducation.objects.bulk_create(valid_further_education)
+
+                return Response({
+                    'message': f'Successfully created {len(valid_further_education)} further education records',
+                }, status=status.HTTP_200_OK)
+                
+            except Exception as e:
+                return Response({
+                    'error': f'Error creating further education records: {str(e)}'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+        except Exception as e:
+            return Response({
+                'error': f'Error processing file: {str(e)}'
+            }, status=status.HTTP_400_BAD_REQUEST)
