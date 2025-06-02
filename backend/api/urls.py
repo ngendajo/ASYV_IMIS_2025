@@ -41,6 +41,8 @@ urlpatterns = [
          views.DataUploadViewSet.as_view({'post': 'upload_xlsx'}), 
          name='kids-data-upload-xlsx'),#kids-data-upload-xlsx
     path('upload-employment/', views.EmploymentExcelUploadView.as_view(), name='upload-employment'),
+    path('upload-college/', views.CollegeExcelUploadView.as_view(), name='upload-college'),
+    path('upload-further-education/', views.FurtherEducationExcelUploadView.as_view(), name='upload-further-education'),
 
     path('', include(router.urls)),
 
