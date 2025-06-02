@@ -10,6 +10,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.views import APIView
 from django.contrib.auth import logout
 from rest_framework import generics
+from rest_framework.parsers import MultiPartParser, FormParser
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 from django.urls import reverse
@@ -1598,3 +1599,402 @@ class KidAcademicsViewSet(viewsets.ModelViewSet):
                 },
                 status=status.HTTP_400_BAD_REQUEST
             )
+            
+#import kids combination
+class KidAcademicsImporter:
+    """
+    Class to handle importing KidAcademics data from Excel files
+    """
+    
+    def __init__(self):
+        self.errors = []
+        self.success_count = 0
+        self.skip_count = 0
+        
+    def validate_row_data(self, row, row_index):
+        """
+        Validate individual row data before processing
+        """
+        errors = []
+        
+        # Check required fields
+        required_fields = ['reg_number', 'academic_year', 'level', 'abbreviation']
+        for field in required_fields:
+            if pd.isna(row.get(field)) or str(row.get(field)).strip() == '':
+                errors.append(f"Row {row_index}: {field} is required")
+        
+        # Validate academic year
+        try:
+            academic_year = int(row.get('academic_year', 0))
+            if academic_year < 2000 or academic_year > 2100:
+                errors.append(f"Row {row_index}: Invalid academic year {academic_year}")
+        except (ValueError, TypeError):
+            errors.append(f"Row {row_index}: Academic year must be a valid integer")
+        
+        # Validate level
+        valid_levels = ['EY', 'S4', 'S5', 'S6', 'S456', 'SECONDARY']
+        level = str(row.get('level', '')).strip().upper()
+        if level not in valid_levels:
+            errors.append(f"Row {row_index}: Level must be one of {valid_levels}")
+        
+        return errors
+    
+    def get_or_validate_objects(self, row, row_index):
+        """
+        Get or validate related objects (User, Kid, Combination)
+        """
+        errors = []
+        objects = {}
+        
+        # Get User by reg_number
+        reg_number = str(row.get('reg_number', '')).strip()
+        try:
+            user = User.objects.get(reg_number=reg_number)
+            objects['user'] = user
+        except User.DoesNotExist:
+            errors.append(f"Row {row_index}: User with reg_number '{reg_number}' not found")
+            return None, errors
+        
+        # Get Kid for this user
+        try:
+            kid = Kid.objects.get(user=user)
+            objects['kid'] = kid
+        except Kid.DoesNotExist:
+            errors.append(f"Row {row_index}: Kid record not found for user '{reg_number}'")
+            return None, errors
+        except Kid.MultipleObjectsReturned:
+            errors.append(f"Row {row_index}: Multiple Kid records found for user '{reg_number}'")
+            return None, errors
+        
+        # Get Combination
+        abbreviation = str(row.get('abbreviation', '')).strip()
+        try:
+            combination = Combination.objects.get(abbreviation__iexact=abbreviation)
+            objects['combination'] = combination
+        except Combination.DoesNotExist:
+            errors.append(f"Row {row_index}: Combination with abbreviation '{abbreviation}' not found")
+            return None, errors
+        except Combination.MultipleObjectsReturned:
+            # Handle multiple combinations - try to get the most appropriate one
+            combinations = Combination.objects.filter(abbreviation__iexact=abbreviation)
+            
+            # Show detailed information about duplicate combinations
+            combination_details = []
+            for combo in combinations:
+                # Include ID, name (if available), and any other relevant fields
+                detail = f"ID: {combo.id}"
+                if hasattr(combo, 'name') and combo.name:
+                    detail += f", Name: '{combo.name}'"
+                if hasattr(combo, 'is_active'):
+                    detail += f", Active: {combo.is_active}"
+                if hasattr(combo, 'created_at'):
+                    detail += f", Created: {combo.created_at.strftime('%Y-%m-%d')}"
+                combination_details.append(detail)
+            
+            combination_list = "; ".join(combination_details)
+            
+            # Option 1: Use first active combination if available
+            active_combination = combinations.filter(is_active=True).first() if hasattr(combinations.first(), 'is_active') else None
+            if active_combination:
+                objects['combination'] = active_combination
+                # Log warning about multiple combinations
+                logger.warning(f"Row {row_index}: Multiple combinations found for abbreviation '{abbreviation}' - [{combination_list}]. Using active combination ID: {active_combination.id}")
+            else:
+                # Option 2: Use most recent combination
+                latest_combination = combinations.order_by('-created_at').first() if hasattr(combinations.first(), 'created_at') else combinations.first()
+                if latest_combination:
+                    objects['combination'] = latest_combination
+                    logger.warning(f"Row {row_index}: Multiple combinations found for abbreviation '{abbreviation}' - [{combination_list}]. Using combination ID: {latest_combination.id}")
+                else:
+                    # Fallback: list all available combinations
+                    errors.append(f"Row {row_index}: Multiple Combinations found with abbreviation '{abbreviation}'. Details: [{combination_list}]")
+                    return None, errors
+        
+        return objects, errors
+    
+    def create_academics_for_levels(self, kid, base_academic_year, combination, levels_with_years, row_index):
+        """
+        Create KidAcademics records for specified levels with corresponding academic years
+        levels_with_years: list of tuples [(level, academic_year), ...]
+        """
+        created_records = []
+        
+        for level, academic_year in levels_with_years:
+            try:
+                kid_academics, created = KidAcademics.objects.update_or_create(
+                    kid=kid,
+                    academic_year=academic_year,
+                    level=level,
+                    defaults={
+                        'combination': combination
+                    }
+                )
+                
+                action = "Created" if created else "Updated"
+                logger.info(f"{action} KidAcademics for {kid} - {academic_year} - {level}")
+                created_records.append((kid_academics, created))
+                
+            except IntegrityError as e:
+                error_msg = f"Row {row_index}: Database integrity error for level {level} (year {academic_year}) - {str(e)}"
+                self.errors.append(error_msg)
+                return []
+                
+            except Exception as e:
+                error_msg = f"Row {row_index}: Unexpected error for level {level} (year {academic_year}) - {str(e)}"
+                self.errors.append(error_msg)
+                return []
+        
+        return created_records
+
+    def get_levels_with_years(self, level_input, base_academic_year):
+        """
+        Determine which levels to create and their corresponding academic years
+        Returns list of tuples: [(level, academic_year), ...]
+        """
+        if level_input == 'EY':
+            return [('EY', base_academic_year)]
+        elif level_input == 'S4':
+            return [
+                ('S4', base_academic_year),
+                ('S5', base_academic_year + 1),
+                ('S6', base_academic_year + 2)
+            ]
+        elif level_input == 'S5':
+            return [
+                ('S4', base_academic_year - 1),
+                ('S5', base_academic_year),
+                ('S6', base_academic_year + 1)
+            ]
+        elif level_input == 'S6':
+            return [
+                ('S4', base_academic_year - 2),
+                ('S5', base_academic_year - 1),
+                ('S6', base_academic_year)
+            ]
+        elif level_input in ['S456', 'SECONDARY']:
+            # For S456/SECONDARY, assume the year provided is for S4
+            return [
+                ('S4', base_academic_year),
+                ('S5', base_academic_year + 1),
+                ('S6', base_academic_year + 2)
+            ]
+        else:
+            # For any other level, just use the base year
+            return [(level_input, base_academic_year)]
+
+    def process_excel_file(self, file_input, sheet_name=None, dry_run=False):
+        """
+        Main method to process Excel file and import KidAcademics data
+        file_input can be either a file path (string) or a file-like object
+        """
+        try:
+            # Read Excel file - handle both file path and file object
+            if sheet_name:
+                df = pd.read_excel(file_input, sheet_name=sheet_name)
+            else:
+                df = pd.read_excel(file_input)
+            
+            # Clean column names
+            df.columns = df.columns.str.strip().str.lower()
+            
+            # Check if required columns exist
+            required_columns = ['reg_number', 'academic_year', 'level', 'abbreviation']
+            missing_columns = [col for col in required_columns if col not in df.columns]
+            
+            if missing_columns:
+                raise ValueError(f"Missing required columns: {missing_columns}")
+            
+            logger.info(f"Processing {len(df)} rows from Excel file")
+            
+            # Process each row
+            if not dry_run:
+                with transaction.atomic():
+                    self._process_rows(df)
+            else:
+                self._process_rows(df, dry_run=True)
+            
+            return self.get_import_summary()
+            
+        except Exception as e:
+            logger.error(f"Error processing Excel file: {str(e)}")
+            return {
+                'success': False,
+                'error': str(e),
+                'processed': 0,
+                'success_count': 0,
+                'skip_count': 0,
+                'errors': []
+            }
+    
+    def _process_rows(self, df, dry_run=False):
+        """Process DataFrame rows"""
+        for index, row in df.iterrows():
+            row_index = index + 2  # Excel row number (1-indexed + header)
+            
+            # Validate row data
+            validation_errors = self.validate_row_data(row, row_index)
+            if validation_errors:
+                self.errors.extend(validation_errors)
+                self.skip_count += 1
+                continue
+            
+            # Get related objects
+            objects, object_errors = self.get_or_validate_objects(row, row_index)
+            if object_errors:
+                self.errors.extend(object_errors)
+                self.skip_count += 1
+                continue
+            
+            if dry_run:
+                self.success_count += 1
+                continue
+            
+            # Process based on level specification
+            try:
+                academic_year = int(row['academic_year'])
+                level_input = str(row['level']).strip().upper()
+                
+                # Get levels with their corresponding academic years
+                levels_with_years = self.get_levels_with_years(level_input, academic_year)
+                
+                # Create records for determined levels and years
+                created_records = self.create_academics_for_levels(
+                    objects['kid'], 
+                    academic_year, 
+                    objects['combination'], 
+                    levels_with_years,
+                    row_index
+                )
+                
+                if created_records:
+                    self.success_count += len(created_records)
+                else:
+                    self.skip_count += 1
+                
+            except ValueError as e:
+                error_msg = f"Row {row_index}: Invalid academic year - {str(e)}"
+                self.errors.append(error_msg)
+                self.skip_count += 1
+                
+            except Exception as e:
+                error_msg = f"Row {row_index}: Unexpected error - {str(e)}"
+                self.errors.append(error_msg)
+                self.skip_count += 1
+    
+    def get_import_summary(self):
+        """
+        Return summary of import process
+        """
+        return {
+            'success': len(self.errors) == 0 or self.success_count > 0,
+            'total_processed': self.success_count + self.skip_count,
+            'success_count': self.success_count,
+            'skip_count': self.skip_count,
+            'errors': self.errors
+        }
+
+
+class KidAcademicsImportView(APIView):
+    """
+    API View for importing KidAcademics data from Excel files
+    """
+    parser_classes = [MultiPartParser, FormParser]
+    #permission_classes = [IsAuthenticated]
+    
+    def post(self, request, *args, **kwargs):
+        """
+        Handle Excel file upload and processing
+        
+        Expected form data:
+        - file: Excel file
+        - sheet_name (optional): Excel sheet name
+        - dry_run (optional): Boolean for validation only
+        """
+        try:
+            # Validate file upload
+            if 'file' not in request.FILES:
+                return Response(
+                    {'error': 'No file provided'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            uploaded_file = request.FILES['file']
+            
+            # Validate file type
+            if not uploaded_file.name.endswith(('.xlsx', '.xls')):
+                return Response(
+                    {'error': 'Only Excel files (.xlsx, .xls) are allowed'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Get optional parameters
+            sheet_name = request.data.get('sheet_name', None)
+            dry_run = request.data.get('dry_run', 'false').lower() == 'true'
+            
+            # Process the file directly from memory
+            importer = KidAcademicsImporter()
+            result = importer.process_excel_file(
+                uploaded_file, 
+                sheet_name=sheet_name,
+                dry_run=dry_run
+            )
+            
+            # Determine response status
+            if result['success']:
+                response_status = status.HTTP_200_OK
+                if dry_run:
+                    result['message'] = 'Validation completed successfully'
+                else:
+                    result['message'] = 'Import completed successfully'
+            else:
+                response_status = status.HTTP_400_BAD_REQUEST
+                result['message'] = 'Import failed'
+            
+            return Response(result, status=response_status)
+            
+        except Exception as e:
+            logger.error(f"Unexpected error in KidAcademicsImportView: {str(e)}")
+            return Response(
+                {
+                    'success': False,
+                    'error': f'Unexpected error: {str(e)}',
+                    'message': 'Import failed due to server error'
+                }, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+    )
+    
+    def get(self, request, *args, **kwargs):
+        """
+        Return information about the import endpoint
+        """
+        return Response({
+            'message': 'KidAcademics Import Endpoint',
+            'description': 'Upload Excel file to import KidAcademics data',
+            'accepted_methods': ['POST'],
+            'required_fields': {
+                'file': 'Excel file (.xlsx or .xls)'
+            },
+            'optional_fields': {
+                'sheet_name': 'Excel sheet name (string)',
+                'dry_run': 'Validation only - true/false (boolean)'
+            },
+            'expected_columns': [
+                'reg_number',
+                'academic_year', 
+                'level',
+                'abbreviation'
+            ],
+            'valid_levels': ['EY', 'S4', 'S5', 'S6', 'S456', 'SECONDARY'],
+            'level_logic': {
+                'EY': 'Creates 1 record for EY level with specified year',
+                'S4': 'Creates 3 records: S4 (specified year), S5 (year+1), S6 (year+2)',
+                'S5': 'Creates 3 records: S4 (year-1), S5 (specified year), S6 (year+1)',
+                'S6': 'Creates 3 records: S4 (year-2), S5 (year-1), S6 (specified year)',
+                'S456/SECONDARY': 'Creates 3 records: S4 (specified year), S5 (year+1), S6 (year+2)'
+            },
+            'examples': {
+                'S4_2024': 'Creates S4(2024), S5(2025), S6(2026)',
+                'S5_2025': 'Creates S4(2024), S5(2025), S6(2026)',
+                'S6_2026': 'Creates S4(2024), S5(2025), S6(2026)'
+            }
+        })
