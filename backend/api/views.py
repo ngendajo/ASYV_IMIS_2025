@@ -1659,7 +1659,7 @@ class EmploymentExcelUploadView(APIView):
             
             required_columns = ['title', 'alumn', 'status', 'industry', 
                 'description', 'company', 'on_going', 'crc_support',
-                'recorded_by', 'is_approved', 'approved_at',
+                'recorded_by', 'is_approved', 'approved_at', 'contributing_leaps',
                 'start_date', 'end_date'] # Question - what is passing in for alumn? 
             #Do we need recorded_by, is_approved, approved_at just for passing in excel?
             
@@ -1715,6 +1715,18 @@ class EmploymentExcelUploadView(APIView):
                     # Validate graduation status
                     if alumn_kid.graduation_status.lower() != 'graduated':
                         raise ValueError(f"User '{alumn_username}' is not graduated and cannot be an alumn")
+                    
+                    # Validate Leap names (contributing_leaps column expected as comma-separated ep names)
+                    ep_raw = str(row.get('contributing_leaps', '')).strip()
+                    leap_names = [x.strip() for x in ep_raw.split(',') if x.strip()] #leap names provided in data
+                    existing_leaps_qs = Leap.objects.filter(ep__in=leap_names) #queryset of all leap objects that matches
+                    existing_leaps = set(existing_leaps_qs.values_list('ep', flat=True)) #set of existing eps 
+                    missing_leaps = set(leap_names) - existing_leaps #eps not in leap model 
+                    if missing_leaps:
+                        return Response(
+                            {'error': f'These ep names do not exist: {missing_leaps}'},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
                     
                     # Validate employment status
                     status_val = row['status']
