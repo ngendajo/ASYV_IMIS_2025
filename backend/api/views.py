@@ -1657,10 +1657,10 @@ class EmploymentExcelUploadView(APIView):
         try:
             df = pd.read_excel(excel_file)
             
-            required_columns = ['title', 'alumn', 'status', 'industry', 
+            required_columns = ['title', 'alumn_reg', 'status', 'industry', 
                 'description', 'company', 'on_going', 'crc_support',
                 'recorded_by', 'is_approved', 'approved_at', 'contributing_leaps',
-                'start_date', 'end_date'] # Question - what is passing in for alumn? 
+                'start_date', 'end_date'] # registration number passed in as identifier for user
             #Do we need recorded_by, is_approved, approved_at just for passing in excel?
             
             if not all(column in df.columns for column in required_columns):
@@ -1673,14 +1673,14 @@ class EmploymentExcelUploadView(APIView):
             errors = []
             
             # Bulk fetch alumn by username
-            alumn_usernames = df['alumn'].dropna().unique()
+            alumn_reg_numbers = df['alumn_reg'].dropna().unique()
             # Bulk fetch recorders by username 
-            recorder_usernames = df['recorded_by'].dropna().unique()
-            #creates dictionary for username : user object 
-            all_usernames = set(alumn_usernames) | set(recorder_usernames)
-            users_by_username = {
-                user.username: user
-                for user in User.objects.filter(username__in=all_usernames)
+            recorder_reg_numbers = df['recorded_by'].dropna().unique()
+            #creates dictionary for reg_number : user object 
+            all_reg_numbers = set(alumn_reg_numbers) | set(recorder_reg_numbers)
+            users_by_reg_number = {
+                user.reg_number: user
+                for user in User.objects.filter(reg_number__in=all_reg_numbers)
             }
             #get list of valid status options 
             valid_statuses = {choice[0] for choice in Employment.EMPLOYMENT_CHOICES}
@@ -1701,20 +1701,20 @@ class EmploymentExcelUploadView(APIView):
             for index, row in df.iterrows():
                 try:
                     #check alumn is a user 
-                    alumn_username = row['alumn']
-                    if alumn_username not in users_by_username:
-                        raise ValueError(f"User (alumn) with username '{alumn_username}' does not exist")
-                    alumn_user = users_by_username[alumn_username]
+                    alumn_reg = row['alumn_reg']
+                    if alumn_reg not in users_by_reg_number:
+                        raise ValueError(f"User (alumn) with username '{alumn_reg}' does not exist")
+                    alumn_user = users_by_reg_number[alumn_reg] #get alumn user object with reg number key
 
                     # Get Kid linked to User
                     try:
                         alumn_kid = Kid.objects.get(user=alumn_user)
                     except Kid.DoesNotExist:
-                        raise ValueError(f"No Kid record found for user '{alumn_username}'")
+                        raise ValueError(f"No Kid record found for user '{alumn_reg}'")
 
                     # Validate graduation status
                     if alumn_kid.graduation_status.lower() != 'graduated':
-                        raise ValueError(f"User '{alumn_username}' is not graduated and cannot be an alumn")
+                        raise ValueError(f"User '{alumn_reg}' is not graduated and cannot be an alumn")
                     
                     # Validate Leap names (contributing_leaps column expected as comma-separated ep names)
                     ep_raw = str(row.get('contributing_leaps', '')).strip()
@@ -1735,10 +1735,10 @@ class EmploymentExcelUploadView(APIView):
                     
                     recorded_by_user = None
                     if pd.notna(row['recorded_by']):
-                        rec_username = row['recorded_by']
-                        if rec_username not in users_by_username:
-                            raise ValueError(f"User (recorded_by) with username '{rec_username}' does not exist")
-                        recorded_by_user = users_by_username[rec_username]
+                        rec_reg= row['recorded_by']
+                        if rec_reg not in users_by_reg_number:
+                            raise ValueError(f"User (recorded_by) with username '{rec_reg}' does not exist")
+                        recorded_by_user = users_by_reg_number[rec_reg]
 
                     on_going = parse_bool(row['on_going'])
                     crc_support = parse_bool(row['crc_support'])
@@ -1844,7 +1844,7 @@ class FurtherEducationExcelUploadView(APIView):
         
         try:
             df = pd.read_excel(excel_file)
-            required_columns = ['alumn', 'level', 'degree', 'college', 
+            required_columns = ['alumn_reg', 'level', 'degree', 'college', 
                 'application_result', 'waitlisted', 'enrolled', 'scholarship',
                 'scholarship_details', 'status', 'crc_support']
             
@@ -1858,11 +1858,11 @@ class FurtherEducationExcelUploadView(APIView):
             errors = []
 
             # Bulk fetch alumn by username
-            alumn_usernames = df['alumn'].dropna().unique()
+            alumn_reg = df['alumn_reg'].dropna().unique()
             #creates dictionary for username : user object 
-            users_by_username = {
-                user.username: user
-                for user in User.objects.filter(username__in=alumn_usernames)
+            users_by_reg_number = {
+                user.reg_number: user
+                for user in User.objects.filter(reg_number__in=alumn_reg)
             }
 
             #get list of valid choices 
@@ -1887,20 +1887,20 @@ class FurtherEducationExcelUploadView(APIView):
             for index, row in df.iterrows():
                 try:
                     #check alumn is a user 
-                    alumn_username = row['alumn']
-                    if alumn_username not in users_by_username:
-                        raise ValueError(f"User (alumn) with username '{alumn_username}' does not exist")
-                    alumn_user = users_by_username[alumn_username]
+                    alumn_reg = row['alumn']
+                    if alumn_reg not in users_by_reg_number:
+                        raise ValueError(f"User (alumn) with reg number '{alumn_reg}' does not exist")
+                    alumn_user = users_by_reg_number[alumn_reg]
 
                     # Get Kid linked to User
                     try:
                         alumn_kid = Kid.objects.get(user=alumn_user)
                     except Kid.DoesNotExist:
-                        raise ValueError(f"No Kid record found for user '{alumn_username}'")
+                        raise ValueError(f"No Kid record found for user '{alumn_reg}'")
                     
                     # Validate graduation status
                     if alumn_kid.graduation_status.lower() != 'graduated':
-                        raise ValueError(f"User '{alumn_username}' is not graduated and cannot be an alumn")
+                        raise ValueError(f"User '{alumn_reg}' is not graduated and cannot be an alumn")
                     
                     #check if college exists 
                     college_name = row['college_name']
