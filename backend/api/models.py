@@ -335,7 +335,7 @@ class College(models.Model):
     city = models.CharField(max_length=100)
 
     def __str__(self):
-        return self.combination_name
+        return self.college_name
 
 class FurtherEducation(models.Model):
     alumn = models.ForeignKey('Kid', on_delete=models.PROTECT, related_name='studiedrafts')
@@ -349,7 +349,6 @@ class FurtherEducation(models.Model):
     )
     level = models.CharField(max_length=3, choices=LEVEL_CHOICES, default='NMS')#Examples:Bachelors,Masters,PHD
     degree = models.CharField(max_length=2500)
-    college = models.ForeignKey(College,default=None,null=True, on_delete=models.PROTECT, related_name='college')
     APPLICATION_RESULT_CHOICES = (
         ('A', 'Accepted'),
         ('R', 'Rejected'),
@@ -375,6 +374,7 @@ class FurtherEducation(models.Model):
         ('N', 'NA'),
     )
     status = models.CharField(max_length=3, choices=STATUS_CHOICES)
+    crc_support = models.BooleanField(default=False)
 
     def __str__(self):
-        return str(self.alumn.user.first_name + ' - ' + self.university)
+        return str(self.alumn.user.first_name + ' - ' + self.college.college_name)
