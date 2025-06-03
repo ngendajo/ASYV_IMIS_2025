@@ -17,6 +17,7 @@ router.register(r'kids', views.KidViewSet) #Kid crud
 router.register(r'kid-academics', views.KidAcademicsViewSet) #KidAcademics crud
 router.register(r'employments', views.EmploymentViewSet, basename='employment') #Employment crud
 router.register(r'further-education', views.FurtherEducationViewSet, basename='furthereducation') #Further Education crud
+router.register(r'colleges', views.CollegeViewSet, basename='colleges') #College crud 
 
 
 urlpatterns = [

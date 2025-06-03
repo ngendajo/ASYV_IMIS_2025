@@ -238,10 +238,23 @@ class CollegeSerializer(serializers.ModelSerializer):
         model = College
         fields = ['id', 'college_name', 'country', 'city']
 
-class EmploymentSerializer(serializers.ModelSerializer): 
-    class Meta: 
-        model = Employment 
-        fields = '__all__'
+
+class EmploymentSerializer(serializers.ModelSerializer):
+    # By default, ManyToManyField uses PrimaryKeyRelatedField with many=True
+    contributing_leaps = serializers.PrimaryKeyRelatedField(
+        queryset=Leap.objects.all(),  # validate IDs against all leaps
+        many=True,
+        required=False,
+        allow_empty=True
+    )
+    
+    class Meta:
+        model = Employment
+        fields = [
+            'id', 'title', 'alumn', 'status', 'industry', 'description', 'company',
+            'on_going', 'crc_support', 'recorded_by', 'is_approved', 'approved_at',
+            'contributing_leaps', 'start_date', 'end_date',
+        ]
 
 class FurtherEducationSerializer(serializers.ModelSerializer): 
     college = CollegeSerializer(read_only=True)  # nested display

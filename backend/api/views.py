@@ -2614,3 +2614,63 @@ class FurtherEducationViewSet(viewsets.ModelViewSet):
                 {'success': False, 'message': 'Error deleting further education record', 'errors': ['Please try again later']},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+#CRUD for College 
+class CollegeViewSet(viewsets.ModelViewSet): 
+    queryset = College.objects.all()
+    serializer_class = CollegeSerializer
+
+    def create(self, request, *args, **kwargs):
+        try:
+            with transaction.atomic():
+                serializer = self.get_serializer(data=request.data)
+                serializer.is_valid(raise_exception=True)
+                self.perform_create(serializer)
+                return Response({'success': True, 'message': 'College created', 'data': serializer.data}, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            logger.error(f"Error creating college: {e}")
+            return Response({'success': False, 'message': 'Error creating college'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def list(self, request, *args, **kwargs):
+        try:
+            queryset = self.filter_queryset(self.get_queryset())
+            page = self.paginate_queryset(queryset)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+                return self.get_paginated_response({'success': True, 'data': serializer.data})
+            serializer = self.get_serializer(queryset, many=True)
+            return Response({'success': True, 'data': serializer.data})
+        except Exception as e:
+            logger.error(f"Error listing colleges: {e}")
+            return Response({'success': False, 'message': 'Error retrieving college list'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def retrieve(self, request, *args, **kwargs):
+        try:
+            instance = self.get_object()
+            serializer = self.get_serializer(instance)
+            return Response({'success': True, 'data': serializer.data})
+        except Exception as e:
+            logger.error(f"Error retrieving college: {e}")
+            return Response({'success': False, 'message': 'College not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    def update(self, request, *args, **kwargs):
+        try:
+            with transaction.atomic():
+                partial = kwargs.pop('partial', False)
+                instance = self.get_object()
+                serializer = self.get_serializer(instance, data=request.data, partial=partial)
+                serializer.is_valid(raise_exception=True)
+                self.perform_update(serializer)
+                return Response({'success': True, 'message': 'College updated', 'data': serializer.data})
+        except Exception as e:
+            logger.error(f"Error updating college: {e}")
+            return Response({'success': False, 'message': 'Error updating college'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def destroy(self, request, *args, **kwargs):
+        try:
+            instance = self.get_object()
+            self.perform_destroy(instance)
+            return Response({'success': True, 'message': 'College deleted'}, status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            logger.error(f"Error deleting college: {e}")
+            return Response({'success': False, 'message': 'Error deleting college'}, status=status.HTTP_400_BAD_REQUEST)
