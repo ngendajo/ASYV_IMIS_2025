@@ -232,3 +232,26 @@ class AlumniListsSerializer(serializers.ModelSerializer):
             'combination_name',
             'combination_id',
         ]
+
+class CollegeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = College
+        fields = ['id', 'college_name', 'country', 'city']
+
+class EmploymentSerializer(serializers.ModelSerializer): 
+    class Meta: 
+        model = Employment 
+        fields = '__all__'
+
+class FurtherEducationSerializer(serializers.ModelSerializer): 
+    college = CollegeSerializer(read_only=True)  # nested display
+    
+    college_id = serializers.PrimaryKeyRelatedField(
+        queryset=College.objects.all(), source='college', write_only=True
+    )
+    
+    class Meta:
+        model = FurtherEducation
+        fields = ['id', 'alumn', 'level', 'degree', 'application_result', 'waitlisted', 
+                  'enrolled', 'scholarship', 'scholarship_details', 'status', 'crc_support', 
+                  'college', 'college_id']

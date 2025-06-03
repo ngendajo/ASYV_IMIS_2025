@@ -1427,6 +1427,7 @@ class DataUploadViewSet(viewsets.ViewSet):
                 'error': str(e),
                 'message': 'An error occurred during processing'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 #KidAcademics CRUD  
 class KidAcademicsViewSet(viewsets.ModelViewSet):
     queryset = KidAcademics.objects.select_related('kid', 'combination').all()
@@ -2028,10 +2029,12 @@ def gender_distribution(request):
     })
 
 #Alumni combination distribution 
+#based on senior 6 
 @api_view(['GET'])
 def combination_counts(request):
     queryset = KidAcademics.objects.filter(
-        kid__graduation_status='graduated'
+        kid__graduation_status='graduated', 
+        level='S6'
     ).values(
         'combination__abbreviation'
     ).annotate(
@@ -2061,7 +2064,7 @@ class EmploymentExcelUploadView(APIView):
                 'description', 'company', 'on_going', 'crc_support',
                 'recorded_by', 'is_approved', 'approved_at', 'contributing_leaps',
                 'start_date', 'end_date'] # registration number passed in as identifier for user
-            #Do we need recorded_by, is_approved, approved_at just for passing in excel?
+                #Do we need recorded_by, is_approved, approved_at just for passing in excel?
             
             if not all(column in df.columns for column in required_columns):
                 return Response(
@@ -2070,6 +2073,7 @@ class EmploymentExcelUploadView(APIView):
                 )
             
             valid_employments = []
+            employment_leaps_map = {} # key: Employment instance, value: list of Leap instances
             errors = []
             
             # Bulk fetch alumn by username
@@ -2117,9 +2121,10 @@ class EmploymentExcelUploadView(APIView):
                         raise ValueError(f"User '{alumn_reg}' is not graduated and cannot be an alumn")
                     
                     # Validate Leap names (contributing_leaps column expected as comma-separated ep names)
+                    # Validate with KidLeaps that the kid has taken those leaps 
                     ep_raw = str(row.get('contributing_leaps', '')).strip()
                     leap_names = [x.strip() for x in ep_raw.split(',') if x.strip()] #leap names provided in data
-                    existing_leaps_qs = Leap.objects.filter(ep__in=leap_names) #queryset of all leap objects that matches
+                    existing_leaps_qs = Leap.objects.filter(ep__in=leap_names) #queryset of all leap objects that matches from data inputted
                     existing_leaps = set(existing_leaps_qs.values_list('ep', flat=True)) #set of existing eps 
                     missing_leaps = set(leap_names) - existing_leaps #eps not in leap model 
                     if missing_leaps:
@@ -2127,6 +2132,13 @@ class EmploymentExcelUploadView(APIView):
                             {'error': f'These ep names do not exist: {missing_leaps}'},
                             status=status.HTTP_400_BAD_REQUEST
                         )
+                    
+                    kid_leaps = KidLeap.objects.filter(kid=alumn_kid, leap__ep__in=leap_names)
+                    valid_eps_for_kid = set(kid_leaps.values_list('leap_id', flat=True)) #list of leaps for kid
+
+                    invalid_leaps = [leap.ep for leap in existing_leaps if leap.id not in valid_eps_for_kid]
+                    if invalid_leaps:
+                        raise ValueError(f" Kid {alumn_reg} has not participated in these LEAPs: {', '.join(invalid_leaps)}")
                     
                     # Validate employment status
                     status_val = row['status']
@@ -2166,6 +2178,8 @@ class EmploymentExcelUploadView(APIView):
                     )
                     
                     valid_employments.append(employment_data)
+                    valid_leap_objs = existing_leaps_qs.filter(ep__in=valid_eps_for_kid)
+                    employment_leaps_map[employment_data] = list(valid_leap_objs)
                     
                 except Exception as e:
                     errors.append(f"Row {index + 2}: {str(e)}")
@@ -2178,8 +2192,9 @@ class EmploymentExcelUploadView(APIView):
             
             try:
                 with transaction.atomic():
-                    for employement_data in valid_employments:
-                        Employment.objects.bulk_create(valid_employments)
+                    Employment.objects.bulk_create(valid_employments)
+                    for employment, leaps in employment_leaps_map.items():
+                        employment.contributing_leaps.set(leaps) #mapping leaps to employment
 
                 return Response({
                     'message': f'Successfully created {len(valid_employments)} employment records',
@@ -2378,3 +2393,224 @@ class FurtherEducationExcelUploadView(APIView):
             return Response({
                 'error': f'Error processing file: {str(e)}'
             }, status=status.HTTP_400_BAD_REQUEST)
+
+#CRUD for employment      
+class EmploymentViewSet(viewsets.ModelViewSet):
+    queryset = Employment.objects.select_related('alumn', 'recorded_by').prefetch_related('contributing_leaps').all()
+    serializer_class = EmploymentSerializer
+
+    def create(self, request, *args, **kwargs):
+        try:
+            with transaction.atomic():
+                serializer = self.get_serializer(data=request.data)
+                serializer.is_valid(raise_exception=True)
+                self.perform_create(serializer)
+                return Response(
+                    {
+                        'success': True,
+                        'message': 'Employment record created successfully',
+                        'data': serializer.data
+                    },
+                    status=status.HTTP_201_CREATED
+                )
+        except serializers.ValidationError as e:
+            logger.error(f"Validation error creating employment: {e}")
+            return Response(
+                {'success': False, 'message': 'Validation error', 'errors': e.detail},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except IntegrityError as e:
+            logger.error(f"Database integrity error: {e}")
+            return Response(
+                {'success': False, 'message': 'Database error occurred', 'errors': ['Integrity error']},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            logger.error(f"Unexpected error creating employment: {e}")
+            return Response(
+                {'success': False, 'message': 'An unexpected error occurred', 'errors': ['Please try again later']},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    def list(self, request, *args, **kwargs):
+        try:
+            queryset = self.filter_queryset(self.get_queryset())
+            page = self.paginate_queryset(queryset)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+                return self.get_paginated_response({'success': True, 'data': serializer.data})
+            serializer = self.get_serializer(queryset, many=True)
+            return Response({'success': True, 'data': serializer.data}, status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.error(f"Error retrieving employment records: {e}")
+            return Response(
+                {'success': False, 'message': 'Error retrieving employment records', 'errors': ['Please try again later']},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    def retrieve(self, request, *args, **kwargs):
+        try:
+            instance = self.get_object()
+            serializer = self.get_serializer(instance)
+            return Response({'success': True, 'data': serializer.data}, status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.error(f"Error retrieving employment record: {e}")
+            return Response(
+                {'success': False, 'message': 'Employment record not found', 'errors': ['The requested record does not exist']},
+                status=status.HTTP_404_NOT_FOUND
+            )
+    def update(self, request, *args, **kwargs):
+        try:
+            with transaction.atomic():
+                partial = kwargs.pop('partial', False)
+                instance = self.get_object()
+                serializer = self.get_serializer(instance, data=request.data, partial=partial)
+                serializer.is_valid(raise_exception=True)
+                self.perform_update(serializer)
+                return Response(
+                    {'success': True, 'message': 'Employment record updated successfully', 'data': serializer.data},
+                    status=status.HTTP_200_OK
+                )
+        except serializers.ValidationError as e:
+            logger.error(f"Validation error updating employment: {e}")
+            return Response(
+                {'success': False, 'message': 'Validation error', 'errors': e.detail},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except IntegrityError as e:
+            logger.error(f"Database integrity error: {e}")
+            return Response(
+                {'success': False, 'message': 'Database error occurred', 'errors': ['Integrity error']},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            logger.error(f"Unexpected error updating employment: {e}")
+            return Response(
+                {'success': False, 'message': 'An unexpected error occurred', 'errors': ['Please try again later']},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    def destroy(self, request, *args, **kwargs):
+        try:
+            with transaction.atomic():
+                instance = self.get_object()
+                self.perform_destroy(instance)
+                return Response(
+                    {'success': True, 'message': 'Employment record deleted successfully'},
+                    status=status.HTTP_204_NO_CONTENT
+                )
+        except Exception as e:
+            logger.error(f"Error deleting employment record: {e}")
+            return Response(
+                {'success': False, 'message': 'Error deleting employment record', 'errors': ['Please try again later']},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+#CRUD for Further Education
+class FurtherEducationViewSet(viewsets.ModelViewSet):
+    queryset = FurtherEducation.objects.select_related('alumn').all()
+    serializer_class = FurtherEducationSerializer
+
+    def create(self, request, *args, **kwargs):
+        try:
+            with transaction.atomic():
+                serializer = self.get_serializer(data=request.data)
+                serializer.is_valid(raise_exception=True)
+                self.perform_create(serializer)
+                return Response(
+                    {
+                        'success': True,
+                        'message': 'Further education record created successfully',
+                        'data': serializer.data
+                    },
+                    status=status.HTTP_201_CREATED
+                )
+        except serializers.ValidationError as e:
+            logger.error(f"Validation error creating further education: {e}")
+            return Response(
+                {'success': False, 'message': 'Validation error', 'errors': e.detail},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except IntegrityError as e:
+            logger.error(f"Database integrity error: {e}")
+            return Response(
+                {'success': False, 'message': 'Database error occurred', 'errors': ['Integrity error']},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            logger.error(f"Unexpected error creating further education: {e}")
+            return Response(
+                {'success': False, 'message': 'An unexpected error occurred', 'errors': ['Please try again later']},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def list(self, request, *args, **kwargs):
+        try:
+            queryset = self.filter_queryset(self.get_queryset())
+            page = self.paginate_queryset(queryset)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+                return self.get_paginated_response({'success': True, 'data': serializer.data})
+            serializer = self.get_serializer(queryset, many=True)
+            return Response({'success': True, 'data': serializer.data}, status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.error(f"Error retrieving further education records: {e}")
+            return Response(
+                {'success': False, 'message': 'Error retrieving further education records', 'errors': ['Please try again later']},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def retrieve(self, request, *args, **kwargs):
+        try:
+            instance = self.get_object()
+            serializer = self.get_serializer(instance)
+            return Response({'success': True, 'data': serializer.data}, status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.error(f"Error retrieving further education record: {e}")
+            return Response(
+                {'success': False, 'message': 'Further education record not found', 'errors': ['The requested record does not exist']},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    def update(self, request, *args, **kwargs):
+        try:
+            with transaction.atomic():
+                partial = kwargs.pop('partial', False)
+                instance = self.get_object()
+                serializer = self.get_serializer(instance, data=request.data, partial=partial)
+                serializer.is_valid(raise_exception=True)
+                self.perform_update(serializer)
+                return Response(
+                    {'success': True, 'message': 'Further education record updated successfully', 'data': serializer.data},
+                    status=status.HTTP_200_OK
+                )
+        except serializers.ValidationError as e:
+            logger.error(f"Validation error updating further education: {e}")
+            return Response(
+                {'success': False, 'message': 'Validation error', 'errors': e.detail},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except IntegrityError as e:
+            logger.error(f"Database integrity error: {e}")
+            return Response(
+                {'success': False, 'message': 'Database error occurred', 'errors': ['Integrity error']},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            logger.error(f"Unexpected error updating further education: {e}")
+            return Response(
+                {'success': False, 'message': 'An unexpected error occurred', 'errors': ['Please try again later']},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def destroy(self, request, *args, **kwargs):
+        try:
+            with transaction.atomic():
+                instance = self.get_object()
+                self.perform_destroy(instance)
+                return Response(
+                    {'success': True, 'message': 'Further education record deleted successfully'},
+                    status=status.HTTP_204_NO_CONTENT
+                )
+        except Exception as e:
+            logger.error(f"Error deleting further education record: {e}")
+            return Response(
+                {'success': False, 'message': 'Error deleting further education record', 'errors': ['Please try again later']},
+                status=status.HTTP_400_BAD_REQUEST
+            )

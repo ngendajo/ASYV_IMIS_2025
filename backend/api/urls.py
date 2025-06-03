@@ -14,7 +14,9 @@ router.register(r'leaps', views.LeapViewSet) #Leap CRUD
 router.register(r'subjects', views.SubjectViewSet, basename='subject')#Subject crud
 router.register(r'combinations', views.CombinationViewSet) #combination crud
 router.register(r'kids', views.KidViewSet) #Kid crud
-router.register(r'kid-academics', views.KidAcademicsViewSet)
+router.register(r'kid-academics', views.KidAcademicsViewSet) #KidAcademics crud
+router.register(r'employments', views.EmploymentViewSet, basename='employment') #Employment crud
+router.register(r'further-education', views.FurtherEducationViewSet, basename='furthereducation') #Further Education crud
 
 
 urlpatterns = [
