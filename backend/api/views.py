@@ -2073,7 +2073,7 @@ class EmploymentExcelUploadView(APIView):
                 )
             
             valid_employments = []
-            employment_leaps_map = {} # key: Employment instance, value: list of Leap instances
+            employment_leaps_data = []  # list of tuples (index, list_of_leap_objs)
             errors = []
             
             # Bulk fetch alumn by username
@@ -2179,7 +2179,7 @@ class EmploymentExcelUploadView(APIView):
                     
                     valid_employments.append(employment_data)
                     valid_leap_objs = existing_leaps_qs.filter(ep__in=valid_eps_for_kid)
-                    employment_leaps_map[employment_data] = list(valid_leap_objs)
+                    employment_leaps_data.append((len(valid_employments) - 1, list(valid_leap_objs)))  # save index and leap objs
                     
                 except Exception as e:
                     errors.append(f"Row {index + 2}: {str(e)}")
@@ -2192,10 +2192,10 @@ class EmploymentExcelUploadView(APIView):
             
             try:
                 with transaction.atomic():
-                    Employment.objects.bulk_create(valid_employments)
-                    for employment, leaps in employment_leaps_map.items():
-                        employment.contributing_leaps.set(leaps) #mapping leaps to employment
-
+                    created_employments = Employment.objects.bulk_create(valid_employments)
+                    for idx, leaps in employment_leaps_data:
+                        created_employments[idx].contributing_leaps.set(leaps)
+                
                 return Response({
                     'message': f'Successfully created {len(valid_employments)} employment records',
                 }, status=status.HTTP_200_OK)
@@ -2674,3 +2674,50 @@ class CollegeViewSet(viewsets.ModelViewSet):
         except Exception as e:
             logger.error(f"Error deleting college: {e}")
             return Response({'success': False, 'message': 'Error deleting college'}, status=status.HTTP_400_BAD_REQUEST)
+
+#Alumni outcomes view 
+@api_view(['GET'])
+def alumni_outcome_percentages(request):
+    gender = request.query_params.get('gender')
+    combination_abbreviation = request.query_params.get('combination') 
+    graduation_year = request.query_params.get('year')
+
+    alumni = Kid.objects.filter(graduation_status='graduated')
+    if gender:
+        alumni = alumni.filter(user__gender=gender)
+    if combination_abbreviation:
+        alumni = alumni.filter(
+            kidacademics__combination__abbreviation=combination_abbreviation,
+            kidacademics__level='S6'  # also filter level if needed
+        ).distinct()
+    if graduation_year: 
+        alumni = alumni.filter(family__grade__graduation_year_to_asyv=graduation_year)
+
+    # IDs of alumni in employment and further education
+    employed_ids = set(
+        Employment.objects.filter(alumn__in=alumni).values_list('alumn_id', flat=True)
+    )
+    furthered_ids = set(
+        FurtherEducation.objects.filter(alumn__in=alumni).values_list('alumn_id', flat=True)
+    )
+    
+    total_alumni = alumni.count()
+
+    # Calculate categories
+    employed_no_further = len([a for a in employed_ids if a not in furthered_ids])
+    further_no_employ = len([a for a in furthered_ids if a not in employed_ids])
+    both_employ_further = len(employed_ids.intersection(furthered_ids))
+    neither = total_alumni - (employed_no_further + further_no_employ + both_employ_further)
+
+    def percent(n):
+        return round(n / total_alumni * 100, 2) if total_alumni > 0 else 0
+
+    data = {
+        'total_alumni': total_alumni,
+        'employed_without_further_education_pct': percent(employed_no_further),
+        'further_education_without_employment_pct': percent(further_no_employ),
+        'both_employed_and_further_education_pct': percent(both_employ_further),
+        'neither_employed_nor_further_education_pct': percent(neither),
+    }
+
+    return Response({'success': True, 'data': data})
