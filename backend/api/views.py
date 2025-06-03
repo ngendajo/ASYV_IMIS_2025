@@ -2091,6 +2091,7 @@ class EmploymentExcelUploadView(APIView):
                 user.reg_number: user
                 for user in User.objects.filter(reg_number__in=all_reg_numbers)
             }
+            print("dictionary of reg_number to users", users_by_reg_number)
             #get list of valid status options 
             valid_statuses = {choice[0] for choice in Employment.EMPLOYMENT_CHOICES}
            
@@ -2111,8 +2112,9 @@ class EmploymentExcelUploadView(APIView):
                 try:
                     #check alumn is a user 
                     alumn_reg = row['alumn_reg']
+                    print('alumn_reg is', alumn_reg)
                     if alumn_reg not in users_by_reg_number:
-                        raise ValueError(f"User (alumn) with username '{alumn_reg}' does not exist")
+                        raise ValueError(f"User (alumn) with reg_number '{alumn_reg}' does not exist")
                     alumn_user = users_by_reg_number[alumn_reg] #get alumn user object with reg number key
 
                     # Get Kid linked to User
