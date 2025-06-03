@@ -106,13 +106,13 @@ class User(AbstractBaseUser, PermissionsMixin):
     def save(self, *args, **kwargs):
         self.clean()  # Validate before saving
         super().save(*args, **kwargs)
-
-    def __str__(self):
-        return self.username
-
+    
     def get_full_name(self):
         return f"{self.first_name} {self.middle_name or ''} {self.rwandan_name}".strip()
 
+    def __str__(self):
+        return f"{self.get_full_name()}"
+    
     def get_short_name(self):
         return self.first_name
     
@@ -126,7 +126,7 @@ class Grade(models.Model): #each graduation class
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.grade_name
+        return f"{self.grade_name} , Class of {self.graduation_year_to_asyv}"
 
     class Meta:
         ordering = ['-created_at']
