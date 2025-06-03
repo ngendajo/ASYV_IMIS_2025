@@ -2066,9 +2066,14 @@ class EmploymentExcelUploadView(APIView):
                 'start_date', 'end_date'] # registration number passed in as identifier for user
                 #Do we need recorded_by, is_approved, approved_at just for passing in excel?
             
-            if not all(column in df.columns for column in required_columns):
+            # Normalize: remove spaces and lowercase for comparison
+            normalized_required = {col.strip().lower().replace(" ", "") for col in required_columns}
+            normalized_uploaded = {col.strip().lower().replace(" ", "") for col in df.columns}
+
+            if not normalized_required.issubset(normalized_uploaded):
+                missing = normalized_required - normalized_uploaded
                 return Response(
-                    {'error': f'Excel file must contain these columns: {", ".join(required_columns)}'},
+                    {'error': f'Excel file is missing required columns: {", ".join(missing)}'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
