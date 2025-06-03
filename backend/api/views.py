@@ -2088,13 +2088,13 @@ class EmploymentExcelUploadView(APIView):
             #creates dictionary for reg_number : user object 
             all_reg_numbers = set(alumn_reg_numbers) | set(recorder_reg_numbers)
             users_by_reg_number = {
-                user.reg_number: user
+                user.reg_number.strip(): user
                 for user in User.objects.filter(reg_number__in=all_reg_numbers)
             }
-            print("dictionary of reg_number to users", users_by_reg_number)
+            #print("dictionary of reg_number to users", users_by_reg_number)
             #get list of valid status options 
             valid_statuses = {choice[0] for choice in Employment.EMPLOYMENT_CHOICES}
-           
+            print("valid status = ", valid_statuses)
             #clean any boolean values into True/False 
             def parse_bool(val):
                 if pd.isna(val):
@@ -2109,10 +2109,11 @@ class EmploymentExcelUploadView(APIView):
             
             #check inputted data 
             for index, row in df.iterrows():
+                #print("Row", row.get("status"))
                 try:
                     #check alumn is a user 
-                    alumn_reg = row['alumn_reg']
-                    print('alumn_reg is', alumn_reg)
+                    alumn_reg = str(row['alumn_reg']).strip()
+                    #print('alumn_reg is', alumn_reg)
                     if alumn_reg not in users_by_reg_number:
                         raise ValueError(f"User (alumn) with reg_number '{alumn_reg}' does not exist")
                     alumn_user = users_by_reg_number[alumn_reg] #get alumn user object with reg number key
@@ -2129,8 +2130,11 @@ class EmploymentExcelUploadView(APIView):
                     
                     # Validate Leap names (contributing_leaps column expected as comma-separated ep names)
                     # Validate with KidLeaps that the kid has taken those leaps 
-                    ep_raw = str(row.get('contributing_leaps', '')).strip()
-                    leap_names = [x.strip() for x in ep_raw.split(',') if x.strip()] #leap names provided in data
+                    ep_raw = row.get('contributing_leaps', '')
+                    if pd.isna(ep_raw):
+                        leap_names = []
+                    else:
+                        leap_names = [x.strip() for x in ep_raw.split(',') if x.strip()] #leap names provided in data
                     existing_leaps_qs = Leap.objects.filter(ep__in=leap_names) #queryset of all leap objects that matches from data inputted
                     existing_leaps = set(existing_leaps_qs.values_list('ep', flat=True)) #set of existing eps 
                     missing_leaps = set(leap_names) - existing_leaps #eps not in leap model 
@@ -2140,15 +2144,27 @@ class EmploymentExcelUploadView(APIView):
                             status=status.HTTP_400_BAD_REQUEST
                         )
                     
-                    kid_leaps = KidLeap.objects.filter(kid=alumn_kid, leap__ep__in=leap_names)
-                    valid_eps_for_kid = set(kid_leaps.values_list('leap_id', flat=True)) #list of leaps for kid
-
-                    invalid_leaps = [leap.ep for leap in existing_leaps if leap.id not in valid_eps_for_kid]
-                    if invalid_leaps:
-                        raise ValueError(f" Kid {alumn_reg} has not participated in these LEAPs: {', '.join(invalid_leaps)}")
+                    #kid_leaps = KidLeap.objects.filter(kid=alumn_kid, leap__ep__in=leap_names)
+                    if len(leap_names) > 0:
+                        #print("entered leaps for ", alumn_reg , leap_names)
+                        kid_leaps = KidLeap.objects.filter(kid=alumn_kid) 
                     
+                        # for kl in kid_leaps: 
+                        #     print("for kid", alumn_kid, alumn_reg, "leap is", kl.leap.ep)
+                        #print("kidleap objects", kid_leaps)
+                        valid_eps_for_kid = set(kid_leaps.values_list('leap_id', flat=True)) #list of leaps for kid
+                        #print("valid leaps for kid", alumn_kid, ", ", valid_eps_for_kid)
+                        invalid_leaps = [leap.ep for leap in existing_leaps_qs if leap.id not in valid_eps_for_kid]
+                        if invalid_leaps:
+                            raise ValueError(f" Kid {alumn_reg} has not participated in these LEAPs: {', '.join(invalid_leaps)}")
+                        valid_leap_objs = existing_leaps_qs.filter(ep__in=valid_eps_for_kid)
+                        
+                    else:
+                        valid_leap_objs = []
                     # Validate employment status
-                    status_val = row['status']
+                    #print(row.get('status'))
+                    status_val = str(row.get('status')).strip()
+                    #print("status", status_val)
                     if status_val not in valid_statuses:
                         raise ValueError(f"Status '{status_val}' is invalid. Valid choices: {valid_statuses}")
                     
@@ -2185,7 +2201,7 @@ class EmploymentExcelUploadView(APIView):
                     )
                     
                     valid_employments.append(employment_data)
-                    valid_leap_objs = existing_leaps_qs.filter(ep__in=valid_eps_for_kid)
+                    
                     employment_leaps_data.append((len(valid_employments) - 1, list(valid_leap_objs)))  # save index and leap objs
                     
                 except Exception as e:
@@ -2217,7 +2233,7 @@ class EmploymentExcelUploadView(APIView):
                 'error': f'Error processing file: {str(e)}'
             }, status=status.HTTP_400_BAD_REQUEST)
         
-class CollegeExcelUploadView(APIView): 
+class CollegeExcelUploadView(APIView):
     def post(self, request): 
         if 'file' not in request.FILES:
             return Response({'error': 'No file uploaded'}, status=status.HTTP_400_BAD_REQUEST)
