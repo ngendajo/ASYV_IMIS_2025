@@ -25,6 +25,7 @@ from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from .filters import *
+from .utils import *
 import logging
 
 logger = logging.getLogger(__name__)
@@ -2246,18 +2247,23 @@ class CollegeExcelUploadView(APIView):
             df = pd.read_excel(excel_file)
             required_columns = ['college_name', 'country', 'city']
 
-            if not all(column in df.columns for column in required_columns):
+            # Normalize: remove spaces and lowercase for comparison
+            normalized_required = {col.strip().lower().replace(" ", "") for col in required_columns}
+            normalized_uploaded = {col.strip().lower().replace(" ", "") for col in df.columns}
+
+            if not normalized_required.issubset(normalized_uploaded):
+                missing = normalized_required - normalized_uploaded
                 return Response(
-                    {'error': f'Excel file must contain these columns: {", ".join(required_columns)}'},
+                    {'error': f'Excel file is missing required columns: {", ".join(missing)}'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
             valid_colleges = []
             for _, row in df.iterrows():
                 college = College(
-                    college_name=row['college_name'],
-                    country=row['country'],
-                    city=row['city']
+                    college_name= str(row['college_name']).strip(),
+                    country=str(row['country']).strip(),
+                    city=str(row['city']).strip()
                 )
                 valid_colleges.append(college)
 
@@ -2285,9 +2291,14 @@ class FurtherEducationExcelUploadView(APIView):
                 'application_result', 'waitlisted', 'enrolled', 'scholarship',
                 'scholarship_details', 'status', 'crc_support']
             
-            if not all(column in df.columns for column in required_columns):
+            # Normalize: remove spaces and lowercase for comparison
+            normalized_required = {col.strip().lower().replace(" ", "") for col in required_columns}
+            normalized_uploaded = {col.strip().lower().replace(" ", "") for col in df.columns}
+
+            if not normalized_required.issubset(normalized_uploaded):
+                missing = normalized_required - normalized_uploaded
                 return Response(
-                    {'error': f'Excel file must contain these columns: {", ".join(required_columns)}'},
+                    {'error': f'Excel file is missing required columns: {", ".join(missing)}'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
@@ -2324,7 +2335,7 @@ class FurtherEducationExcelUploadView(APIView):
             for index, row in df.iterrows():
                 try:
                     #check alumn is a user 
-                    alumn_reg = row['alumn']
+                    alumn_reg = str(row['alumn_reg']).strip()
                     if alumn_reg not in users_by_reg_number:
                         raise ValueError(f"User (alumn) with reg number '{alumn_reg}' does not exist")
                     alumn_user = users_by_reg_number[alumn_reg]
@@ -2340,29 +2351,29 @@ class FurtherEducationExcelUploadView(APIView):
                         raise ValueError(f"User '{alumn_reg}' is not graduated and cannot be an alumn")
                     
                     #check if college exists 
-                    college_name = row['college_name']
+                    college_name = str(row['college_name']).strip()
                     try: 
                         college_obj = College.objects.get(college_name=college_name)
                     except College.DoesNotExist: 
                         raise ValueError(f"No College record found for college ' {college_name}'")
 
                     #validate level 
-                    level_val = row['level'] 
+                    level_val = str(row['level']).strip() 
                     if level_val not in valid_level: 
                         raise ValueError(f"Level ' {level_val}' is invalid, Valid choices: {valid_level}") 
                     
                     #validate application result 
-                    application_result_val = row['application_result'] 
+                    application_result_val = str(row['application_result']).strip()
                     if application_result_val not in valid_application_result: 
                         raise ValueError(f"Application Result ' {application_result_val}' is invalid, Valid choices: {valid_application_result}") 
                     
                     #validate scholarship 
-                    scholarship_val = row['scholarship'] 
+                    scholarship_val = str(row['scholarship']).strip()
                     if scholarship_val not in valid_scholarship: 
                         raise ValueError(f"Scholarship ' {scholarship_val}' is invalid, Valid choices: {valid_scholarship}") 
                     
                     #validate status
-                    status_val = row['status']
+                    status_val = str(row['status']).strip()
                     if status_val not in valid_status: 
                         raise ValueError(f"Status ' {status_val}' is invalid, Valid choices: {valid_status}") 
                     
@@ -2743,3 +2754,22 @@ def alumni_outcome_percentages(request):
     }
 
     return Response({'success': True, 'data': data})
+
+#Map Visualization Alumni Outcomes Further Education 
+class AlumniCountryMap(APIView): 
+    def get(self, request):
+        in_further_education = FurtherEducation.objects.filter(enrolled=True) 
+        country_counts = in_further_education.values('college__country').annotate(count=Count('id'))
+
+        result = []
+        for row in country_counts:
+            country = row['college__country']
+            coords = COUNTRY_COORDS.get(country)
+            if coords:
+                result.append({
+                    "country": country,
+                    "count": row["count"],
+                    "lat": coords["lat"],
+                    "lng": coords["lng"],
+                })
+        return Response(result)
