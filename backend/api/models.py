@@ -339,6 +339,7 @@ class College(models.Model):
 
 class FurtherEducation(models.Model):
     alumn = models.ForeignKey('Kid', on_delete=models.PROTECT, related_name='studiedrafts')
+    college = models.ForeignKey('College', on_delete=models.PROTECT, related_name='college')
     
     LEVEL_CHOICES = (
         ('C', 'Certificate'),
@@ -347,7 +348,7 @@ class FurtherEducation(models.Model):
         ('M', 'Masters'),
         ('PHD', 'PHD'),
     )
-    level = models.CharField(max_length=3, choices=LEVEL_CHOICES, default='NMS')#Examples:Bachelors,Masters,PHD
+    level = models.CharField(max_length=3, choices=LEVEL_CHOICES, default='C')#Examples:Bachelors,Masters,PHD
     degree = models.CharField(max_length=2500)
     APPLICATION_RESULT_CHOICES = (
         ('A', 'Accepted'),

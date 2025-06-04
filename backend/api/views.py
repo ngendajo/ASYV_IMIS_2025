@@ -2256,9 +2256,9 @@ class CollegeExcelUploadView(APIView):
             valid_colleges = []
             for _, row in df.iterrows():
                 college = College(
-                    college_name=row['college_name'],
-                    country=row['country'],
-                    city=row['city']
+                    college_name=str(row['college_name']).strip(),
+                    country=str(row['country']).strip(),
+                    city=str(row['city']).strip()
                 )
                 valid_colleges.append(college)
 
@@ -2325,7 +2325,7 @@ class FurtherEducationExcelUploadView(APIView):
             for index, row in df.iterrows():
                 try:
                     #check alumn is a user 
-                    alumn_reg = row['alumn']
+                    alumn_reg = str(row['alumn_reg']).strip()
                     if alumn_reg not in users_by_reg_number:
                         raise ValueError(f"User (alumn) with reg number '{alumn_reg}' does not exist")
                     alumn_user = users_by_reg_number[alumn_reg]
@@ -2341,29 +2341,29 @@ class FurtherEducationExcelUploadView(APIView):
                         raise ValueError(f"User '{alumn_reg}' is not graduated and cannot be an alumn")
                     
                     #check if college exists 
-                    college_name = row['college_name']
+                    college_name = str(row['college']).strip()
                     try: 
                         college_obj = College.objects.get(college_name=college_name)
                     except College.DoesNotExist: 
                         raise ValueError(f"No College record found for college ' {college_name}'")
 
                     #validate level 
-                    level_val = row['level'] 
+                    level_val = str(row['level']).strip()
                     if level_val not in valid_level: 
                         raise ValueError(f"Level ' {level_val}' is invalid, Valid choices: {valid_level}") 
                     
                     #validate application result 
-                    application_result_val = row['application_result'] 
+                    application_result_val = str(row['application_result']).strip()
                     if application_result_val not in valid_application_result: 
                         raise ValueError(f"Application Result ' {application_result_val}' is invalid, Valid choices: {valid_application_result}") 
                     
                     #validate scholarship 
-                    scholarship_val = row['scholarship'] 
+                    scholarship_val = str(row['scholarship']).strip() 
                     if scholarship_val not in valid_scholarship: 
                         raise ValueError(f"Scholarship ' {scholarship_val}' is invalid, Valid choices: {valid_scholarship}") 
                     
                     #validate status
-                    status_val = row['status']
+                    status_val = str(row['status']).strip()
                     if status_val not in valid_status: 
                         raise ValueError(f"Status ' {status_val}' is invalid, Valid choices: {valid_status}") 
                     
@@ -2400,8 +2400,7 @@ class FurtherEducationExcelUploadView(APIView):
             
             try: #creates the objects
                 with transaction.atomic():
-                    for further_education_data in valid_further_education:
-                        FurtherEducation.objects.bulk_create(valid_further_education)
+                    FurtherEducation.objects.bulk_create(valid_further_education)
 
                 return Response({
                     'message': f'Successfully created {len(valid_further_education)} further education records',
