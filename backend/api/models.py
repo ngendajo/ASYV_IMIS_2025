@@ -338,8 +338,9 @@ class College(models.Model):
         return self.college_name
 
 class FurtherEducation(models.Model):
-    alumn = models.ForeignKey('Kid', on_delete=models.PROTECT, related_name='studiedrafts')
-    
+    alumn = models.ForeignKey(Kid, on_delete=models.PROTECT)
+    college = models.ForeignKey(College, on_delete=models.PROTECT)
+
     LEVEL_CHOICES = (
         ('C', 'Certificate'),
         ('A1', 'Advanced diploma'),
