@@ -2410,8 +2410,7 @@ class FurtherEducationExcelUploadView(APIView):
             
             try: #creates the objects
                 with transaction.atomic():
-                    for further_education_data in valid_further_education:
-                        FurtherEducation.objects.bulk_create(valid_further_education)
+                    FurtherEducation.objects.bulk_create(valid_further_education)
 
                 return Response({
                     'message': f'Successfully created {len(valid_further_education)} further education records',
