@@ -2140,8 +2140,7 @@ class EmploymentExcelUploadView(APIView):
                     missing_leaps = set(leap_names) - existing_leaps #eps not in leap model 
                     if missing_leaps:
                         return Response(
-                            {'error': f'These ep names do not exist: {missing_leaps}'},
-                            status=status.HTTP_400_BAD_REQUEST
+                            {'error': f'These ep names do not exist: {missing_leaps}'}
                         )
                     
                     #kid_leaps = KidLeap.objects.filter(kid=alumn_kid, leap__ep__in=leap_names)
