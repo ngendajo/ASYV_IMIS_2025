@@ -2906,3 +2906,22 @@ def get_student_information(request, user_id):
             }, 
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+#Map Visualization Alumni Outcomes Further Education 
+class AlumniCountryMap(APIView): 
+    def get(self, request):
+        in_further_education = FurtherEducation.objects.filter(enrolled=True) 
+        country_counts = in_further_education.values('college__country').annotate(count=Count('id'))
+
+        result = []
+        for row in country_counts:
+            country = row['college__country']
+            coords = COUNTRY_COORDS.get(country)
+            if coords:
+                result.append({
+                    "country": country,
+                    "count": row["count"],
+                    "lat": coords["lat"],
+                    "lng": coords["lng"],
+                })
+        return Response(result)
