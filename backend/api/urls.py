@@ -56,5 +56,6 @@ urlpatterns = [
     path('alumnilist/', views.AlumniListView.as_view(), name='alumini'), #It is used in new ams
     path('gender-distribution/', views.gender_distribution, name='gender_distribution'),
     path('combination-counts/', views.combination_counts, name='combination_counts'),
-    path('alumni-outcomes-percentage/', views.alumni_outcome_percentages, name='general report')
+    path('alumni-outcomes-percentage/', views.alumni_outcome_percentages, name='general report'),
+    path('kid/<int:user_id>/', views.get_student_information, name='kid-info')
 ]
