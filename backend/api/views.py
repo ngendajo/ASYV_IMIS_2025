@@ -1,5 +1,6 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
+from django.db.models import Q
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from django.contrib.auth import get_user_model
 from .serializers import *
@@ -21,6 +22,7 @@ from django.utils.translation import gettext_lazy as _
 import pandas as pd
 from django.db import transaction
 from rest_framework.decorators import action
+from django.utils import timezone
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
@@ -2754,21 +2756,153 @@ def alumni_outcome_percentages(request):
 
     return Response({'success': True, 'data': data})
 
-#Map Visualization Alumni Outcomes Further Education 
-class AlumniCountryMap(APIView): 
-    def get(self, request):
-        in_further_education = FurtherEducation.objects.filter(enrolled=True) 
-        country_counts = in_further_education.values('college__country').annotate(count=Count('id'))
-
-        result = []
-        for row in country_counts:
-            country = row['college__country']
-            coords = COUNTRY_COORDS.get(country)
-            if coords:
-                result.append({
-                    "country": country,
-                    "count": row["count"],
-                    "lat": coords["lat"],
-                    "lng": coords["lng"],
-                })
-        return Response(result)
+#get_student_information
+@api_view(['GET'])
+def get_student_information(request, user_id):
+    """
+    Extract comprehensive student information by user_id
+    """
+    try:
+        with transaction.atomic():
+            # Get the user
+            try:
+                user=User.objects.get(
+                        Q(id=user_id) & (Q(is_student=True) | Q(is_alumni=True))
+                    )
+            except User.DoesNotExist:
+                return Response(
+                    {'error': f'Student with user_id {user_id} not found'}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            # Get the kid profile
+            try:
+                kid = Kid.objects.select_related(
+                    'family__grade', 'family__mother'
+                ).get(user=user)
+            except Kid.DoesNotExist:
+                return Response(
+                    {'error': f'Kid profile not found for user_id {user_id}'}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            # Basic Information
+            basic_info = {
+                'user_id': user.id,
+                'first_name': user.first_name,
+                'rwandan_name': user.rwandan_name,
+                'middle_name': user.middle_name,
+                'gender': 'Female' if user.gender == 'F' else 'Male' if user.gender == 'M' else 'Not Specified',
+                'date_of_birth': user.dob,
+            }
+            
+            # Place of Birth
+            place_of_birth = {
+                'origin_district': kid.origin_district,
+                'origin_sector': kid.origin_sector,
+            }
+            
+            # Current Address
+            current_address = {
+                'current_district_or_city': kid.current_district_or_city,
+                'current_county': kid.current_county,
+            }
+            
+            # Affiliation (Grade and Family)
+            affiliation = {}
+            try:
+                if kid.family:
+                    affiliation = {
+                        'family_name': kid.family.family_name,
+                        'family_number': kid.family.family_number,
+                        'mother_name': kid.family.mother.get_full_name() if kid.family.mother else None,
+                        'grade_info': {
+                            'grade_name': kid.family.grade.grade_name if kid.family.grade else None,
+                            'admission_year': kid.family.grade.admission_year_to_asyv if kid.family.grade else None,
+                            'graduation_year': kid.family.grade.graduation_year_to_asyv if kid.family.grade else None,
+                        } if kid.family.grade else {}
+                    }
+                else:
+                    affiliation = {'message': 'No family affiliation found'}
+            except Exception as e:
+                logger.error(f"Error retrieving affiliation for user_id {user_id}: {str(e)}")
+                affiliation = {'error': 'Error retrieving affiliation information'}
+            
+            # Academic Combinations
+            combinations = []
+            try:
+                kid_academics = KidAcademics.objects.select_related('combination').filter(kid=kid)
+                for academic in kid_academics:
+                    combinations.append({
+                        'academic_year': academic.academic_year,
+                        'level': academic.level,
+                        'combination_name': academic.combination.combination_name,
+                        'combination_abbreviation': academic.combination.abbreviation,
+                    })
+            except Exception as e:
+                logger.error(f"Error retrieving combinations for user_id {user_id}: {str(e)}")
+                combinations = [{'error': 'Error retrieving academic combinations'}]
+            
+            # LEAP Activities
+            leap_activities = []
+            try:
+                kid_leaps = KidLeap.objects.select_related('leap').filter(kid=kid)
+                for kid_leap in kid_leaps:
+                    leap_activities.append({
+                        'leap_name': kid_leap.leap.ep,
+                        'category': kid_leap.leap.leap_category,
+                        'is_approved': kid_leap.is_approved,
+                        'approved_at': kid_leap.approved_at.isoformat() if kid_leap.approved_at else None,
+                        'recorded_by': kid_leap.recorded_by.get_full_name() if kid_leap.recorded_by else None,
+                        'created_at': kid_leap.created_at.isoformat(),
+                    })
+            except Exception as e:
+                logger.error(f"Error retrieving LEAP activities for user_id {user_id}: {str(e)}")
+                leap_activities = [{'error': 'Error retrieving LEAP activities'}]
+            
+            # National Exam Results
+            national_exam = {}
+            try:
+                national_exam = {
+                    'points_achieved': float(kid.points_in_national_exam) if kid.points_in_national_exam else None,
+                    'maximum_points': float(kid.maximum_points_in_national_exam) if kid.maximum_points_in_national_exam else None,
+                    'percentage': round((float(kid.points_in_national_exam) / float(kid.maximum_points_in_national_exam)) * 100, 2) if (kid.points_in_national_exam and kid.maximum_points_in_national_exam) else None,
+                    'mention': kid.mention,
+                }
+            except Exception as e:
+                logger.error(f"Error processing national exam results for user_id {user_id}: {str(e)}")
+                national_exam = {'error': 'Error retrieving national exam information'}
+            
+            # Personal Status
+            personal_status = {
+                'marital_status': kid.marital_status,
+                'has_children': kid.has_children,
+                'life_status': kid.life_status,
+                'graduation_status': kid.graduation_status,
+                'health_issue': kid.health_issue,
+            }
+            
+            # Compile all information
+            student_info = {
+                'basic_information': basic_info,
+                'place_of_birth': place_of_birth,
+                'current_address': current_address,
+                'affiliation': affiliation,
+                'academic_combinations': combinations,
+                'leap_activities': leap_activities,
+                'national_exam_results': national_exam,
+                'personal_status': personal_status,
+                'retrieved_at': timezone.now().isoformat(),
+            }
+            
+            return Response(student_info, status=status.HTTP_200_OK)
+            
+    except Exception as e:
+        logger.error(f"Unexpected error retrieving student information for user_id {user_id}: {str(e)}")
+        return Response(
+            {
+                'error': 'An unexpected error occurred while retrieving student information',
+                'details': str(e)
+            }, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
