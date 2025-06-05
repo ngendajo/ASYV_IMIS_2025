@@ -2143,7 +2143,8 @@ class EmploymentExcelUploadView(APIView):
                     missing_leaps = set(leap_names) - existing_leaps #eps not in leap model 
                     if missing_leaps:
                         return Response(
-                            {'error': f'These ep names do not exist: {missing_leaps}'}
+                            {'error': f'These ep names do not exist: {missing_leaps}'},
+                            status=status.HTTP_400_BAD_REQUEST
                         )
                     
                     #kid_leaps = KidLeap.objects.filter(kid=alumn_kid, leap__ep__in=leap_names)
@@ -2925,3 +2926,42 @@ class AlumniCountryMap(APIView):
                     "lng": coords["lng"],
                 })
         return Response(result)
+
+#alumni-employment in profile 
+class AlumniEmploymentView(APIView):
+    #permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user_id = request.query_params.get('id')
+        if not user_id:
+            return Response({'error': 'Missing user ID'}, status=400)
+
+        try:
+            # Get the graduated Kid linked to this User
+            print(user_id)
+            kid = Kid.objects.get(user__id=user_id, graduation_status = "graduated")
+        except Kid.DoesNotExist:
+            return Response({'error': 'Graduated Kid not found for this user'}, status=404)
+
+        employments = Employment.objects.filter(alumn=kid)
+        serializer = EmploymentSerializer(employments, many=True)
+        return Response(serializer.data)
+    
+class AlumniAcademicView(APIView):
+    #permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user_id = request.query_params.get('id')
+        if not user_id:
+            return Response({'error': 'Missing user ID'}, status=400)
+
+        try:
+            # Get the graduated Kid linked to this User
+            print(user_id)
+            kid = Kid.objects.get(user__id=user_id, graduation_status = "graduated")
+        except Kid.DoesNotExist:
+            return Response({'error': 'No graduated kid found for this user'}, status=404)
+
+        academics = FurtherEducation.objects.filter(alumn=kid, enrolled=True)
+        serializer = FurtherEducationSerializer(academics, many=True)
+        return Response(serializer.data)

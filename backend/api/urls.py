@@ -59,5 +59,9 @@ urlpatterns = [
     path('alumni-outcomes-percentage/', views.alumni_outcome_percentages, name='general report'),
     path('kid/<int:user_id>/', views.get_student_information, name='kid-info')
     path('alumni-outcomes-percentage/', views.alumni_outcome_percentages, name='general report'), 
-    path('alumni-country-map/', views.AlumniCountryMap.as_view(), name="alumni-country-map")
+    path('alumni-country-map/', views.AlumniCountryMap.as_view(), name="alumni-country-map"), 
+    
+    #profile 
+    path('alumni-employment/', views.AlumniEmploymentView.as_view(), name='alumni-employment'),
+    path('alumni-academic/', views.AlumniAcademicView.as_view(), name='alumni-academic')
 ]

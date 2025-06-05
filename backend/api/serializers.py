@@ -146,7 +146,7 @@ class LeapSerializer(serializers.ModelSerializer):
         model = Leap
         fields = ['id', 'ep', 'leap_category', 'created_at', 'updated_at']
         
-#kid crud
+#subject crud
 class SubjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subject
@@ -241,30 +241,29 @@ class CollegeSerializer(serializers.ModelSerializer):
 
 class EmploymentSerializer(serializers.ModelSerializer):
     # By default, ManyToManyField uses PrimaryKeyRelatedField with many=True
-    contributing_leaps = serializers.PrimaryKeyRelatedField(
-        queryset=Leap.objects.all(),  # validate IDs against all leaps
-        many=True,
-        required=False,
-        allow_empty=True
-    )
+    # contributing_leaps = serializers.PrimaryKeyRelatedField(
+    #     queryset=Leap.objects.all(),  # validate IDs against all leaps
+    #     many=True,
+    #     required=False,
+    #     allow_empty=True
+    # )
     
     class Meta:
         model = Employment
-        fields = [
-            'id', 'title', 'alumn', 'status', 'industry', 'description', 'company',
-            'on_going', 'crc_support', 'recorded_by', 'is_approved', 'approved_at',
-            'contributing_leaps', 'start_date', 'end_date',
+        fields = ['title', 'description', 'industry', 'company', 'start_date', 'end_date'
         ]
 
 class FurtherEducationSerializer(serializers.ModelSerializer): 
-    college = CollegeSerializer(read_only=True)  # nested display
-    
-    college_id = serializers.PrimaryKeyRelatedField(
-        queryset=College.objects.all(), source='college', write_only=True
-    )
+    college = serializers.CharField(source='college.college_name')
+    location = serializers.SerializerMethodField()
+    level = serializers.CharField(source='get_level_display')
+    scholarship = serializers.CharField(source='get_scholarship_display')
+    status = serializers.CharField(source='get_status_display')
+
     
     class Meta:
         model = FurtherEducation
-        fields = ['id', 'alumn', 'level', 'degree', 'application_result', 'waitlisted', 
-                  'enrolled', 'scholarship', 'scholarship_details', 'status', 'crc_support', 
-                  'college', 'college_id']
+        fields = ['level', 'degree', 'college', 'location', 'scholarship', 'status']
+
+    def get_location(self, obj):
+        return f"{obj.college.city}, {obj.college.country}"
