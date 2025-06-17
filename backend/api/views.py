@@ -2331,7 +2331,9 @@ class CollegeExcelUploadView(APIView):
             valid_colleges = []
             for _, row in df.iterrows():
                 college = College(
+
                     college_name= str(row['college_name']).strip(),
+
                     country=str(row['country']).strip(),
                     city=str(row['city']).strip()
                 )
@@ -2421,14 +2423,18 @@ class FurtherEducationExcelUploadView(APIView):
                         raise ValueError(f"User '{alumn_reg}' is not graduated and cannot be an alumn")
                     
                     #check if college exists 
+
                     college_name = str(row['college_name']).strip()
+
                     try: 
                         college_obj = College.objects.get(college_name=college_name)
                     except College.DoesNotExist: 
                         raise ValueError(f"No College record found for college ' {college_name}'")
 
                     #validate level 
+
                     level_val = str(row['level']).strip() 
+
                     if level_val not in valid_level: 
                         raise ValueError(f"Level ' {level_val}' is invalid, Valid choices: {valid_level}") 
                     
@@ -2438,7 +2444,9 @@ class FurtherEducationExcelUploadView(APIView):
                         raise ValueError(f"Application Result ' {application_result_val}' is invalid, Valid choices: {valid_application_result}") 
                     
                     #validate scholarship 
+
                     scholarship_val = str(row['scholarship']).strip()
+
                     if scholarship_val not in valid_scholarship: 
                         raise ValueError(f"Scholarship ' {scholarship_val}' is invalid, Valid choices: {valid_scholarship}") 
                     
@@ -2825,11 +2833,13 @@ def alumni_outcome_percentages(request):
     return Response({'success': True, 'data': data})
 
 #get_student_information
+
 @api_view(['GET', 'PUT'])
 def get_student_information(request, user_id):
     """
     GET: Extract comprehensive student information by user_id
     PUT: Update basic student profile info by user_id
+
     """
     try:
         with transaction.atomic():
@@ -2844,6 +2854,8 @@ def get_student_information(request, user_id):
                     status=status.HTTP_404_NOT_FOUND
                 )
             
+
+
             try:
                 kid = Kid.objects.select_related(
                     'family__grade', 'family__mother'
@@ -2852,6 +2864,7 @@ def get_student_information(request, user_id):
                 return Response(
                     {'error': f'Kid profile not found for user_id {user_id}'}, 
                     status=status.HTTP_404_NOT_FOUND
+
                     )
              # Get the kid profile
             if request.method == 'GET':
@@ -2978,6 +2991,7 @@ def get_student_information(request, user_id):
                         return Response({'error': 'Error updating profile', 'details': str(e)},
                                         status=status.HTTP_400_BAD_REQUEST)
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
             
     except Exception as e:
         logger.error(f"Unexpected error retrieving student information for user_id {user_id}: {str(e)}")
@@ -2987,6 +3001,7 @@ def get_student_information(request, user_id):
                 'details': str(e)
             }, 
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
+
         )
 
 #Map Visualization Alumni Outcomes Further Education 
@@ -3372,3 +3387,4 @@ class DropdownOptionsAPIView(APIView):
             ]
         }
         return Response(data)
+

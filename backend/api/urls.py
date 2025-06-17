@@ -58,6 +58,7 @@ urlpatterns = [
     path('gender-distribution/', views.gender_distribution, name='gender_distribution'),
     path('combination-counts/', views.combination_counts, name='combination_counts'),
     path('alumni-outcomes-percentage/', views.alumni_outcome_percentages, name='general report'),
+
     path('alumni-directory/', views.AlumniDirectoryView.as_view(), name='alumni directory'), 
     path('alumni-country-map/', views.AlumniCountryMap.as_view(), name="alumni-country-map"), 
     path('alumni-trends/', views.AlumniOutcomeTrends.as_view(), name="alumni-outcome-trends"),  
@@ -68,5 +69,6 @@ urlpatterns = [
     path('alumni-academic/', views.AlumniAcademicView.as_view(), name='alumni-academic'),
     #selection options
     path('options/all-dropdowns/', views.DropdownOptionsAPIView.as_view(), name='profile-dropdowns'),
+
 
 ]
