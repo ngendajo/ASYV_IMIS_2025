@@ -195,7 +195,7 @@ class Combination(models.Model):
     abbreviation = models.CharField(max_length=20)
 
     def __str__(self):
-        return self.combination_name
+        return self.combination_name + self.abbreviation
 
 class Kid(models.Model):
     GRADUATION_STATUS_CHOICES = [
@@ -205,7 +205,7 @@ class Kid(models.Model):
         ('deceased_before', 'Deceased Before Graduation')
     ]
     
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='kids')
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='kid')
     family = models.ForeignKey(Family, on_delete=models.CASCADE, related_name='kids',null=True, blank=True)
     
     # Add new managed relationship with approval system
@@ -267,6 +267,9 @@ class KidAcademics(models.Model):
     academic_year = models.IntegerField()
     level = models.CharField(max_length=10, choices=LEVEL_CHOICES)
     combination = models.ForeignKey(Combination, on_delete=models.CASCADE)
+    marks = models.FloatField(default=0)
+    report_card = models.FileField(upload_to='pdfs/', null=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True, null=True)
 
     class Meta:
         unique_together = ('kid', 'academic_year')
@@ -294,7 +297,7 @@ class NationalSubjectResult(models.Model):
         
 class Employment(models.Model):
     title = models.CharField(max_length=5000)
-    alumn = models.ForeignKey(Kid, on_delete=models.PROTECT, related_name='employ')
+    alumn = models.ForeignKey(Kid, on_delete=models.PROTECT, related_name='employment')
     
     EMPLOYMENT_CHOICES = (
         ('F', 'Full-time'),
@@ -303,7 +306,39 @@ class Employment(models.Model):
         ('I', 'Intern'),
     ) 
     status = models.CharField(max_length=2, choices=EMPLOYMENT_CHOICES)
-    industry = models.CharField(max_length=2000, default="")
+    INDUSTRY_CHOICES = [
+        ("Agriculture, Forestry, and Fishing", "Agriculture, Forestry, and Fishing"),
+        ("Art, Design, and Performance", "Art, Design, and Performance"),
+        ("Beauty and Personal Care", "Beauty and Personal Care"),
+        ("Business and Management", "Business and Management"),
+        ("Construction and Engineering", "Construction and Engineering"),
+        ("Dining and Hospitality Services", "Dining and Hospitality Services"),
+        ("Education and Training", "Education and Training"),
+        ("Energy and Utilities", "Energy and Utilities"),
+        ("Finance and Banking", "Finance and Banking"),
+        ("Government and Public Service", "Government and Public Service"),
+        ("Healthcare and Medical Services", "Healthcare and Medical Services"),
+        ("Information Technology and Software Development", "Information Technology and Software Development"),
+        ("Legal Services", "Legal Services"),
+        ("Logistics and Transportation", "Logistics and Transportation"),
+        ("Manufacturing and Production", "Manufacturing and Production"),
+        ("Marketing, Sales, and Customer Service", "Marketing, Sales, and Customer Service"),
+        ("Media and Communication", "Media and Communication"),
+        ("Real Estate and Property Management", "Real Estate and Property Management"),
+        ("Research and Development", "Research and Development"),
+        ("Security and Law Enforcement", "Security and Law Enforcement"),
+        ("Social Work and Community Services", "Social Work and Community Services"),
+        ("Sports and Recreation", "Sports and Recreation"),
+        ("Telecommunications", "Telecommunications"),
+        ("Trade and Skilled Labor", "Trade and Skilled Labor"),
+        ("Others / Not Specified", "Others / Not Specified"),
+    ]
+
+    industry = models.CharField(
+        max_length=100,
+        choices=INDUSTRY_CHOICES,
+        default="Others / Not Specified",
+    )
     description = models.CharField(max_length=2000, default="")
     company = models.CharField(max_length=2000)
     on_going = models.BooleanField(default=False)
@@ -338,9 +373,9 @@ class College(models.Model):
         return self.college_name
 
 class FurtherEducation(models.Model):
-    alumn = models.ForeignKey(Kid, on_delete=models.PROTECT)
-    college = models.ForeignKey(College, on_delete=models.PROTECT)
-
+    alumn = models.ForeignKey('Kid', on_delete=models.PROTECT, related_name='furthereducation')
+    college = models.ForeignKey('College', on_delete=models.PROTECT, related_name='college')
+    
     LEVEL_CHOICES = (
         ('C', 'Certificate'),
         ('A1', 'Advanced diploma'),

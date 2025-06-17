@@ -47,21 +47,26 @@ urlpatterns = [
     path('upload-employment/', views.EmploymentExcelUploadView.as_view(), name='upload-employment'),
     path('upload-college/', views.CollegeExcelUploadView.as_view(), name='upload-college'),
     path('upload-further-education/', views.FurtherEducationExcelUploadView.as_view(), name='upload-further-education'),
-
+    path('upload-marks/', views.MarksExcelUpload.as_view(), name='upload-marks'),
     path('', include(router.urls)),
 
     
     path('', views.getRoutes),
 
+    #visualizations
     path('alumnilist/', views.AlumniListView.as_view(), name='alumini'), #It is used in new ams
     path('gender-distribution/', views.gender_distribution, name='gender_distribution'),
     path('combination-counts/', views.combination_counts, name='combination_counts'),
     path('alumni-outcomes-percentage/', views.alumni_outcome_percentages, name='general report'),
-    path('kid/<int:user_id>/', views.get_student_information, name='kid-info')
-    path('alumni-outcomes-percentage/', views.alumni_outcome_percentages, name='general report'), 
+    path('alumni-directory/', views.AlumniDirectoryView.as_view(), name='alumni directory'), 
     path('alumni-country-map/', views.AlumniCountryMap.as_view(), name="alumni-country-map"), 
+    path('alumni-trends/', views.AlumniOutcomeTrends.as_view(), name="alumni-outcome-trends"),  
     
     #profile 
+    path('kid/<int:user_id>/', views.get_student_information, name='kid-info'),
     path('alumni-employment/', views.AlumniEmploymentView.as_view(), name='alumni-employment'),
-    path('alumni-academic/', views.AlumniAcademicView.as_view(), name='alumni-academic')
+    path('alumni-academic/', views.AlumniAcademicView.as_view(), name='alumni-academic'),
+    #selection options
+    path('options/all-dropdowns/', views.DropdownOptionsAPIView.as_view(), name='profile-dropdowns'),
+
 ]
