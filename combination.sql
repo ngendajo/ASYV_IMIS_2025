@@ -5,7 +5,7 @@
 -- Dumped from database version 15.3
 -- Dumped by pg_dump version 15.3
 
--- Started on 2025-05-28 15:13:33
+-- Started on 2025-06-17 15:57:48
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -26,8 +26,6 @@ SET default_table_access_method = heap;
 -- TOC entry 240 (class 1259 OID 52272)
 -- Name: api_combination; Type: TABLE; Schema: public; Owner: postgres
 --
-
-DROP TABLE IF EXISTS public.api_combination CASCADE;
 
 CREATE TABLE public.api_combination (
     id bigint NOT NULL,
@@ -70,6 +68,25 @@ COPY public.api_combination (id, combination_name, abbreviation) FROM stdin;
 3	History, Economics and Geography	HEG
 4	History, Economics and Literature in English	HEL
 5	Literature in English, French and Kinyarwanda	LFK
+12	A	A
+13	B	B
+14	BLUE	BLUE
+15	BROWN	BROWN
+16	C	C
+17	CLASSA	CLASSA
+18	CLASSB	CLASSB
+19	CLASSC	CLASSC
+20	CLASSD	CLASSD
+21	CLASSE	CLASSE
+22	D	D
+23	FRANKFURT	FRANKFURT
+24	GREEN	GREEN
+25	LASVEGAS	LASVEGAS
+26	NEW YORK	NEW YORK
+27	ORANGE	ORANGE
+28	WAKANDA	WAKANDA
+29	WASHINGTON	WASHINGTON
+30	YELLOW	YELLOW
 \.
 
 
@@ -79,7 +96,7 @@ COPY public.api_combination (id, combination_name, abbreviation) FROM stdin;
 -- Name: api_combination_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.api_combination_id_seq', 11, true);
+SELECT pg_catalog.setval('public.api_combination_id_seq', 30, true);
 
 
 --
@@ -91,7 +108,7 @@ ALTER TABLE ONLY public.api_combination
     ADD CONSTRAINT api_combination_pkey PRIMARY KEY (id);
 
 
--- Completed on 2025-05-28 15:13:33
+-- Completed on 2025-06-17 15:57:49
 
 --
 -- PostgreSQL database dump complete
