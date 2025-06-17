@@ -27,7 +27,10 @@ from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from .filters import *
+from .utils import *
 import logging
+
+from django.core.paginator import Paginator
 
 logger = logging.getLogger(__name__)
 from .models import *
@@ -2003,6 +2006,70 @@ class KidAcademicsImportView(APIView):
                 'S6_2026': 'Creates S4(2024), S5(2025), S6(2026)'
             }
         })
+    
+#Upload Marks -> Updates KidAcademics Table 
+class MarksExcelUpload(APIView): 
+    def post(self, request):
+        if 'file' not in request.FILES:
+            return Response({'error': 'No file uploaded'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        excel_file = request.FILES['file']
+        
+        if not excel_file.name.endswith('.xlsx'):
+            return Response({'error': 'Please upload an Excel file'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            df = pd.read_excel(excel_file)
+            required_columns = ['reg_number', 'S6', 'S5', 'S4', 'EY'] 
+            # Normalize: remove spaces and lowercase for comparison
+            normalized_required = {col.strip().lower().replace(" ", "") for col in required_columns}
+            normalized_uploaded = {col.strip().lower().replace(" ", "") for col in df.columns}
+
+            if not normalized_required.issubset(normalized_uploaded):
+                missing = normalized_required - normalized_uploaded
+                return Response(
+                    {'error': f'Excel file is missing required columns: {", ".join(missing)}'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            success_count = 0
+            not_found = []
+            with transaction.atomic():
+                for _, row in df.iterrows():
+                    reg_number = str(row['reg_number']).strip()
+
+                    try:
+                        kid = Kid.objects.get(user__reg_number=reg_number)
+                    except Kid.DoesNotExist:
+                        not_found.append(f"Kid with Reg_number '{reg_number}' not found.")
+                        continue
+                
+                    for level in ['S6', 'S5', 'S4', 'EY']:
+                        marks = row.get(level)
+                        if pd.isna(marks):
+                            continue  # Skip if no marks
+
+                        # Try to find an existing KidAcademics record
+                        try:
+                            academic = KidAcademics.objects.get(kid=kid, level=level)
+                            academic.marks = marks
+                            academic.save()
+                            success_count += 1
+                        except KidAcademics.DoesNotExist:
+                           not_found.append(f"KidAcademics not found for {reg_number} - {level}")
+        
+        except Exception as e:
+            return Response({
+                'error': f'Error processing file: {str(e)}'
+            }, status=status.HTTP_400_BAD_REQUEST)
+            
+        return Response({   
+            'message': f'Update complete. Updated: {success_count}, Missing: {len(not_found)}',
+            'not_found': not_found
+        })
+    
+    
+
+
         
 #view alumni list
 class AlumniListView(APIView):
@@ -2013,8 +2080,9 @@ class AlumniListView(APIView):
             'user', 'family'
         )
 
-        serializer = AlumniListsSerializer(queryset, many=True)
+        serializer = AlumniListSerializer(queryset, many=True)
         return Response(serializer.data)
+        
 
 #alumni gender distribution
 @api_view(['GET'])
@@ -2249,16 +2317,23 @@ class CollegeExcelUploadView(APIView):
             df = pd.read_excel(excel_file)
             required_columns = ['college_name', 'country', 'city']
 
-            if not all(column in df.columns for column in required_columns):
+            # Normalize: remove spaces and lowercase for comparison
+            normalized_required = {col.strip().lower().replace(" ", "") for col in required_columns}
+            normalized_uploaded = {col.strip().lower().replace(" ", "") for col in df.columns}
+
+            if not normalized_required.issubset(normalized_uploaded):
+                missing = normalized_required - normalized_uploaded
                 return Response(
-                    {'error': f'Excel file must contain these columns: {", ".join(required_columns)}'},
+                    {'error': f'Excel file is missing required columns: {", ".join(missing)}'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
             valid_colleges = []
             for _, row in df.iterrows():
                 college = College(
-                    college_name=str(row['college_name']).strip(),
+
+                    college_name= str(row['college_name']).strip(),
+
                     country=str(row['country']).strip(),
                     city=str(row['city']).strip()
                 )
@@ -2288,9 +2363,14 @@ class FurtherEducationExcelUploadView(APIView):
                 'application_result', 'waitlisted', 'enrolled', 'scholarship',
                 'scholarship_details', 'status', 'crc_support']
             
-            if not all(column in df.columns for column in required_columns):
+            # Normalize: remove spaces and lowercase for comparison
+            normalized_required = {col.strip().lower().replace(" ", "") for col in required_columns}
+            normalized_uploaded = {col.strip().lower().replace(" ", "") for col in df.columns}
+
+            if not normalized_required.issubset(normalized_uploaded):
+                missing = normalized_required - normalized_uploaded
                 return Response(
-                    {'error': f'Excel file must contain these columns: {", ".join(required_columns)}'},
+                    {'error': f'Excel file is missing required columns: {", ".join(missing)}'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
@@ -2343,14 +2423,18 @@ class FurtherEducationExcelUploadView(APIView):
                         raise ValueError(f"User '{alumn_reg}' is not graduated and cannot be an alumn")
                     
                     #check if college exists 
-                    college_name = str(row['college']).strip()
+
+                    college_name = str(row['college_name']).strip()
+
                     try: 
                         college_obj = College.objects.get(college_name=college_name)
                     except College.DoesNotExist: 
                         raise ValueError(f"No College record found for college ' {college_name}'")
 
                     #validate level 
-                    level_val = str(row['level']).strip()
+
+                    level_val = str(row['level']).strip() 
+
                     if level_val not in valid_level: 
                         raise ValueError(f"Level ' {level_val}' is invalid, Valid choices: {valid_level}") 
                     
@@ -2360,7 +2444,9 @@ class FurtherEducationExcelUploadView(APIView):
                         raise ValueError(f"Application Result ' {application_result_val}' is invalid, Valid choices: {valid_application_result}") 
                     
                     #validate scholarship 
-                    scholarship_val = str(row['scholarship']).strip() 
+
+                    scholarship_val = str(row['scholarship']).strip()
+
                     if scholarship_val not in valid_scholarship: 
                         raise ValueError(f"Scholarship ' {scholarship_val}' is invalid, Valid choices: {valid_scholarship}") 
                     
@@ -2747,10 +2833,13 @@ def alumni_outcome_percentages(request):
     return Response({'success': True, 'data': data})
 
 #get_student_information
-@api_view(['GET'])
+
+@api_view(['GET', 'PUT'])
 def get_student_information(request, user_id):
     """
-    Extract comprehensive student information by user_id
+    GET: Extract comprehensive student information by user_id
+    PUT: Update basic student profile info by user_id
+
     """
     try:
         with transaction.atomic():
@@ -2765,7 +2854,8 @@ def get_student_information(request, user_id):
                     status=status.HTTP_404_NOT_FOUND
                 )
             
-            # Get the kid profile
+
+
             try:
                 kid = Kid.objects.select_related(
                     'family__grade', 'family__mother'
@@ -2774,118 +2864,134 @@ def get_student_information(request, user_id):
                 return Response(
                     {'error': f'Kid profile not found for user_id {user_id}'}, 
                     status=status.HTTP_404_NOT_FOUND
-                )
-            
-            # Basic Information
-            basic_info = {
-                'user_id': user.id,
-                'first_name': user.first_name,
-                'rwandan_name': user.rwandan_name,
-                'middle_name': user.middle_name,
-                'gender': 'Female' if user.gender == 'F' else 'Male' if user.gender == 'M' else 'Not Specified',
-                'date_of_birth': user.dob,
-            }
-            
-            # Place of Birth
-            place_of_birth = {
-                'origin_district': kid.origin_district,
-                'origin_sector': kid.origin_sector,
-            }
-            
-            # Current Address
-            current_address = {
-                'current_district_or_city': kid.current_district_or_city,
-                'current_county': kid.current_county,
-            }
-            
-            # Affiliation (Grade and Family)
-            affiliation = {}
-            try:
-                if kid.family:
-                    affiliation = {
-                        'family_name': kid.family.family_name,
-                        'family_number': kid.family.family_number,
-                        'mother_name': kid.family.mother.get_full_name() if kid.family.mother else None,
-                        'grade_info': {
-                            'grade_name': kid.family.grade.grade_name if kid.family.grade else None,
-                            'admission_year': kid.family.grade.admission_year_to_asyv if kid.family.grade else None,
-                            'graduation_year': kid.family.grade.graduation_year_to_asyv if kid.family.grade else None,
-                        } if kid.family.grade else {}
-                    }
-                else:
-                    affiliation = {'message': 'No family affiliation found'}
-            except Exception as e:
-                logger.error(f"Error retrieving affiliation for user_id {user_id}: {str(e)}")
-                affiliation = {'error': 'Error retrieving affiliation information'}
-            
-            # Academic Combinations
-            combinations = []
-            try:
-                kid_academics = KidAcademics.objects.select_related('combination').filter(kid=kid)
-                for academic in kid_academics:
-                    combinations.append({
-                        'academic_year': academic.academic_year,
-                        'level': academic.level,
-                        'combination_name': academic.combination.combination_name,
-                        'combination_abbreviation': academic.combination.abbreviation,
-                    })
-            except Exception as e:
-                logger.error(f"Error retrieving combinations for user_id {user_id}: {str(e)}")
-                combinations = [{'error': 'Error retrieving academic combinations'}]
-            
-            # LEAP Activities
-            leap_activities = []
-            try:
-                kid_leaps = KidLeap.objects.select_related('leap').filter(kid=kid)
-                for kid_leap in kid_leaps:
-                    leap_activities.append({
-                        'leap_name': kid_leap.leap.ep,
-                        'category': kid_leap.leap.leap_category,
-                        'is_approved': kid_leap.is_approved,
-                        'approved_at': kid_leap.approved_at.isoformat() if kid_leap.approved_at else None,
-                        'recorded_by': kid_leap.recorded_by.get_full_name() if kid_leap.recorded_by else None,
-                        'created_at': kid_leap.created_at.isoformat(),
-                    })
-            except Exception as e:
-                logger.error(f"Error retrieving LEAP activities for user_id {user_id}: {str(e)}")
-                leap_activities = [{'error': 'Error retrieving LEAP activities'}]
-            
-            # National Exam Results
-            national_exam = {}
-            try:
-                national_exam = {
-                    'points_achieved': float(kid.points_in_national_exam) if kid.points_in_national_exam else None,
-                    'maximum_points': float(kid.maximum_points_in_national_exam) if kid.maximum_points_in_national_exam else None,
-                    'percentage': round((float(kid.points_in_national_exam) / float(kid.maximum_points_in_national_exam)) * 100, 2) if (kid.points_in_national_exam and kid.maximum_points_in_national_exam) else None,
-                    'mention': kid.mention,
+
+                    )
+             # Get the kid profile
+            if request.method == 'GET':
+                # Basic Information
+                basic_info = {
+                    'user_id': user.id,
+                    'kid_id': user.kid.id,
+                    'first_name': user.first_name,
+                    'rwandan_name': user.rwandan_name,
+                    'middle_name': user.middle_name,
+                    'gender': 'Female' if user.gender == 'F' else 'Male' if user.gender == 'M' else 'Not Specified',
+                    'date_of_birth': user.dob,
                 }
-            except Exception as e:
-                logger.error(f"Error processing national exam results for user_id {user_id}: {str(e)}")
-                national_exam = {'error': 'Error retrieving national exam information'}
+                
+                # Place of Birth
+                place_of_birth = {
+                    'origin_district': kid.origin_district,
+                    'origin_sector': kid.origin_sector,
+                }
+                
+                # Current Address
+                current_address = {
+                    'current_district_or_city': kid.current_district_or_city,
+                    'current_county': kid.current_county,
+                }
+                
+                # Affiliation (Grade and Family)
+                affiliation = {}
+                try:
+                    if kid.family:
+                        affiliation = {
+                            'family_name': kid.family.family_name,
+                            'family_number': kid.family.family_number,
+                            'mother_name': kid.family.mother.get_full_name() if kid.family.mother else None,
+                            'grade_info': {
+                                'grade_name': kid.family.grade.grade_name if kid.family.grade else None,
+                                'admission_year': kid.family.grade.admission_year_to_asyv if kid.family.grade else None,
+                                'graduation_year': kid.family.grade.graduation_year_to_asyv if kid.family.grade else None,
+                            } if kid.family.grade else {}
+                        }
+                    else:
+                        affiliation = {'message': 'No family affiliation found'}
+                except Exception as e:
+                    logger.error(f"Error retrieving affiliation for user_id {user_id}: {str(e)}")
+                    affiliation = {'error': 'Error retrieving affiliation information'}
+                
+                # Academic Combinations
+                combinations = []
+                try:
+                    kid_academics = KidAcademics.objects.select_related('combination').filter(kid=kid)
+                    for academic in kid_academics:
+                        combinations.append({
+                            'academic_year': academic.academic_year,
+                            'level': academic.level,
+                            'combination_name': academic.combination.combination_name,
+                            'combination_abbreviation': academic.combination.abbreviation,
+                        })
+                except Exception as e:
+                    logger.error(f"Error retrieving combinations for user_id {user_id}: {str(e)}")
+                    combinations = [{'error': 'Error retrieving academic combinations'}]
+                
+                # LEAP Activities
+                leap_activities = []
+                try:
+                    kid_leaps = KidLeap.objects.select_related('leap').filter(kid=kid)
+                    for kid_leap in kid_leaps:
+                        leap_activities.append({
+                            'leap_name': kid_leap.leap.ep,
+                            'category': kid_leap.leap.leap_category,
+                            'is_approved': kid_leap.is_approved,
+                            'approved_at': kid_leap.approved_at.isoformat() if kid_leap.approved_at else None,
+                            'recorded_by': kid_leap.recorded_by.get_full_name() if kid_leap.recorded_by else None,
+                            'created_at': kid_leap.created_at.isoformat(),
+                        })
+                except Exception as e:
+                    logger.error(f"Error retrieving LEAP activities for user_id {user_id}: {str(e)}")
+                    leap_activities = [{'error': 'Error retrieving LEAP activities'}]
+                
+                # National Exam Results
+                national_exam = {}
+                try:
+                    national_exam = {
+                        'points_achieved': float(kid.points_in_national_exam) if kid.points_in_national_exam else None,
+                        'maximum_points': float(kid.maximum_points_in_national_exam) if kid.maximum_points_in_national_exam else None,
+                        'percentage': round((float(kid.points_in_national_exam) / float(kid.maximum_points_in_national_exam)) * 100, 2) if (kid.points_in_national_exam and kid.maximum_points_in_national_exam) else None,
+                        'mention': kid.mention,
+                    }
+                except Exception as e:
+                    logger.error(f"Error processing national exam results for user_id {user_id}: {str(e)}")
+                    national_exam = {'error': 'Error retrieving national exam information'}
+                
+                # Personal Status
+                personal_status = {
+                    'marital_status': kid.marital_status,
+                    'has_children': kid.has_children,
+                    'life_status': kid.life_status,
+                    'graduation_status': kid.graduation_status,
+                    'health_issue': kid.health_issue,
+                }
+                
+                # Compile all information
+                student_info = {
+                    'basic_information': basic_info,
+                    'place_of_birth': place_of_birth,
+                    'current_address': current_address,
+                    'affiliation': affiliation,
+                    'academic_combinations': combinations,
+                    'leap_activities': leap_activities,
+                    'national_exam_results': national_exam,
+                    'personal_status': personal_status,
+                    'retrieved_at': timezone.now().isoformat(),
+                }
+                
+                return Response(student_info, status=status.HTTP_200_OK)
             
-            # Personal Status
-            personal_status = {
-                'marital_status': kid.marital_status,
-                'has_children': kid.has_children,
-                'life_status': kid.life_status,
-                'graduation_status': kid.graduation_status,
-                'health_issue': kid.health_issue,
-            }
-            
-            # Compile all information
-            student_info = {
-                'basic_information': basic_info,
-                'place_of_birth': place_of_birth,
-                'current_address': current_address,
-                'affiliation': affiliation,
-                'academic_combinations': combinations,
-                'leap_activities': leap_activities,
-                'national_exam_results': national_exam,
-                'personal_status': personal_status,
-                'retrieved_at': timezone.now().isoformat(),
-            }
-            
-            return Response(student_info, status=status.HTTP_200_OK)
+            elif request.method == 'PUT':
+                serializer = StudentProfileSerializer(data=request.data)
+                if serializer.is_valid():
+                    try:
+                        serializer.update({'user': user, 'kid': kid}, serializer.validated_data)
+                        return Response({'message': 'Profile updated successfully'}, status=status.HTTP_200_OK)
+                    except Exception as e:
+                        logger.error(f"Error updating student profile for user_id {user_id}: {str(e)}")
+                        return Response({'error': 'Error updating profile', 'details': str(e)},
+                                        status=status.HTTP_400_BAD_REQUEST)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
             
     except Exception as e:
         logger.error(f"Unexpected error retrieving student information for user_id {user_id}: {str(e)}")
@@ -2895,4 +3001,390 @@ def get_student_information(request, user_id):
                 'details': str(e)
             }, 
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
+
         )
+
+#Map Visualization Alumni Outcomes Further Education 
+class AlumniCountryMap(APIView): 
+    def get(self, request):
+        in_further_education = FurtherEducation.objects.filter(enrolled=True) 
+        country_counts = in_further_education.values('college__country').annotate(count=Count('id'))
+
+        result = []
+        for row in country_counts:
+            country = row['college__country']
+            coords = COUNTRY_COORDS.get(country)
+            if coords:
+                result.append({
+                    "country": country,
+                    "count": row["count"],
+                    "lat": coords["lat"],
+                    "lng": coords["lng"],
+                })
+        return Response(result)
+
+#alumni-employment in profile 
+class AlumniEmploymentView(APIView):
+    #permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user_id = request.query_params.get('id')
+        if not user_id:
+            return Response({'error': 'Missing user ID'}, status=400)
+
+        try:
+            # Get the graduated Kid linked to this User
+            print(user_id)
+            kid = Kid.objects.get(user__id=user_id, graduation_status = "graduated")
+        except Kid.DoesNotExist:
+            return Response({'error': 'Graduated Kid not found for this user'}, status=404)
+
+        employments = Employment.objects.filter(alumn=kid)
+        serializer = EmploymentSerializer(employments, many=True)
+        return Response(serializer.data)
+    
+class AlumniAcademicView(APIView):
+    #permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user_id = request.query_params.get('id')
+        if not user_id:
+            return Response({'error': 'Missing user ID'}, status=400)
+
+        try:
+            # Get the graduated Kid linked to this User
+            print(user_id)
+            kid = Kid.objects.get(user__id=user_id, graduation_status = "graduated")
+        except Kid.DoesNotExist:
+            return Response({'error': 'No graduated kid found for this user'}, status=404)
+
+        academics = FurtherEducation.objects.filter(alumn=kid, enrolled=True)
+        serializer = FurtherEducationSerializer(academics, many=True)
+        return Response(serializer.data)
+
+#alumni directory api
+class AlumniDirectoryView(APIView):
+    def get(self, request):
+        page = int(request.GET.get('page', 1))
+        page_size = int(request.GET.get('page_size', 10))
+
+        gender = request.GET.get('gender')
+        family = request.GET.get('family')
+        combination = request.GET.get('combination')
+        industry = request.GET.get('industry')
+        graduation_year = request.GET.get('year')
+        search_term = self.request.query_params.get('search')
+
+        alumni = Kid.objects.filter(graduation_status='graduated'
+                                    ).select_related('user', 'family__grade'
+                                                     ).prefetch_related('employment', 'furthereducation')
+
+        if gender:
+            alumni = alumni.filter(user__gender=gender) #M or F
+        if family:
+            alumni = alumni.filter(family__id=family) #by family Id
+        if combination:
+            alumni = alumni.filter(
+                academics__combination__id=combination,
+                academics__level='S6'
+            ) #by combination id
+        if industry:
+            alumni = alumni.filter(employment__industry=industry) #by string industry
+        if graduation_year: #by year 
+            print("graduation_year param:", graduation_year)
+            alumni = alumni.filter(family__grade__graduation_year_to_asyv=graduation_year)
+        if search_term:
+            alumni = alumni.filter(
+                Q(user__first_name__icontains=search_term) |
+                Q(user__rwandan_name__icontains=search_term)
+            ).distinct()
+
+        alumni = alumni.distinct()
+        print("Filtered alumni count:", alumni.count())
+
+        #employment_count = alumni.filter(employ__isnull=False).distinct().count()
+        #education_count = alumni.filter(alumn__isnull=False).distinct().count()
+
+        employed_ids = set(
+            Employment.objects.filter(alumn__in=alumni).values_list('alumn_id', flat=True)
+        )
+        furthered_ids = set(
+            FurtherEducation.objects.filter(alumn__in=alumni).values_list('alumn_id', flat=True)
+        )
+
+        total_alumni = alumni.count()
+        employed_no_further = len([a for a in employed_ids if a not in furthered_ids])
+        further_no_employ = len([a for a in furthered_ids if a not in employed_ids])
+        both_employ_further = len(employed_ids.intersection(furthered_ids))
+        neither = total_alumni - (employed_no_further + further_no_employ + both_employ_further)
+
+        def percent(n):
+            return round(n / total_alumni * 100, 2) if total_alumni > 0 else 0
+
+        outcome_data = {
+            'total_alumni': total_alumni,
+            'employed_without_further_education_pct': percent(employed_no_further),
+            'further_education_without_employment_pct': percent(further_no_employ),
+            'both_employed_and_further_education_pct': percent(both_employ_further),
+            'neither_employed_nor_further_education_pct': percent(neither),
+        }
+
+          # Return filter options
+        genders_available = alumni.values_list('user__gender', flat=True).distinct()
+        graduation_years_available = alumni.values('family__grade__graduation_year_to_asyv',
+                                                    'family__grade__grade_name').distinct().order_by('-family__grade__graduation_year_to_asyv')
+        families_available = alumni.values('family__id', 'family__family_name').distinct().order_by('family__family_name')
+        combinations_available = KidAcademics.objects.filter(
+            kid__in=alumni, level='S6'
+        ).values('combination_id', 'combination__abbreviation', 'combination__combination_name').distinct()
+        industries_available = Employment.objects.filter(alumn__in=alumni).values_list('industry', flat=True).distinct().order_by('industry')
+
+        
+      
+        paginator = Paginator(alumni, page_size)
+        page_obj = paginator.get_page(page)
+        alumni_page = page_obj.object_list
+
+        # Serialize alumni list
+        serialized_alumni = AlumniListSerializer(alumni_page, many=True).data
+
+        return Response({
+        "success": True,
+        "filters": {
+            "gender": list(genders_available),
+            "graduation_year": list(graduation_years_available),
+            "family": list(families_available),
+            "combination": list(combinations_available),
+            "industry": list(industries_available),
+        },
+        "data": serialized_alumni,
+        "outcome_summary": outcome_data,
+        "pagination": {
+            "current_page": page,
+            "page_size": page_size,
+            "total": paginator.count,
+            "has_next": page_obj.has_next(),
+            "has_previous": page_obj.has_previous()
+        }
+    })
+
+class EmploymentBulkCreateUpdateView(APIView):
+    def post(self, request, *args, **kwargs):
+        try:
+            serializer = EmploymentSerializer(data=request.data, many=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'detail': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def put(self, request, *args, **kwargs):
+        try:
+            employment_list = request.data
+            for employment_data in employment_list:
+                employment_instance = Employment.objects.get(id=employment_data['id'])
+                serializer = EmploymentSerializer(employment_instance, data=employment_data)
+                if serializer.is_valid():
+                    serializer.save()
+                else:
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "Bulk update successful"}, status=status.HTTP_200_OK)
+        except Employment.DoesNotExist as e:
+            return Response({'detail': str(e)}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'detail': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+from django.db.models import Count
+
+class AlumniOutcomeTrends(APIView):
+    def get(self, request):
+        year = request.query_params.get('year')
+        gender = request.query_params.get('gender')
+
+        alumni_qs = Kid.objects.filter(graduation_status='graduated').select_related('family__grade')
+
+        if year:
+            alumni_qs = alumni_qs.filter(family__grade__graduation_year_to_asyv=year)
+        if gender:
+            alumni_qs = alumni_qs.filter(user__gender=gender)
+
+        filtered_alumni_ids = set(alumni_qs.values_list('id', flat=True))
+
+        employments_qs = Employment.objects.filter(
+            alumn_id__in=filtered_alumni_ids
+        ).select_related('alumn__family__grade')
+
+        further_edu_ids = set(
+            FurtherEducation.objects.filter(
+                status__in=['O', 'G'],
+                alumn_id__in=filtered_alumni_ids
+            ).values_list('alumn_id', flat=True)
+        )
+
+        employed_ids = set(employments_qs.values_list('alumn_id', flat=True))
+
+        college_attendance_qs = (
+            FurtherEducation.objects
+            .filter(status__in=['O', 'G'], alumn_id__in=filtered_alumni_ids)
+            .values(
+                'college__college_name',
+                'alumn__family__grade__graduation_year_to_asyv'  # graduation year
+            )
+            .annotate(attendance_count=Count('college'))
+            .order_by('alumn__family__grade__graduation_year_to_asyv', '-attendance_count')
+        )
+
+        # Map colleges per year
+        colleges_by_year = {}
+        for item in college_attendance_qs:
+            yr = item['alumn__family__grade__graduation_year_to_asyv']
+            colleges_by_year.setdefault(yr, [])
+            colleges_by_year[yr].append({
+                'college': item['college__college_name'],
+                'attendance_count': item['attendance_count'],
+            })
+
+        status_keys = [key for key, _ in Employment.EMPLOYMENT_CHOICES]
+        status_map = dict(Employment.EMPLOYMENT_CHOICES)
+        industry_map = dict(Employment.INDUSTRY_CHOICES)
+
+        grad_years = alumni_qs.values_list('family__grade__graduation_year_to_asyv', flat=True).distinct()
+
+        results = {}
+        for yr in grad_years:
+            results[yr] = {
+                'total': 0,
+                'employment_only': 0,
+                'further_edu_only': 0,
+                'both': 0,
+                'neither': 0,
+                'employment_status_counts': {key: 0 for key in status_keys},
+                'industry_counts': {key: 0 for key in industry_map.keys()},
+                'most_attended_colleges': colleges_by_year.get(yr, [])
+            }
+
+        for emp in employments_qs:
+            grad_year = emp.alumn.family.grade.graduation_year_to_asyv
+            results[grad_year]['employment_status_counts'][emp.status] += 1
+            results[grad_year]['industry_counts'][emp.industry] += 1
+
+        for alumn in alumni_qs:
+            grad_year = alumn.family.grade.graduation_year_to_asyv
+            results[grad_year]['total'] += 1
+
+            has_employment = alumn.id in employed_ids
+            has_further_edu = alumn.id in further_edu_ids
+
+            if has_employment and has_further_edu:
+                results[grad_year]['both'] += 1
+            elif has_employment:
+                results[grad_year]['employment_only'] += 1
+            elif has_further_edu:
+                results[grad_year]['further_edu_only'] += 1
+            else:
+                results[grad_year]['neither'] += 1
+
+        data = []
+        for yr in sorted(results):
+            year_data = results[yr]
+            total = year_data['total']
+            if total == 0:
+                continue
+
+            employment_status_readable = {}
+            for key, count in year_data['employment_status_counts'].items():
+                label = status_map.get(key, key)
+                pct = round(count / total * 100, 2) if total > 0 else 0
+                employment_status_readable[label] = {'count': count, 'percent': pct}
+
+            industry_readable = {}
+            for key, count in year_data['industry_counts'].items():
+                label = industry_map.get(key, key)
+                pct = round(count / total * 100, 2) if total > 0 else 0
+                industry_readable[label] = {'count': count, 'percent': pct}
+
+            data.append({
+                'graduation_year': yr,
+                'total_alumni': total,
+                'employment_only': year_data['employment_only'],
+                'employment_only_percent': round(year_data['employment_only'] / total * 100, 2),
+                'further_edu_only': year_data['further_edu_only'],
+                'further_edu_only_percent': round(year_data['further_edu_only'] / total * 100, 2),
+                'both': year_data['both'],
+                'both_percent': round(year_data['both'] / total * 100, 2),
+                'neither': year_data['neither'],
+                'neither_percent': round(year_data['neither'] / total * 100, 2),
+                'employment_status_distribution': employment_status_readable,
+                'industry_distribution': industry_readable,
+                'most_attended_colleges': year_data['most_attended_colleges'], 
+            })
+
+        # Return per-year data + overall most attended colleges
+        return Response({
+            'yearly_outcomes': data,
+        })
+
+
+class DropdownOptionsAPIView(APIView):
+    #permission_classes = [IsAuthenticated]  # Optional: remove if public
+
+    def get(self, request):
+        industry_list = [
+            "Agriculture, Forestry, and Fishing",
+            "Art, Design, and Performance",
+            "Beauty and Personal Care",
+            "Business and Management",
+            "Construction and Engineering",
+            "Dining and Hospitality Services",
+            "Education and Training",
+            "Energy and Utilities",
+            "Finance and Banking",
+            "Government and Public Service",
+            "Healthcare and Medical Services",
+            "Information Technology and Software Development",
+            "Legal Services",
+            "Logistics and Transportation",
+            "Manufacturing and Production",
+            "Marketing, Sales, and Customer Service",
+            "Media and Communication",
+            "Real Estate and Property Management",
+            "Research and Development",
+            "Security and Law Enforcement",
+            "Social Work and Community Services",
+            "Sports and Recreation",
+            "Telecommunications",
+            "Trade and Skilled Labor",
+            "Others / Not Specified"
+        ]
+        colleges = College.objects.all().order_by('college_name')
+        data = {
+            "marital_statuses": [
+                {"value": "single", "label": "Single"},
+                {"value": "married", "label": "Married"},
+                {"value": "divorced", "label": "Divorced"},
+                {"value": "widowed", "label": "Widowed"},
+            ],
+            "children_options": [
+                {"value": True, "label": "Yes"},
+                {"value": False, "label": "No"},
+            ],
+            "levels": [
+                {"value": "C", "label": "Certificate"},
+                {"value": "A1", "label": "Advanced Diploma"},
+                {"value": "A0", "label": "Bachelor"},
+                {"value": "M", "label": "Master"},
+                {"value": "PHD", "label": "Ph.D."},
+            ],
+            "colleges": [{"value": c.college_name, "label": c.college_name} for c in colleges],
+            "industries": [{"value": name, "label": name} for name in industry_list],
+            "status": [
+                {"value" : "D", "label": "Dropped_Out"},
+                {"value" : "S", "label": "Suspended"},
+                {"value" : "O", "label": "On_going"}, 
+                {"value" : "G", "label": "Graduated"},
+                {"value" : "N", "label": "NA"},
+            ]
+        }
+        return Response(data)
+

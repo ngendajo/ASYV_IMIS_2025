@@ -27,6 +27,9 @@ SET default_table_access_method = heap;
 -- Name: api_college; Type: TABLE; Schema: public; Owner: postgres
 --
 
+
+DROP TABLE IF EXISTS public.api_college CASCADE;
+
 CREATE TABLE public.api_college (
     id bigint NOT NULL,
     college_name character varying(100) NOT NULL,

@@ -26,6 +26,7 @@ SET default_table_access_method = heap;
 -- TOC entry 250 (class 1259 OID 68732)
 -- Name: api_employment; Type: TABLE; Schema: public; Owner: postgres
 --
+DROP TABLE IF EXISTS public.api_employment CASCADE;
 
 CREATE TABLE public.api_employment (
     id bigint NOT NULL,

@@ -27,6 +27,9 @@ SET default_table_access_method = heap;
 -- Name: api_furthereducation; Type: TABLE; Schema: public; Owner: postgres
 --
 
+
+DROP TABLE IF EXISTS public.api_furthereducation CASCADE;
+
 CREATE TABLE public.api_furthereducation (
     id bigint NOT NULL,
     level character varying(3) NOT NULL,

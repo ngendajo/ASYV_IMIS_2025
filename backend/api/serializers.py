@@ -7,60 +7,6 @@ from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from .models import *
 
 User = get_user_model()
-
-#User crud serialisers
-class UserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
-    password_confirm = serializers.CharField(write_only=True, required=True)
-
-    class Meta:
-        model = User
-        fields = [
-            'id', 'username', 'reg_number', 'first_name', 'rwandan_name',
-            'middle_name', 'email', 'email1', 'phone', 'phone1',
-            'image_url', 'dob', 'gender', 'password', 'password_confirm'
-        ]
-        extra_kwargs = {
-            'password': {'write_only': True},
-            'password_confirm': {'write_only': True},
-        }
-
-    def validate(self, attrs):
-        # Remove password_confirm from attrs since it's not a model field
-        password_confirm = attrs.pop('password_confirm', None)
-        
-        # Validate passwords match
-        if attrs.get('password') != password_confirm:
-            raise serializers.ValidationError({"password": "Password fields didn't match."})
-
-        return attrs
-
-    def create(self, validated_data):
-        try:
-            user = User.objects.create_user(**validated_data)
-            return user
-        except ValidationError as e:
-            raise serializers.ValidationError(str(e))
-        except Exception as e:
-            raise serializers.ValidationError(f"Error creating user: {str(e)}")
-
-    def update(self, instance, validated_data):
-        try:
-            # Handle password update separately
-            password = validated_data.pop('password', None)
-            if password:
-                instance.set_password(password)
-
-            # Update other fields
-            for attr, value in validated_data.items():
-                setattr(instance, attr, value)
-
-            instance.save()
-            return instance
-        except ValidationError as e:
-            raise serializers.ValidationError(str(e))
-        except Exception as e:
-            raise serializers.ValidationError(f"Error updating user: {str(e)}")
         
 class UpdateUserImageUrlSerializer(serializers.ModelSerializer):
     class Meta:
@@ -116,53 +62,133 @@ class ResetPasswordSerializer(serializers.Serializer):
 class GradeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Grade
-        fields = ['id', 'grade_name', 'admission_year_to_asyv', 
-                 'graduation_year_to_asyv', 'created_at', 'updated_at']
-        read_only_fields = ['created_at', 'updated_at']
+        fields = '__all__'
 
 
 class FamilySerializer(serializers.ModelSerializer):
-    mother_details = UserSerializer(source='mother', read_only=True)
-    grade_details = serializers.SerializerMethodField()
+    grade = GradeSerializer()
 
     class Meta:
         model = Family
-        fields = ['id', 'family_name', 'family_number', 'mother', 
-                 'mother_details', 'grade', 'grade_details', 
-                 'created_at', 'updated_at']
-        read_only_fields = ['created_at', 'updated_at']
-
-    def get_grade_details(self, obj):
-        return {
-            'id': obj.grade.id,
-            'grade_name': obj.grade.grade_name,
-            'admission_year': obj.grade.admission_year_to_asyv,
-            'graduation_year': obj.grade.graduation_year_to_asyv
-        }
+        fields = '__all__'
         
 #Leap crud
 class LeapSerializer(serializers.ModelSerializer):
     class Meta:
         model = Leap
-        fields = ['id', 'ep', 'leap_category', 'created_at', 'updated_at']
+        fields = '__all__'
         
-#kid crud
+#subject crud
 class SubjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subject
-        fields = ['id', 'subject_name', 'credits']
+        fields = '__all__'
         
 class CombinationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Combination
-        fields = ['id', 'combination_name', 'abbreviation']
-        
-class KidSerializer(serializers.ModelSerializer):
+        fields = '__all__'
+
+class EmploymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Employment
+        fields = '__all__'
+
+class KidSerializer(serializers.ModelSerializer): 
     class Meta:
         model = Kid
         fields = '__all__'
-        read_only_fields = ('created_at', 'updated_at')
+
+
+class AlumniListSerializer(serializers.Serializer):
+    family = FamilySerializer()
+    combination = serializers.SerializerMethodField()
+    first_name = serializers.SerializerMethodField()
+    rwandan_name = serializers.SerializerMethodField()
+    gender = serializers.SerializerMethodField()
+    email = serializers.SerializerMethodField()
+    phone = serializers.SerializerMethodField()
+    employment = EmploymentSerializer(many=True, read_only=True)
+    image_url = serializers.ImageField(source='user.image_url')
+
+    class Meta:
+        model = Kid
+        fields = ['id', 'first_name', 'rwandan_name', 
+                  'gender', 'email', 'phone', 'image_url', 'family', 
+                  'employment', 'combination']
+    def get_gender(self, obj): 
+        return obj.user.gender if obj.user else None
+    
+    def get_first_name(self, obj):
+        return obj.user.first_name if obj.user else None
+
+    def get_rwandan_name(self, obj):
+        return obj.user.rwandan_name if obj.user else None
+    
+    def get_email(self, obj): 
+        return obj.user.email if obj.user else None
+    
+    def get_phone(self, obj): 
+        return obj.user.phone if obj.user else None
+    
+    def get_combination(self, obj):
+        academic = KidAcademics.objects.filter(kid=obj, level='S6').first()
+        if academic and academic.combination:
+            return CombinationSerializer(academic.combination).data
+        return None
+    
+
+#User crud serialisers
+class UserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
+    password_confirm = serializers.CharField(write_only=True, required=True)
+    kid = KidSerializer(read_only=True)
+
+    class Meta:
+        model = User
+        fields = [field.name for field in User._meta.fields] + ['kid' ,'password', 'password_confirm']
+        # extra_kwargs = {
+        #     'password': {'write_only': True},
+        #     'password_confirm': {'write_only': True},
+        # }
+
+    def validate(self, attrs):
+        # Remove password_confirm from attrs since it's not a model field
+        password_confirm = attrs.pop('password_confirm', None)
         
+        # Validate passwords match
+        if attrs.get('password') != password_confirm:
+            raise serializers.ValidationError({"password": "Password fields didn't match."})
+
+        return attrs
+
+    def create(self, validated_data):
+        try:
+            user = User.objects.create_user(**validated_data)
+            return user
+        except ValidationError as e:
+            raise serializers.ValidationError(str(e))
+        except Exception as e:
+            raise serializers.ValidationError(f"Error creating user: {str(e)}")
+
+    def update(self, instance, validated_data):
+        try:
+            # Handle password update separately
+            password = validated_data.pop('password', None)
+            if password:
+                instance.set_password(password)
+
+            # Update other fields
+            for attr, value in validated_data.items():
+                setattr(instance, attr, value)
+
+            instance.save()
+            return instance
+        except ValidationError as e:
+            raise serializers.ValidationError(str(e))
+        except Exception as e:
+            raise serializers.ValidationError(f"Error updating user: {str(e)}")
+
 #Crud for KidAcademic
 class KidAcademicsSerializer(serializers.ModelSerializer):
     class Meta:
@@ -200,71 +226,84 @@ class KidAcademicsSerializer(serializers.ModelSerializer):
         
         return data
 
-class AlumniListsSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(source='user.email')
-    image_url = serializers.CharField(source='user.image_url')  # assuming image_url is on user model
-    first_name = serializers.CharField(source='user.first_name')
-    #last_name = serializers.CharField(source='user.last_name')
-    phone1 = serializers.CharField(source='user.phone1')
-    #reg_number = serializers.CharField(source='user.reg_number', allow_null=True, default='')  # if this is on user or kid?
-    #alumn_id = serializers.IntegerField(source='id')  # your kid's id or alumni id? adjust accordingly
-    
-    grade_name = serializers.CharField(source='family.grade.grade_name', allow_null=True, default='')
-    grade_id = serializers.IntegerField(source='family.grade.id', allow_null=True)
-    family_name = serializers.CharField(source='family.family_name', allow_null=True, default='')
-    family_id = serializers.IntegerField(source='family.id', allow_null=True)
-    combination_name = serializers.CharField(source='combination.combination_name', allow_null=True, default='')
-    combination_id = serializers.IntegerField(source='combination.id', allow_null=True)
-    
-    
-    class Meta:
-        model = Kid
-        fields = [
-            'id',
-            'email',
-            'image_url',
-            'first_name',
-            'phone1',
-            'grade_name',
-            'grade_id',
-            'family_name',
-            'family_id',
-            'combination_name',
-            'combination_id',
-        ]
+class AlumniDirectorySerializer(serializers.Serializer):
+    alumni = KidSerializer(many=True)
+    employment_count = serializers.IntegerField()
+    education_count = serializers.IntegerField()
 
 class CollegeSerializer(serializers.ModelSerializer):
     class Meta:
         model = College
-        fields = ['id', 'college_name', 'country', 'city']
+        fields = '__all__'
 
-
-class EmploymentSerializer(serializers.ModelSerializer):
-    # By default, ManyToManyField uses PrimaryKeyRelatedField with many=True
-    contributing_leaps = serializers.PrimaryKeyRelatedField(
-        queryset=Leap.objects.all(),  # validate IDs against all leaps
-        many=True,
-        required=False,
-        allow_empty=True
-    )
-    
-    class Meta:
-        model = Employment
-        fields = [
-            'id', 'title', 'alumn', 'status', 'industry', 'description', 'company',
-            'on_going', 'crc_support', 'recorded_by', 'is_approved', 'approved_at',
-            'contributing_leaps', 'start_date', 'end_date',
-        ]
 
 class FurtherEducationSerializer(serializers.ModelSerializer): 
-    college = CollegeSerializer(read_only=True)  # nested display
-    
-    college_id = serializers.PrimaryKeyRelatedField(
-        queryset=College.objects.all(), source='college', write_only=True
-    )
-    
+    college = serializers.CharField(source='college.college_name')
+    location = serializers.SerializerMethodField()
+
     class Meta:
         model = FurtherEducation
-        fields = ['id', 'alumn', 'level', 'degree', 'application_result', 'waitlisted', 
-                  'enrolled', 'scholarship', 'scholarship_details', 'status', 'crc_support', 
-                  'college', 'college_id']
+        fields = '__all__'
+
+    def get_location(self, obj):
+        return f"{obj.college.city}, {obj.college.country}"
+    
+class StudentProfileSerializer(serializers.Serializer):
+    # User fields
+    first_name = serializers.CharField(required=False)
+    middle_name = serializers.CharField(required=False, allow_blank=True)
+    rwandan_name = serializers.CharField(required=False, allow_blank=True)
+    gender = serializers.ChoiceField(choices=[('M', 'Male'), ('F', 'Female')], required=False)
+    date_of_birth = serializers.DateField(required=False)
+
+    # Kid fields
+    origin_district = serializers.CharField(required=False, allow_blank=True)
+    origin_sector = serializers.CharField(required=False, allow_blank=True)
+    current_district_or_city = serializers.CharField(required=False, allow_blank=True)
+    current_county = serializers.CharField(required=False, allow_blank=True)
+    marital_status = serializers.CharField(required=False, allow_blank=True)
+    has_children = serializers.BooleanField(required=False)
+    life_status = serializers.CharField(required=False, allow_blank=True)
+    graduation_status = serializers.CharField(required=False, allow_blank=True)
+    health_issue = serializers.CharField(required=False, allow_blank=True)
+
+    def update(self, instance, validated_data):
+        user = instance['user']
+        kid = instance['kid']
+
+        # Update user fields
+        for attr in ['first_name', 'middle_name', 'rwandan_name', 'gender', 'date_of_birth']:
+            if attr in validated_data:
+                setattr(user, attr, validated_data[attr])
+        user.save()
+
+        # Update kid fields
+        for attr in [
+            'origin_district', 'origin_sector',
+            'current_district_or_city', 'current_county',
+            'marital_status', 'has_children', 'life_status',
+            'graduation_status', 'health_issue',
+        ]:
+            if attr in validated_data:
+                setattr(kid, attr, validated_data[attr])
+        kid.save()
+
+        return {'user': user, 'kid': kid}
+
+class FurtherEducationChoicesSerializer(serializers.Serializer):
+    levels = serializers.SerializerMethodField()
+    application_results = serializers.SerializerMethodField()
+    scholarships = serializers.SerializerMethodField()
+    statuses = serializers.SerializerMethodField()
+
+    def get_levels(self, obj):
+        return [{'value': choice[0], 'label': choice[1]} for choice in FurtherEducation.LEVEL_CHOICES]
+
+    def get_application_results(self, obj):
+        return [{'value': choice[0], 'label': choice[1]} for choice in FurtherEducation.APPLICATION_RESULT_CHOICES]
+
+    def get_scholarships(self, obj):
+        return [{'value': choice[0], 'label': choice[1]} for choice in FurtherEducation.SCHOLARSHIP_CHOICES]
+
+    def get_statuses(self, obj):
+        return [{'value': choice[0], 'label': choice[1]} for choice in FurtherEducation.STATUS_CHOICES]
