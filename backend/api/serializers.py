@@ -92,7 +92,7 @@ class CombinationSerializer(serializers.ModelSerializer):
 class EmploymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Employment
-        fields = '__all__'
+        fields = ['id', 'alumn', 'title', 'status', 'industry', 'company', 'start_date', 'end_date']
 
 class KidSerializer(serializers.ModelSerializer): 
     class Meta:
@@ -238,57 +238,82 @@ class CollegeSerializer(serializers.ModelSerializer):
 
 
 class FurtherEducationSerializer(serializers.ModelSerializer): 
-    college = serializers.CharField(source='college.college_name')
-    location = serializers.SerializerMethodField()
+    college = serializers.PrimaryKeyRelatedField(queryset=College.objects.all())
+    location = serializers.SerializerMethodField(read_only=True)
+
 
     class Meta:
         model = FurtherEducation
-        fields = '__all__'
+        fields = ['id', 'alumn', 'college', 'level', 'degree', 'status', 'location']
 
     def get_location(self, obj):
         return f"{obj.college.city}, {obj.college.country}"
     
-class StudentProfileSerializer(serializers.Serializer):
-    # User fields
+class BasicInformationSerializer(serializers.Serializer):
+    user_id = serializers.IntegerField(required=False)
+    kid_id = serializers.IntegerField(required=False)
     first_name = serializers.CharField(required=False)
-    middle_name = serializers.CharField(required=False, allow_blank=True)
+    middle_name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     rwandan_name = serializers.CharField(required=False, allow_blank=True)
-    gender = serializers.ChoiceField(choices=[('M', 'Male'), ('F', 'Female')], required=False)
-    date_of_birth = serializers.DateField(required=False)
+    # add other user fields here
 
-    # Kid fields
-    origin_district = serializers.CharField(required=False, allow_blank=True)
-    origin_sector = serializers.CharField(required=False, allow_blank=True)
-    current_district_or_city = serializers.CharField(required=False, allow_blank=True)
-    current_county = serializers.CharField(required=False, allow_blank=True)
+class PersonalStatusSerializer(serializers.Serializer):
     marital_status = serializers.CharField(required=False, allow_blank=True)
     has_children = serializers.BooleanField(required=False)
     life_status = serializers.CharField(required=False, allow_blank=True)
     graduation_status = serializers.CharField(required=False, allow_blank=True)
     health_issue = serializers.CharField(required=False, allow_blank=True)
 
+class CurrentAddressSerializer(serializers.Serializer):
+    current_district_or_city = serializers.CharField(required=False, allow_blank=True)
+    current_county = serializers.CharField(required=False, allow_blank=True)
+
+class StudentProfileSerializer(serializers.Serializer):
+    basic_information = BasicInformationSerializer(required=False)
+    personal_status = PersonalStatusSerializer(required=False)
+    current_address = CurrentAddressSerializer(required=False)
+    # other nested fields if needed
+
     def update(self, instance, validated_data):
         user = instance['user']
         kid = instance['kid']
 
-        # Update user fields
-        for attr in ['first_name', 'middle_name', 'rwandan_name', 'gender', 'date_of_birth']:
-            if attr in validated_data:
-                setattr(user, attr, validated_data[attr])
+        basic_info = validated_data.get('basic_information', {})
+        personal_status = validated_data.get('personal_status', {})
+        current_address = validated_data.get('current_address', {})
+
+        # Update user fields from basic_information
+        for attr in ['first_name', 'middle_name', 'rwandan_name']:
+            if attr in basic_info:
+                setattr(user, attr, basic_info[attr])
         user.save()
 
-        # Update kid fields
-        for attr in [
-            'origin_district', 'origin_sector',
-            'current_district_or_city', 'current_county',
-            'marital_status', 'has_children', 'life_status',
-            'graduation_status', 'health_issue',
-        ]:
-            if attr in validated_data:
-                setattr(kid, attr, validated_data[attr])
+        # Update kid fields from personal_status
+        for attr in ['marital_status', 'has_children', 'life_status', 'graduation_status', 'health_issue']:
+            if attr in personal_status:
+                setattr(kid, attr, personal_status[attr])
+        
+        # Update kid fields from current_address
+        for attr in ['current_district_or_city', 'current_county']:
+            if attr in current_address:
+                setattr(kid, attr, current_address[attr])
+
         kid.save()
 
         return {'user': user, 'kid': kid}
+
+class CurrentInfoSerializer(serializers.Serializer):
+    marital_status = serializers.CharField(required=False, allow_blank=True)
+    has_children = serializers.BooleanField(required=False)
+    current_district_or_city = serializers.CharField(required=False, allow_blank=True)
+    current_county = serializers.CharField(required=False, allow_blank=True)
+
+    def update(self, instance, validated_data):
+        # instance here should be the Kid model instance (or whatever model holds these fields)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
 
 class FurtherEducationChoicesSerializer(serializers.Serializer):
     levels = serializers.SerializerMethodField()

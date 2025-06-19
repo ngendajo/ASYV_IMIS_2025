@@ -2066,10 +2066,6 @@ class MarksExcelUpload(APIView):
             'message': f'Update complete. Updated: {success_count}, Missing: {len(not_found)}',
             'not_found': not_found
         })
-    
-    
-
-
         
 #view alumni list
 class AlumniListView(APIView):
@@ -2987,6 +2983,7 @@ def get_student_information(request, user_id):
                         serializer.update({'user': user, 'kid': kid}, serializer.validated_data)
                         return Response({'message': 'Profile updated successfully'}, status=status.HTTP_200_OK)
                     except Exception as e:
+                        print("Serializer errors:", serializer.errors)
                         logger.error(f"Error updating student profile for user_id {user_id}: {str(e)}")
                         return Response({'error': 'Error updating profile', 'details': str(e)},
                                         status=status.HTTP_400_BAD_REQUEST)
@@ -3003,6 +3000,22 @@ def get_student_information(request, user_id):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
 
         )
+    
+class CurrentInfoUpdateView(APIView):
+    #permission_classes = [permissions.IsAuthenticated]
+
+    def put(self, request, kid_id):
+        # Retrieve the Kid instance
+        try:
+            kid = Kid.objects.get(id=kid_id)
+        except Kid.DoesNotExist:
+            return Response({"detail": "Kid not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = CurrentInfoSerializer(kid, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 #Map Visualization Alumni Outcomes Further Education 
 class AlumniCountryMap(APIView): 
@@ -3019,7 +3032,7 @@ class AlumniCountryMap(APIView):
                     "country": country,
                     "count": row["count"],
                     "lat": coords["lat"],
-                    "lng": coords["lng"],
+                    "lon": coords["lon"],
                 })
         return Response(result)
 
@@ -3043,6 +3056,49 @@ class AlumniEmploymentView(APIView):
         serializer = EmploymentSerializer(employments, many=True)
         return Response(serializer.data)
     
+    #UPDATE employment info on profile
+    def put(self, request):
+        user_id = request.query_params.get('id')
+        if not user_id:
+            return Response({'error': 'Missing user ID'}, status=400)
+
+        try:
+            kid = Kid.objects.get(user__id=user_id, graduation_status="graduated")
+        except Kid.DoesNotExist:
+            return Response({'error': 'Graduated Kid not found for this user'}, status=404)
+
+        updated_employments = request.data.get('employment', [])
+        existing_employments = {e.id: e for e in Employment.objects.filter(alumn=kid)}
+
+        updated_ids = []
+
+        for emp_data in updated_employments:
+            emp_id = emp_data.get('id')
+
+            if emp_id and emp_id in existing_employments:
+                # Update existing
+                emp = existing_employments[emp_id]
+                emp_data['alumn'] = kid.id
+                #print("alumn:", emp.alumn, "id?", emp_data['alumn'])
+                serializer = EmploymentSerializer(emp, data=emp_data)
+                if serializer.is_valid():
+                    serializer.save()
+                    updated_ids.append(emp_id)
+    
+                else:
+                    print("Serializer errors:", serializer.errors)
+                    return Response(serializer.errors, status=400)
+            else:
+                # Create new
+                emp_data['alumn'] = kid.id  # link it to the Kid
+                serializer = EmploymentSerializer(data=emp_data)
+                if serializer.is_valid():
+                    serializer.save()
+                else:
+                    return Response(serializer.errors, status=400)
+        
+        return Response({'message': 'Employment record created/updated', 'updated_ids': updated_ids}, status=200)
+    
 class AlumniAcademicView(APIView):
     #permission_classes = [IsAuthenticated]
 
@@ -3058,9 +3114,52 @@ class AlumniAcademicView(APIView):
         except Kid.DoesNotExist:
             return Response({'error': 'No graduated kid found for this user'}, status=404)
 
-        academics = FurtherEducation.objects.filter(alumn=kid, enrolled=True)
+        academics = FurtherEducation.objects.filter(alumn=kid, status__in = ['O', 'G'])
         serializer = FurtherEducationSerializer(academics, many=True)
         return Response(serializer.data)
+    
+    #UPDATE academic info on profile
+    def put(self, request):
+        user_id = request.query_params.get('id')
+        if not user_id:
+            return Response({'error': 'Missing user ID'}, status=400)
+
+        try:
+            kid = Kid.objects.get(user__id=user_id, graduation_status="graduated")
+        except Kid.DoesNotExist:
+            return Response({'error': 'Graduated Kid not found for this user'}, status=404)
+
+        updated_academics = request.data.get('academic', [])
+        existing_academics = {a.id: a for a in FurtherEducation.objects.filter(alumn=kid)}
+
+        updated_ids = []
+
+        for aca_data in updated_academics:
+            aca_id = aca_data.get('id')
+
+            if aca_id and aca_id in existing_academics:
+                # Update existing
+                aca = existing_academics[aca_id]
+                aca_data['alumn'] = kid.id
+                #print("alumn:", emp.alumn, "id?", emp_data['alumn'])
+                serializer = FurtherEducationSerializer(aca, data=aca_data)
+                if serializer.is_valid():
+                    serializer.save()
+                    updated_ids.append(aca_id)
+    
+                else:
+                    print("Serializer errors:", serializer.errors)
+                    return Response(serializer.errors, status=400)
+            else:
+                # Create new
+                aca_data['alumn'] = kid.id  # link it to the Kid
+                serializer = FurtherEducationSerializer(data=aca_data)
+                if serializer.is_valid():
+                    serializer.save()
+                else:
+                    return Response(serializer.errors, status=400)
+        
+        return Response({'message': 'FurtherEducation record created/updated', 'updated_ids': updated_ids}, status=200)
 
 #alumni directory api
 class AlumniDirectoryView(APIView):
@@ -3074,6 +3173,7 @@ class AlumniDirectoryView(APIView):
         industry = request.GET.get('industry')
         graduation_year = request.GET.get('year')
         search_term = self.request.query_params.get('search')
+        college = request.GET.get('college') 
 
         alumni = Kid.objects.filter(graduation_status='graduated'
                                     ).select_related('user', 'family__grade'
@@ -3098,6 +3198,9 @@ class AlumniDirectoryView(APIView):
                 Q(user__first_name__icontains=search_term) |
                 Q(user__rwandan_name__icontains=search_term)
             ).distinct()
+        if college: 
+            alumni = alumni.filter(furthereducation__college__college_name=college,
+                                   furthereducation__status__in=['G', 'O'])
 
         alumni = alumni.distinct()
         print("Filtered alumni count:", alumni.count())
@@ -3138,7 +3241,7 @@ class AlumniDirectoryView(APIView):
             kid__in=alumni, level='S6'
         ).values('combination_id', 'combination__abbreviation', 'combination__combination_name').distinct()
         industries_available = Employment.objects.filter(alumn__in=alumni).values_list('industry', flat=True).distinct().order_by('industry')
-
+        colleges_available = FurtherEducation.objects.filter(alumn__in=alumni).values('college__college_name').distinct().order_by('college__college_name')
         
       
         paginator = Paginator(alumni, page_size)
@@ -3156,6 +3259,7 @@ class AlumniDirectoryView(APIView):
             "family": list(families_available),
             "combination": list(combinations_available),
             "industry": list(industries_available),
+            "college": list(colleges_available),
         },
         "data": serialized_alumni,
         "outcome_summary": outcome_data,
@@ -3376,7 +3480,7 @@ class DropdownOptionsAPIView(APIView):
                 {"value": "M", "label": "Master"},
                 {"value": "PHD", "label": "Ph.D."},
             ],
-            "colleges": [{"value": c.college_name, "label": c.college_name} for c in colleges],
+            "colleges": [{"value": c.id, "label": c.college_name, "location": c.locationString()} for c in colleges],
             "industries": [{"value": name, "label": name} for name in industry_list],
             "status": [
                 {"value" : "D", "label": "Dropped_Out"},
@@ -3384,6 +3488,12 @@ class DropdownOptionsAPIView(APIView):
                 {"value" : "O", "label": "On_going"}, 
                 {"value" : "G", "label": "Graduated"},
                 {"value" : "N", "label": "NA"},
+            ], 
+            "employment_status" : [
+                {"value": "F", "label": "Full-time"}, 
+                {"value": "P", "label": "Part-time"}, 
+                {"value": "S", "label": "Self-employed"}, 
+                {"value": "I", "label": "Intern"}, 
             ]
         }
         return Response(data)
