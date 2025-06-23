@@ -307,3 +307,54 @@ class FurtherEducationChoicesSerializer(serializers.Serializer):
 
     def get_statuses(self, obj):
         return [{'value': choice[0], 'label': choice[1]} for choice in FurtherEducation.STATUS_CHOICES]
+    
+    
+#Library management System
+    
+#author data serializer
+class AuthorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Author
+        fields = '__all__'
+
+#end author serilizer
+
+#category data serializer
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = '__all__'
+
+#end category serilizer
+
+#book data serializer
+class BookSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Book
+        fields = '__all__'
+        
+class DisplayBookSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Book
+        fields = '__all__'
+        depth=3
+        
+class BookListDisplaySerializer(serializers.Serializer):
+    book_name = serializers.CharField()
+    isbnumber = serializers.CharField()
+    category_name = serializers.CharField()
+    author_name = serializers.CharField()
+    number_of_books = serializers.CharField()
+    id = serializers.IntegerField()
+
+#end book serilizer
+
+#Issue_Book data serializer
+#Issue_Book data serializer
+class Issue_BookSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Issue_Book
+        fields = '__all__'
+
+
+#end Issue_Book serilizer

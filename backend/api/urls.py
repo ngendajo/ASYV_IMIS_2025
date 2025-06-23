@@ -48,8 +48,31 @@ urlpatterns = [
     path('upload-college/', views.CollegeExcelUploadView.as_view(), name='upload-college'),
     path('upload-further-education/', views.FurtherEducationExcelUploadView.as_view(), name='upload-further-education'),
     path('upload-marks/', views.MarksExcelUpload.as_view(), name='upload-marks'),
-    path('', include(router.urls)),
+    path('', include(router.urls)), 
+    
+    #author paths
+    path('author/',views.AuthorRegistrationView.as_view()),
+    path('author/<int:pk>/delete/', views.delete_author, name='delete-author'),
+    path('author/<int:pk>/', views.update_Author, name='update_author'),
+    
+    #category paths
+    path('category/',views.CategoryRegistrationView.as_view()),
+    path('category/<int:pk>/delete/', views.delete_category, name='delete-category'),
+    path('category/<int:pk>/', views.update_Category, name='update_category'),
+    
+    #book paths
+    path('book/',views.BookRegistrationView.as_view()),
+    path('books/',views.BookListDisplayAPIView.as_view()),
+    path('exportbooks/',views.BookReportExportAPIView.as_view()),
+    path('book/<int:pk>/delete/', views.delete_book, name='delete-book'),
+    path('book/<int:pk>/', views.update_Book, name='update_book'),
 
+    #General report
+    # path('general/', views.GeneralReportDisplayAPIView.as_view(), name='general_report'),
+    # path('mostborrower/', views.MostBorrowerDisplayAPIView.as_view(), name='most_borrower_report'),
+    # path('gborrower/', views.BorrowerByGradeDisplayAPIView.as_view(), name='grade_borrower_report'),
+    # path('borrowers/', views.AllBorrowersDisplayAPIView.as_view(), name='borrowers_report'),
+    path('library/book-export/', views.library_book_export_view, name='library_book_export'),
     
     path('', views.getRoutes),
 
