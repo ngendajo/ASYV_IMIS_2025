@@ -67,11 +67,20 @@ urlpatterns = [
     path('book/<int:pk>/delete/', views.delete_book, name='delete-book'),
     path('book/<int:pk>/', views.update_Book, name='update_book'),
 
+    #Issue_Book paths
+    path('issue/', views.Issue_BookRegistrationView.as_view(), name='issue_book_api'),
+    path('issued/', views.IssuedBookDisplayAPIView.as_view(), name='issued_book_api'),
+    path('exportissued/', views.Issued_BookReportExportAPIView.as_view(), name='issued_book_api_in_pdf'),
+    path('exportoverdue/', views.Overdue_BookReportExportAPIView.as_view(), name='overdue_book_api_in_pdf'),
+    path('issue/<int:pk>/delete/', views.delete_Issue_Book, name='delete-issue'),
+    path('issue/<int:pk>/', views.update_Issue_Book, name='update_issue'),
+    #path('change-stpassword/', views.ChangeStudentPasswordView.as_view(), name='change-password'),
+    
     #General report
-    # path('general/', views.GeneralReportDisplayAPIView.as_view(), name='general_report'),
-    # path('mostborrower/', views.MostBorrowerDisplayAPIView.as_view(), name='most_borrower_report'),
-    # path('gborrower/', views.BorrowerByGradeDisplayAPIView.as_view(), name='grade_borrower_report'),
-    # path('borrowers/', views.AllBorrowersDisplayAPIView.as_view(), name='borrowers_report'),
+    path('general/', views.GeneralReportDisplayAPIView.as_view(), name='general_report'),
+    path('mostborrower/', views.MostBorrowerDisplayAPIView.as_view(), name='most_borrower_report'),
+    path('gborrower/', views.BorrowerByGradeDisplayAPIView.as_view(), name='grade_borrower_report'),
+    path('borrowers/', views.AllBorrowersDisplayAPIView.as_view(), name='borrowers_report'),
     path('library/book-export/', views.library_book_export_view, name='library_book_export'),
     
     path('', views.getRoutes),

@@ -358,3 +358,76 @@ class Issue_BookSerializer(serializers.ModelSerializer):
 
 
 #end Issue_Book serilizer
+
+#Reports
+class IssuedBookDisplaySerializer(serializers.Serializer):
+    grade_name = serializers.CharField()
+    studentid = serializers.CharField()
+    family_name = serializers.CharField()
+    combination_name = serializers.CharField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    email = serializers.CharField()
+    book_name = serializers.CharField()
+    isbnumber = serializers.CharField()
+    category_name = serializers.CharField()
+    author_name = serializers.CharField()
+    library_number = serializers.CharField()
+    issuedate = serializers.CharField()
+    returndate = serializers.CharField()
+    id = serializers.IntegerField()
+    
+class StudentListDisplaySerializer(serializers.Serializer):
+    grade_name = serializers.CharField()
+    studentid = serializers.CharField()
+    family_name = serializers.CharField()
+    combination_name = serializers.CharField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    email = serializers.CharField()
+    id = serializers.IntegerField()
+    grade_id = serializers.IntegerField()
+    combination_id = serializers.IntegerField()
+    eay = serializers.IntegerField()
+    gender = serializers.CharField()
+class GeneralReportDisplaySerializer(serializers.Serializer):
+    nbook_types = serializers.IntegerField()
+    nbooks = serializers.IntegerField()
+    nstudents = serializers.IntegerField()
+    nissued_books = serializers.IntegerField()
+    noverdue_books = serializers.IntegerField()
+    
+class MostBorrowerDisplaySerializer(serializers.Serializer):
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    grade_name = serializers.CharField()
+    family_name = serializers.CharField()
+    combination_name = serializers.CharField()
+    issue_count = serializers.IntegerField()
+    
+class BorrowerByGradeDisplaySerializer(serializers.Serializer):
+    grade_name = serializers.CharField()
+    family_name = serializers.CharField()
+    combination_name = serializers.CharField()
+    borrowers = serializers.IntegerField()
+    students = serializers.IntegerField()
+    
+class AllBorrowersDisplaySerializer(serializers.Serializer):
+    first_name=serializers.CharField()
+    last_name=serializers.CharField()
+    phone1=serializers.CharField()
+    email=serializers.CharField()
+    grade_name=serializers.CharField()
+    family_name=serializers.CharField()
+    combination_name=serializers.CharField()
+    book_name=serializers.CharField()
+    isbnumber=serializers.CharField()
+    category_name=serializers.CharField()
+    author_name=serializers.CharField()
+    issuedate = serializers.CharField()
+    returndate = serializers.CharField()
+    student_id= serializers.IntegerField()
+    user_id= serializers.IntegerField()
+    is_student=serializers.BooleanField()
+    is_alumni=serializers.BooleanField()
+    is_staff=serializers.BooleanField()
