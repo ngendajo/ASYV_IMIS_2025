@@ -76,6 +76,10 @@ urlpatterns = [
     path('issue/<int:pk>/', views.update_Issue_Book, name='update_issue'),
     #path('change-stpassword/', views.ChangeStudentPasswordView.as_view(), name='change-password'),
     
+    path('students/', views.StudentListDisplayAPIView.as_view(), name='students'),
+    path('exportstudentexcel/', views.StudentsReportExportAPIView.as_view(), name='student-export-data'),    
+    path('exportissuedexcel/', views.StudentswithBookReportExportInExcelAPIView.as_view(), name='issued-export-data'),  
+    
     #General report
     path('general/', views.GeneralReportDisplayAPIView.as_view(), name='general_report'),
     path('mostborrower/', views.MostBorrowerDisplayAPIView.as_view(), name='most_borrower_report'),

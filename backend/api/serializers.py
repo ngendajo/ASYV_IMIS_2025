@@ -315,7 +315,8 @@ class FurtherEducationChoicesSerializer(serializers.Serializer):
 class AuthorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Author
-        fields = '__all__'
+        fields = ['id', 'author_name']  # Or whatever fields you use
+        read_only_fields = ['id']  # <- Prevent client from setting the id
 
 #end author serilizer
 

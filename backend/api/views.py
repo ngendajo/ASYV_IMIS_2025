@@ -3405,11 +3405,14 @@ class AuthorRegistrationView(APIView):
     permission_classes = [IsAuthenticated, ]
 
     def post(self, request):
-        serializer = AuthorSerializer(data=request.data)
-        # validating for already existing data
-        if Author.objects.filter(**request.data).exists():
-            raise serializers.ValidationError('This data already exists')
+        data = request.data.copy()
+        data.pop('id', None)  # Remove 'id' if it's present
 
+        # Check for duplicates by fields you consider unique (e.g., 'name')
+        if Author.objects.filter(author_name=data.get('author_name')).exists():
+            raise serializers.ValidationError('This author already exists')
+
+        serializer = AuthorSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -3461,7 +3464,7 @@ def delete_author(request, pk):
 # Category data view
 
 class CategoryRegistrationView(APIView):
-    permission_classes = [IsAuthenticated, ]
+    #permission_classes = [IsAuthenticated, ]
 
     def post(self, request):
         serializer = CategorySerializer(data=request.data)
@@ -3495,7 +3498,7 @@ class CategoryRegistrationView(APIView):
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+#@permission_classes([IsAuthenticated])
 def update_Category(request, pk):
     cat = Category.objects.get(pk=pk)
     data = CategorySerializer(instance=cat, data=request.data)
@@ -3508,7 +3511,7 @@ def update_Category(request, pk):
 
 
 @api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
+#@permission_classes([IsAuthenticated])
 def delete_category(request, pk):
     cat = get_object_or_404(Category, pk=pk)
     cat.delete()
