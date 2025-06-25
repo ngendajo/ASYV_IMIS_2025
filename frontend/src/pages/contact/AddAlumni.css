@@ -1,0 +1,171 @@
+.valid {
+  color: green;
+  margin-left: 10px;
+}
+
+.invalid {
+  color: red;
+  margin-left: 10px;
+}
+
+.hide {
+  display: none;
+}
+.container {
+    width: 100%;
+    font-family: Regular;
+    align-items: center;
+  }
+
+  .container form{
+    width: 70%;
+    margin-left: 100px;
+    margin-bottom: 50px;
+    padding: 20px;
+    align-self: center;
+    font-family: Regular;
+    background: var(--white);
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .errmsg {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #f5c6cb;
+    border-radius: 5px;
+  }
+  
+  .offscreen {
+    display: none;
+  }
+  
+  h1 {
+    color: #333;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .img-for-profile {
+    border-radius: 50%;
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    margin-bottom: 1rem;
+  }
+  
+  .dropzone {
+    border: 2px dashed #ddd;
+    margin-left: 1.8rem;
+    margin-right: 1.8rem;
+    padding: 1rem;
+    border-radius: 8px;
+    text-align: center;
+    cursor: pointer;
+  }
+  
+  .selected-file {
+    color: #555;
+    font-size: 0.9rem;
+  }
+  
+  .browse {
+
+    color: var(--coffee);
+    cursor: pointer;
+  }
+  
+  .browse:hover {
+    text-decoration: underline;
+  }
+  
+  .form-content {
+    margin-top: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    padding: 10px;
+  }
+  
+  .formpart {
+    display: flex;
+    flex-direction: column;
+    margin: 1rem;
+  }
+  
+  .formpart label {
+    font-family: Medium;
+    margin-bottom: 0.5rem;
+    color: #555;
+  }
+  
+  .formpart input {
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+  }
+  
+  .formpart input:focus {
+    outline: none;
+    border-color: var(--brown);
+  }
+  
+
+  
+  .instructions {
+    background: #e9ecef;
+    color: #555;
+    padding: 0.5rem;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+  }
+  
+  .save-btn {
+    background-color: var(--coffee);
+    box-shadow: 0 0px 2px var(--blackopa);
+    color: var(--white);
+    font-family: Regular;
+    border: none;
+    font-size: 14px;
+    text-decoration: none;
+    padding: 10px 10px;
+    border-radius: 20px;
+  }
+  
+  .save-btn:disabled {
+    background: #ccc;
+  }
+  
+
+  .line {
+    color: var(--coffee);
+    text-decoration: none;
+  }
+  
+  .line:hover {
+    text-decoration: underline;
+  }
+  
+
+
+
+
+.set-icons{
+  display: flex;
+  
+}
+
+.alumni-form input[type="email"],
+.alumni-form input[type="text"],
+.alumni-form input[type="tel"] {
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    width: 100%;
+    box-sizing: border-box;
+}

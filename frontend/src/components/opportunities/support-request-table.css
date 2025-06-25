@@ -1,0 +1,85 @@
+.requests-wrapper {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.requests-table {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.requests-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: Regular;
+  border-radius: 10px;
+}
+
+.requests-table th,
+.requests-table td {
+  padding: 10px 15px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.requests-table th {
+  background-color: var(--coffee);
+  color: var(--white);
+  font-family: Light;
+}
+
+.requests-table tr:nth-child(even) td {
+  background-color: #ffffff;
+}
+
+.requests-table tr:nth-child(odd) td {
+  background-color: #ffffff8d;
+}
+
+.no-requests-message {
+  font-family: Regular;
+  padding: 20px;
+  text-align: center;
+  color: var(--brown);
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  margin-top: 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Mobile View */
+.requests-mobile {
+  display: none;
+  gap: 20px;
+  flex-direction: column;
+  width: 100%;
+}
+
+.request-card {
+  border: 1px solid var(--grey);
+  padding: 15px;
+  border-radius: 8px;
+  background-color: var(--white);
+  font-family: Regular;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .requests-table {
+    display: none;
+  }
+  .requests-mobile {
+    display: flex;
+  }
+}
+.requests-table {
+  width: 100%;
+  overflow-x: auto;
+  box-sizing: border-box;
+}
+
+.requests-table table {
+  min-width: 600px; /* allows scroll instead of squish */
+}

@@ -1,0 +1,119 @@
+.photo-card-container{
+  /* display */
+  display: flex;
+  flex-direction: column;
+  /* box */
+  position: relative;
+  width: 100%;
+  height: fit-content;
+  overflow: hidden;
+}
+.photo-card-container.edit{
+  /* color block */
+  background-color: var(--white);
+  border-radius: 8px;
+  box-shadow: 0px 6px 6px var(--blackopa);
+}
+.photo-card-img{
+  /* box */
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  transition: transform 0.3s ease-in-out;
+  border-radius: 8px;
+}
+.photo-card-title{
+  /* font */
+  color: var(--brown);
+  font-family: Medium;
+  font-size: 18px;
+  line-height: 1.3;
+  /* box */
+  margin-top: 20px;
+  margin-bottom: -5px;
+}
+.photo-card-date{
+  /* font */
+  color: var(--black);
+  font-family: Regular;
+  font-size: 14px;
+}
+
+/* editing options */
+.photo-card-container input[type="text"],
+.photo-card-container input[type="date"],
+.photo-card-container input[type="file"],
+.photo-card-container textarea{
+  /* font */
+  background-color: var(--palegrey);
+  color: var(--black);
+  caret-color: var(--grey);
+  font-family: Regular;
+  font-size: 14px;
+  /* box */
+  width: 86%;
+  padding: 6px 6px;
+  box-sizing: border-box;
+  border: none;
+  border-radius: 8px;
+  outline: none;
+  margin: 1% 7%;
+}
+.photo-card-container-title{
+  margin-top: 30px !important;
+}
+.photo-card-container-image{
+  margin-bottom: 30px !important;
+}
+.photo-admin-actions {
+  /* display */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+.photo-admin-actions button {
+  /* font */
+  font-family: Medium;
+  font-size: 16px;
+  text-decoration: none;
+  cursor: pointer;
+  /* box */
+  width: 100px;
+  padding: 5px 10px;
+  border-radius: 30px;
+  margin-bottom: 20px;
+}
+.photopost {
+  /* font */
+  background-color: var(--green);
+  color: var(--white);
+  border: 2px var(--green) solid;
+}
+.photopost:hover {
+  /* font */
+  background-color: var(--white);
+  color: var(--green);
+}
+.photoremove {
+  /* font */
+  background-color: var(--grey);
+  color: var(--white);
+  border: 2px var(--grey) solid;
+}
+.photoremove:hover {
+  /* font */
+  background-color: var(--white);
+  color: var(--grey);
+}
+.photoedit {
+  /* font */
+  background-color: var(--coffee);
+  color: var(--white);
+  border: 2px var(--coffee) solid;
+}
+.photoedit:hover {
+  /* font */
+  background-color: var(--white);
+  color: var(--coffee);
+}

@@ -1,0 +1,93 @@
+body {
+    background-color: var(--palegreen);
+}
+
+
+
+/* 2. Dashboard Sidebar - Annie */
+.Sidebar{
+    /* display */
+    display: flex;
+    justify-content: center;
+    /* color block */
+    background: var(--black);
+    position: fixed;
+    top: 80px;
+    left: 0;
+    /* box */
+    width: 280px;
+    height: 100vh;
+    z-index: 10;
+    overflow-y: auto;
+}
+.SidebarWrap{
+    /* box */
+    width: 100%;
+}
+.Profile{
+    /* display */
+    display: flex;
+    align-items: center;
+    /* box */
+    width: 85%;
+    padding: 30px 20px;
+}
+.Profile img{
+    /* box */
+    width: 60px;
+    margin-left: 10px;
+    border-radius: 50%;
+}
+.ProfileText{
+    /* display */
+    display: inline-flex;
+    flex-direction: column;
+    /* box */
+    width: 80%;
+    margin-left: 10px;
+}
+.Content{
+    /* box */
+    flex: 1;
+    scrollbar-width: none;
+    padding-bottom: 40px;
+    overflow-y: auto;
+    -ms-overflow-style: none;
+}
+.Content::-webkit-scrollbar{
+    /* display */
+    display: none;
+}
+
+/* 3. Global Container - Annie */
+.MarginContainer{
+  padding-top: 80px;   /* height of fixed header */
+  padding-left: 280px; /* width of fixed sidebar */
+  padding-right: 2rem;
+  padding-bottom: 2rem;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 100vh;
+}
+
+.DashboardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: clamp(0.5rem, 2vw, 1.5rem);
+  padding: 1rem;
+  width: 100vw;              /* limit container to viewport width */
+  max-width: 75%;           /* safety cap */
+  box-sizing: border-box;
+  overflow-x: hidden;        /* prevent horizontal scroll caused by grid */
+}
+
+@media (max-width: 768px) {
+  .MarginContainer {
+    padding-left: 1rem;
+    padding-top: 5rem;
+  }
+  .DashboardGrid{
+    max-width: 100%;
+    width: 100%;
+  }
+}

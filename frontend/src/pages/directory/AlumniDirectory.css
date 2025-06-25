@@ -1,0 +1,200 @@
+.DirectoryWrapper {
+    /* box */
+    width: 95%;
+    padding-bottom: 60px;
+    position: relative;
+}
+.DirectorySearchWrapper {
+    /* box */
+    width: 100%;
+    position: relative;
+    height: 75px;
+}
+.DirectoryRest{
+    /* display */
+    display: flex;
+    flex-direction: row;
+    /* box */
+    width: 100%;
+}
+.DirectoryList{
+    /* display */
+    display: flex;
+    flex-direction: column;
+    width: 45%;
+}
+.filter-bar {
+  display: flex;
+  flex-direction: row;
+  overflow-x: auto;
+  white-space: nowrap;
+  gap: 10px;
+  padding-bottom: 8px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.filter-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.DirectoryList .filter-button {
+    /* font */
+    background-color: var(--white);
+    font-family: Medium;
+    font-size: 16px;
+    white-space: nowrap;
+    /* box */
+    width: 100%;
+    padding: 4px 6px;
+    box-sizing: border-box;
+    border: 2px var(--green) solid;
+    border-radius: 8px;
+    outline: none;
+    margin: 0 5px;
+}
+.DirectoryList .filter-button.filter-applied {
+    /* font */
+    color: var(--yellow);
+    /* box */
+    border-color: var(--yellow);
+}
+.DirectoryList .filter-button select {
+    /* font */
+    background: none;
+    color: var(--green);
+    font-family: Medium;
+    font-size: 16px;
+    /* box */
+    width: 100%;
+    padding: 4px 6px;
+    box-sizing: border-box;
+    border: none;
+    outline: none;
+}
+.DirectoryList .filter-button.filter-applied select {
+    /* font */
+    width: 80%;
+    color: var(--yellow);
+}
+.DirectoryList .filter-button button {
+    /* font */
+    background: none;
+    color: var(--yellow);
+    font-family: Regular;
+    font-size: 16px;
+    /* box */
+    width: 20%;
+    padding: 4px 4px;
+    cursor: pointer;
+    border: none;
+    outline: none;
+}
+.DirectoryList .filter-button button:hover {
+    /* font */
+    color: var(--brown);
+}
+.directory-title {
+    /* font */
+    color: var(--brown);
+    font-family: Medium;
+    font-size: 18px;
+    /* box */
+    margin-top: -8px;
+    margin-bottom: 16px;
+}
+.directory-title button {
+    /* font */
+    background-color: var(--green);
+    color: var(--white);
+    font-family: Medium;
+    font-size: 16px;
+    text-decoration: none;
+    cursor: pointer;
+    /* box */
+    padding: 5px 15px;
+    border: 2px var(--green) solid;
+    border-radius: 30px;
+    margin-left: 20px;
+}
+.directory-title button:hover {
+    /* font */
+    background-color: var(--yellow);
+    /* box */
+    border: 2px var(--yellow) solid;
+}
+.directory-content {
+    /* display */
+    display: flex;
+    flex-direction: column;
+    /* box */
+    width: 100%;
+}
+.DirectoryDetail{
+    /* display */
+    display: flex;
+    flex-direction: column;
+    /* box */
+    width: 50%;
+    margin-left: 5%;
+}
+.alu-pagination {
+    /* display */
+    display: flex;
+    justify-content: center;
+    list-style: none;
+    /* box */
+    width: 100%;
+    padding: 0;
+}
+.alu-pagination li {
+    /* display */
+    display: inline;
+    /* box */
+    margin: 0 5px;
+}
+.alu-pagination li a {
+    /* font */
+    color: var(--grey);
+    font-family: Regular;
+    font-size: 16px;
+    text-decoration: none;
+    cursor: pointer;
+}
+.alu-pagination li.active a {
+    /* font */
+    color: var(--black);
+}
+
+.filter-bar.scroll-x {
+  overflow-x: auto;
+  white-space: nowrap;
+  padding-bottom: 8px;
+}
+.lockScreen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  top: 80px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--blackopa);
+  z-index: 1000;
+}
+.zoomedInContainer {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.zoomedIn {
+  width: 95%;
+  max-height: 90%;
+  overflow-y: auto;
+  background: var(--white);
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px var(--blackopa);
+}

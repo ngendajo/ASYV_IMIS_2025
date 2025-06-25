@@ -1,0 +1,236 @@
+.job-card {
+    /* display */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    /* box */
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+    min-height: calc(100vh * 0.5);
+    border-radius: 8px;
+}
+.job-card.alumni {
+    /* box */
+    min-height: calc(100vh * 0.4);
+    /* color block */
+    background-color: var(--white);
+    border: 2px solid var(--green);
+}
+.job-card.editingPo {
+    /* color block */
+    background-color: var(--white);
+    border: 2px solid var(--green);
+}
+.job-card.editingPe {
+    /* color block */
+    background-color: var(--palegrey);
+    border: 2px solid var(--coffee);
+}
+.job-card.not-approved {
+    /* color block */
+    background-color: var(--palegrey);
+    border: 2px solid var(--coffee);
+}
+.job-card.approved {
+    /* color block */
+    background-color: var(--white);
+    border: 2px solid var(--green);
+}
+.job-state-con {
+    /* display */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* box */
+    padding-top: 10px;
+    margin-bottom: -20px;
+}
+.job-state {
+    /* font */
+    font-family: Medium;
+    font-size: 16px;
+}
+.job-state.editingPo {
+    color: var(--green);
+}
+.job-state.editingPe {
+    color: var(--coffee);
+}
+.job-state.not-approved {
+    color: var(--coffee);
+}
+.job-state.approved {
+    color: var(--green);
+}
+.job-card-header {
+    /* font */
+    color: var(--brown);
+    font-family: Medium;
+    font-size: 16px;
+    line-height: 1.2; 
+    /* box */
+    height: calc((100vh - 200px) * 0.12);
+    padding-top: 20px;
+    padding-left: 30px;
+    padding-right: 30px;
+}
+.job-des {
+    /* font */
+    color: var(--black);
+    font-family: Regular;
+    font-size: 12px;
+    line-height: 1.2; 
+    /* box */
+    height: calc((100vh - 200px) * 0.2);
+    padding-left: 30px;
+    padding-right: 30px;
+}
+.job-apply-by{
+    /* font */
+    color: var(--black);
+    font-family: Light;
+    font-size: 10px;
+    line-height: 1.2; 
+    /* box */
+    padding-left: 30px;
+    padding-right: 30px;
+}
+.job-view-apply-button {
+    /* font */
+    color: var(--green);
+    font-family: Regular;
+    font-size: 16px;
+    line-height: 1.2; 
+    text-decoration: none;
+    cursor: pointer;
+    /* box */
+    padding-left: 30px;
+    padding-right: 30px;
+    margin-bottom: 30px;
+}
+.job-view-apply-button:hover {
+    /* font */
+    color: var(--brown);
+}
+.job-card input[type="text"],
+.job-card input[type="url"],
+.job-card input[type="date"],
+.job-card textarea{
+    /* font */
+    color: var(--black);
+    caret-color: var(--grey);
+    font-family: Regular;
+    font-size: 14px;
+    /* box */
+    width: 86%;
+    padding: 6px 6px;
+    box-sizing: border-box;
+    border: none;
+    border-radius: 8px;
+    outline: none;
+    margin: 2% 7%;
+}
+.job-card.editingPo input[type="text"],
+.job-card.editingPo input[type="url"],
+.job-card.editingPo input[type="date"],
+.job-card.editingPo textarea{
+    /* font */
+    background-color: var(--palegrey);
+}
+.job-card.editingPe input[type="text"],
+.job-card.editingPe input[type="url"],
+.job-card.editingPe input[type="date"],
+.job-card.editingPe textarea{
+    /* font */
+    background-color: var(--white);
+}
+.job-card input[type="text"]{
+    margin-top: 30px;
+}
+.job-card textarea {
+    /* font */
+    line-height: 1.2;
+    /* box */
+    width: 86%;
+    max-width: 86%;
+    min-height: calc((100vh - 200px) * 0.2);
+    max-height: calc((100vh - 200px) * 0.2);
+}
+.job-char-count {
+    /* font */
+    color: var(--grey);
+    font-family: Light;
+    font-size: 11px;
+    text-align: right;
+    /* box */
+    margin: 0 7%;
+    margin-top: -3%;
+}
+.job-card input[type="url"] {
+    /* box */
+    margin-bottom: 20px;
+}
+.job-admin-actions {
+    /* display */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+.job-admin-actions button {
+    /* font */
+    font-family: Medium;
+    font-size: 16px;
+    text-decoration: none;
+    cursor: pointer;
+    /* box */
+    width: 100px;
+    padding: 5px 10px;
+    border-radius: 30px;
+    margin-bottom: 15px;
+}
+.jobpost {
+    /* font */
+    background-color: var(--green);
+    color: var(--white);
+    border: 2px var(--green) solid;
+}
+.jobpost:hover {
+    /* font */
+    background-color: var(--white);
+    color: var(--green);
+}
+.jobremove {
+    /* font */
+    background-color: var(--grey);
+    color: var(--white);
+    border: 2px var(--grey) solid;
+}
+.jobremove:hover {
+    /* font */
+    background-color: var(--white);
+    color: var(--grey);
+}
+.jobedit {
+    /* font */
+    background-color: var(--coffee);
+    color: var(--white);
+    border: 2px var(--coffee) solid;
+}
+.jobedit:hover {
+    /* font */
+    background-color: var(--white);
+    color: var(--coffee);
+}
+.jobsave {
+    /* font */
+    background-color: var(--yellow);
+    color: var(--white);
+    border: 2px var(--yellow) solid;
+}
+.jobsave:hover {
+    /* font */
+    background-color: var(--white);
+    color: var(--yellow);
+}

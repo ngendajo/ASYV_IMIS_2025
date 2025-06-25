@@ -1,0 +1,98 @@
+.form input {
+  width: 100%;
+  border-radius: 10px;
+  border: none;
+  font-family: light;
+  font-size: 1rem;
+  padding: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+h3 {
+  color:var(--brown);
+  font-size: 1rem;
+  margin-bottom: 1rem;
+}
+
+select {
+  padding: 0.6rem;
+  border: none;
+  border-radius: 12px;
+  width: 100%;
+  margin-bottom: 1.5rem;
+  margin-top: 0.5rem;
+}
+
+.next-btn {
+  background: var(--green);
+  color:var(--white);
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 1rem;
+  margin: 10px;
+  box-shadow: 0 0px 3px var(--blackopa);
+}
+
+.label {
+  align-self: left;
+  margin-bottom: 20px;
+}
+.next-btn:hover{
+  background: var(--coffee);
+}
+
+.form-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.formpart {
+  display: flex;
+  flex-direction: column;
+}
+
+.formpart label {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  color: #555;
+}
+
+.formpart input {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+.formpart input:focus {
+  outline: none;
+  border-color: var(--green);}
+
+.marks-group {
+  margin-bottom: 20px;
+
+}
+
+.review_data {
+  margin-bottom: 20px;
+  color: var(--black);
+}
+
+.review_item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding: 20px;
+  border-bottom: 1px solid #ccc;
+}
+
+.review_title {
+  font-weight: Medium;
+}
+
+.review_value {
+  margin-left: 10px;
+  color: var(--green)
+}

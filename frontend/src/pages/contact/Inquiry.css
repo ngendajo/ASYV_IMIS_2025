@@ -1,0 +1,300 @@
+.inquiry-page {
+  display: flex;
+  justify-content: space-between;
+  font-family: regular;
+  width: 100%;
+  padding-bottom: 20px;
+}
+.inquiry-actions{
+  display: flex;
+  align-items: center;
+}
+.inquiry-actions button{
+margin-top: 15px;
+}
+.faq-section{
+margin-bottom: 20px;
+width: 100%;
+height:fit-content;
+background-color:var(--white);
+padding: 20px;
+border-radius: 8px;
+box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+margin-right: 40px;
+}
+
+.crc-staff {
+  margin-bottom: 40px;
+}
+
+.crc-staff h2 {
+  font-size: 1.2rem;
+  font-family: medium;
+  color: var(--black)
+}
+
+.crc-staff p {
+  font-family: light;
+  font-size: 0.9rem;
+  padding: 0px;
+}
+
+.faq-section h2, .form-section h2 {
+  font-size: 1.2rem;
+  font-family: regular;
+  color: var(--brown);
+  margin-bottom: 30px;
+}
+
+.faq-item {
+  margin-bottom: 10px;
+  cursor: pointer;
+  padding: 15px;
+  background-color: #f1f1f1; 
+  border-radius: 4px;
+  transition: background-color 0.3s;
+  font-size: 0.9rem;
+
+}
+
+.faq-item:hover {
+  background-color:rgba(134, 174, 134, 0.267); 
+}
+
+.faq-question {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.faq-answer {
+  margin-top: 10px;
+}
+
+.arrow {
+  font-size: 1em;
+  color: var(--green)
+}
+
+.inquiry-form-section {
+  width: 100%;
+  align-items: center;
+ 
+}
+
+.inquiry-form-section h2 {
+  margin-bottom: 30px;
+  text-align: center;
+
+  font-size: 1.2rem;
+  font-family: regular;
+  color: var(--brown);
+
+}
+
+.inquiry-form-group {
+  margin-bottom: 15px;
+  position: relative;
+}
+
+.inquiry-form-group input,
+.inquiry-form-group textarea {
+  width: 100%;
+  padding: 10px;
+  font-size: 12px;
+  border: 1.2px solid #ddd;
+  border-radius: 8px;
+  transition: border-color 0.3s;
+  font-family: light;
+}
+
+.inquiry-form-group input:focus,
+.inquiry-form-group textarea:focus {
+  border-color:var(--green);
+  outline: none;
+}
+
+.inquiry-form-group textarea {
+  height: 9.2rem;
+  resize: vertical;
+}
+
+.inquiry-submit-button {
+  width: 100%;
+  background-color: var(--green);
+  color: var(--white);
+  font-family: Medium;
+  font-size: 16px;
+  border: none;
+  text-decoration: none;
+  padding: 10px 10px;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  align-self: center;
+ 
+}
+
+.inquiry-submit-button:hover {
+  background-color: var(--orange);
+}
+
+.inquiry-list-section{
+  width: 100%;
+  font-family: Light;
+  font-size: 14px;
+
+}
+
+.inquiry-item{
+  padding: 10px;
+  display: flex;
+  font-size: 14px;
+  flex-direction: column;
+  background-color: var(--white);
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  margin-bottom: 10px;
+
+}
+
+.reply-submit-button{
+  align-self: center;
+  width: 27%;
+  background-color: var(--green);
+  color: var(--white);
+  font-family: Medium;
+  border: none;
+  font-size: 10px;
+  text-decoration: none;
+  padding: 8px 8px;
+  border-radius: 30px;
+}
+
+.reply-submit-button:hover{
+  
+  background-color: var(--coffee);
+}
+
+
+.inquiry-delete-button{
+  background-color: var(--coffee);
+  color: var(--white);
+  margin-left: 10px;
+  font-family: light;
+  border: none;
+  font-size: 10px;
+  text-decoration: none;
+  padding: 10px 10px;
+  border-radius: 17px;
+}
+
+.inquiry-delete-button:hover{
+  
+  background-color: var(--green);
+}
+
+.reply-form{
+  display: flex;
+  padding: 5px;
+  margin-bottom: 10px;
+}
+.reply-form textarea{
+  border-radius: 12px;
+  border: 1.5px solid var(--coffee);
+  font-family: Light;
+  font-size: 12px;
+  padding: 10px;
+  width: fit-content;
+  margin-right: 10px;
+}
+
+.faq-item button{
+ background-color: var(--coffee);
+  color: var(--white);
+  font-family: light;
+  border: none;
+  font-size: 10px;
+  text-decoration: none;
+  padding: 10px 10px;
+  border-radius: 17px;
+}
+.faq-item button:hover{
+  background-color: var(--green);
+}
+
+.faq-form button{
+  background-color: var(--coffee);
+  width: 30%;
+  align-self: center;
+  height: 40px;
+   color: var(--white);
+   font-family: light;
+   border: none;
+   font-size: 12px;
+   text-decoration: none;
+   padding: 5px 5px;
+   border-radius: 30px;
+ }
+ .faq-form button:hover{
+   background-color: var(--green);
+ }
+
+ .faq-form{
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+ }
+
+ .faq-form-group input{
+  border-radius: 12px;
+  margin-bottom: 10px;
+  border: 1.5px solid var(--coffee);
+  font-family: Light;
+  font-size: 10px;
+  padding: 10px;
+  width: 80%;
+ }
+
+ .inquiry-tabs{
+  /* display */
+  display: flex;
+  justify-content: right;
+  /* box */
+  width: 100%;
+  margin-bottom: 20px;
+  gap: 20px;
+}
+.inquiry-tabs button {
+  /* font */
+  color: var(--brown);
+  font-family: Medium;
+  font-size: 16px;
+  text-decoration: none;
+  transition: 0.1s;
+  cursor: pointer;
+  /* box */
+  position: relative;
+  background: none;
+  border: none;
+  margin: 0 10px;
+}
+
+.inquiry-tabs  button:hover,
+.inquiry-tabs  button.active {
+  /* font */
+  color: var(--yellow);
+  border-bottom: 2px var(--yellow) solid;
+}
+
+/* Remove bullet points for the inquiry list */
+.inquiry-list-section ul {
+list-style-type: none;  /* Remove default bullet points */
+padding: 0;  /* Remove default padding */
+}
+
+/* Optional: Add padding to each list item for better visual spacing */
+.inquiry-list-section ul li {
+padding: 10px 0;  /* Adjust the padding as needed */
+
+}
