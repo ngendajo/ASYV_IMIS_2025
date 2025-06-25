@@ -1,0 +1,91 @@
+.table-container {
+    overflow-x: auto;
+  }
+  
+  .responsive-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+  }
+  
+  .responsive-table th, .responsive-table td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: left;
+  }
+  
+  /* Media query for responsiveness */
+  @media (max-width: 600px) {
+    .responsive-table th, .responsive-table td {
+      font-size: 12px;
+    }
+  }
+ .filter-container{
+  width: 20%;
+ }
+
+ .custom-select-container {
+  position: relative;
+  width: 35%; /* Set a default width */
+  display: flex;
+  align-items: center;
+  margin: 10px;
+}
+
+.custom-select {
+  width: 20%;
+  font-size: 12px;
+  padding: 5px;
+  margin-left: 3px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  appearance: none; /* Remove default arrow icon in some browsers */
+  background: white; /* Add custom arrow icon */
+  background-size: 12px; /* Adjust the arrow icon size */
+
+  /* Optional: Add styles to customize the appearance of the options */
+}
+
+.custom-select:hover {
+  border-color: #999;
+}
+
+.custom-select:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+}
+
+/* Optional: Style the dropdown options */
+.custom-select option {
+  padding: 8px;
+}
+
+.prenext {
+  /* Add your styles here */
+  background-color: #094e2f;
+  color: #fff;
+  padding: 7px 10px;
+  margin: 5px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+/* Add any additional styles for the hover or active state if needed */
+.prenext:hover {
+  background-color: #695909;
+}
+
+.prenext:active {
+  background-color: #695909;
+}
+.pageno{
+  font-size: 16px;
+  font-weight: 600;
+  color: black;
+}
+
+  
+  

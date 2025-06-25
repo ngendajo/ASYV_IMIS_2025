@@ -1,0 +1,192 @@
+
+/* styles for desktop devices */
+@media only screen and (min-width: 992px) {
+  .loginform{
+    margin: 50px 35%;
+    text-align: center;
+    min-height: 400px;
+  }
+  .loginform h2{
+    color:#002F6C;
+    font-size: 40px;
+  }
+  .formelement label{
+    display: block;
+    padding: 10px 0px;
+    font-size: 20px;
+    font-weight: 600;
+  }
+  .credentials {
+    width: 300px;
+    padding: 7px 16px;
+    margin: 8px 2px;
+    display: inline-block;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+    font-size: 20px;
+  }
+  .vercode{
+    width: 100px;
+    padding: 7px 10px;
+    margin: 8px 3px;
+    display: inline-block;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+    font-size: 15px;
+  }
+  .formelement .submitbuton{
+    background-color: #002F6C;
+    color:white;
+    font-size: 20px;
+    padding: 10px 20px;
+    border-radius: 5px;
+  }
+  
+  .captcha{
+    color:white;
+    font-size: 20px;
+    padding: 10px 20px;
+    border: 0px;
+    font-weight: 600;
+    color: #002F6C;
+  }
+  .forgetpass{
+    text-decoration: none; /* Remove underline */
+  }
+  .errmsg{
+    color: red;
+}
+.offscreen{
+  display: none;
+}
+.captcha,.submitbuton,.forgetpass{
+  cursor: pointer;
+}
+}
+
+/* styles for tablet devices */
+@media only screen and (min-width: 768px) and (max-width: 991px) {
+  .loginform{
+    margin: 30px 25%;
+    text-align: center;
+    min-height: 400px;
+  }
+  .loginform h2{
+    color:#002F6C;
+    font-size: 30px;
+  }
+  .formelement label{
+    display: block;
+    padding: 10px 0px;
+    font-size: 20px;
+    font-weight: 600;
+  }
+  .credentials {
+    width: 300px;
+    padding: 7px 16px;
+    margin: 8px 0;
+    display: inline-block;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+    font-size: 15px;
+  }
+  .vercode{
+    width: 100px;
+    padding: 7px 10px;
+    margin: 8px 3px;
+    display: inline-block;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+    font-size: 15px;
+  }
+  .formelement .submitbuton{
+    background-color: #002F6C;
+    color:white;
+    font-size: 20px;
+    padding: 10px 20px;
+    border-radius: 5px;
+  }
+  .captcha{
+    color:white;
+    font-size: 20px;
+    padding: 10px 20px;
+    border: 0px;
+    font-weight: 600;
+    color: #002F6C;
+  }
+  .forgetpass{
+    text-decoration: none; /* Remove underline */
+  }
+  .errmsg{
+    color: red;
+}
+.offscreen{
+  display: none;
+}
+}
+
+/* styles for mobile devices */
+@media only screen and (max-width: 767px) {
+  .loginform{
+    margin: 20px 15%;
+    text-align: center;
+  }
+  .loginform h2{
+    color:#002F6C;
+    font-size: 30px;
+  }
+  .formelement label{
+    display: block;
+    padding: 10px 0px;
+    font-size: 20px;
+    font-weight: 600;
+  }
+  .credentials {
+    width: 300px;
+    padding: 7px 16px;
+    margin: 8px 0;
+    display: inline-block;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+    font-size: 15px;
+  }
+  .vercode{
+    width: 100px;
+    padding: 7px 10px;
+    margin: 8px 3px;
+    display: inline-block;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+    font-size: 15px;
+  }
+  .formelement .submitbuton{
+    background-color: #002F6C;
+    color:white;
+    font-size: 20px;
+    padding: 10px 20px;
+    border-radius: 5px;
+  }
+  .captcha{
+    color:white;
+    font-size: 20px;
+    padding: 10px 20px;
+    border: 0px;
+    font-weight: 600;
+    color: #002F6C;
+  }
+  .forgetpass{
+    text-decoration: none; /* Remove underline */
+  }
+  .errmsg{
+    color: red;
+}
+.offscreen{
+  display: none;
+}
+}
