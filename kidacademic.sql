@@ -26,6 +26,7 @@ SET default_table_access_method = heap;
 -- TOC entry 246 (class 1259 OID 52292)
 -- Name: api_kidacademics; Type: TABLE; Schema: public; Owner: postgres
 --
+DROP TABLE IF EXISTS public.api_kidacademics CASCADE;
 
 CREATE TABLE public.api_kidacademics (
     id bigint NOT NULL,

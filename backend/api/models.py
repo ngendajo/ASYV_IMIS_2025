@@ -371,6 +371,9 @@ class College(models.Model):
 
     def __str__(self):
         return self.college_name
+    
+    def locationString(self): 
+        return f"{self.city}, {self.country}"
 
 class FurtherEducation(models.Model):
 
