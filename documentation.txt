@@ -47,7 +47,10 @@ update_data = {
 
 pip install djangorestframework djangorestframework-simplejwt PyJWT
 pip install pandas openpyxl djangorestframework:
+<<<<<<< HEAD
 pip install Pillow
+=======
+>>>>>>> 6a1f0b71 (testing out how to create api endpoints for data visualizations on the front end - gender distribution)
 
 
 Populating PostgresSQL Database:
