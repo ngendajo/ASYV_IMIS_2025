@@ -118,7 +118,15 @@ export default function Grstatistics() {
   }
   const studentReprtexcel = async () => {
     setLoadingpdf(true);
-      const response = await fetch(`${baseUrl}/exportstudentexcel/`);
+      const response = await fetch(`${baseUrl}/exportstudentexcel/`, {
+              method: 'GET', // or 'POST' if needed
+              headers: {
+                'Authorization': 'Bearer ' + String(auth.accessToken),
+                'Content-Type': 'application/json', // if your endpoint expects JSON
+              },
+              // Include credentials if your backend requires cookies
+              // credentials: 'include',
+            });
       const blob = await response.blob();
 
       const url = window.URL.createObjectURL(new Blob([blob]));
@@ -132,7 +140,14 @@ export default function Grstatistics() {
     };
     const issuedbookPerClassReprtexcel = async () => {
       setLoadingpdf(true);
-        const response = await fetch(`${baseUrl}/library/book-export/`);
+        const response = await fetch(`${baseUrl}/library/book-export/`, {
+              method: 'GET', // or your required method
+              headers: {
+                'Authorization': 'Bearer ' + String(auth.accessToken),
+                'Content-Type': 'application/json', // if needed
+              },
+              // credentials: 'include', // if your backend requires cookies for auth
+            });
         const blob = await response.blob();
   
         const url = window.URL.createObjectURL(new Blob([blob]));
@@ -146,7 +161,14 @@ export default function Grstatistics() {
       };
     const issuedbookReprtexcel = async () => {
       setLoadingpdf(true);
-        const response = await fetch(`${baseUrl}/exportissuedexcel/`);
+        const response = await fetch(`${baseUrl}/exportissuedexcel/`, {
+            method: 'GET', // or appropriate HTTP method
+            headers: {
+              'Authorization': 'Bearer ' + String(auth.accessToken),
+              'Content-Type': 'application/json', // if needed by your API
+            },
+            // credentials: 'include', // uncomment if your backend uses cookies
+          });
         const blob = await response.blob();
   
         const url = window.URL.createObjectURL(new Blob([blob]));
