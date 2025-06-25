@@ -1,0 +1,340 @@
+.AlumniForumContainer {
+    width: 100%;
+    padding-bottom: 60px;
+    position: relative;
+  }
+  
+  .alumni-dashboard {
+    width: 100%;
+    max-width: 800px;
+    margin-top: 53px;
+    padding: 40px;
+    font-family: Regular;
+    background-color: var(--white);
+    box-shadow: 0 2px 10px var(--blackopa);
+    border-radius: 0 20px 20px 20px;
+    height: calc(95% - 62px);
+  }
+  
+  .forum-tabs {
+    display: flex;
+    justify-content: space-around;
+    background-color: var(--palegreen);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 65%;
+    border-radius: 20px 20px 0 0;
+
+     
+  }
+  
+  .forum-tabs button {
+    background-color: var(--green);
+    color: var(--white);
+    font-family: Medium;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 15px;
+    border: none;
+    border-radius: 20px 20px 0 0;
+    flex: 1;
+    transition: background-color 0.1s;
+  }
+  
+  .forum-tabs button.active {
+    background-color: var(--yellow);
+    border-radius: 20px 20px 0 0;
+  }
+  
+  .announcement-item {
+    margin-bottom: 10px;
+  }
+  
+  .date {
+    font-size: 0.7rem;
+    margin-bottom: 5px;
+    text-align: center;
+    color: var(--coffee);
+    font-family: light;
+  }
+  
+  .message-container {
+    display: flex;
+    align-items: flex-start;
+
+   
+  }
+
+  .delete-group-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color:var(--black);
+    margin-left: 180px;
+  }
+  .delete-group-btn :hover{
+    cursor: pointer;
+    color: red;
+
+  }
+  .profile-pic img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+  }
+  
+  .message-content {
+    background-color: var(--white);
+    border-radius: 10px;
+    position: relative;
+  
+  }
+  
+  .message-text {
+    margin-bottom: 5px;
+    background-color: var(--palegrey);
+    padding: 12px;
+    border-radius: 0px 10px 10px 10px;
+    font-size: 0.85rem;
+  }
+  
+  .message-time {
+    font-size: 0.6rem;
+    color: grey;
+    font-family: light;
+    margin-top: 5px;
+    text-align: left;
+  }
+
+  .groups-container {
+    display: flex;
+  }
+
+  
+  .group-search-input {
+    width: 39%;
+    height: 18px;
+    padding: 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 10px;    
+    transition: border-color 0.3s ease;
+    background-color: rgba(67, 132, 67, 0.158);
+    margin-bottom: 10px;
+  }
+  
+  .group-list-container {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+.group-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  width: 45%;
+  overflow-y: auto;
+  height: calc(100% - 20px);
+  font-family: medium;
+  color: var(--black);
+}
+
+.group-list li {
+  cursor: pointer;
+  padding: 10px;
+  transition: background-color 0.2s;
+  margin: 5px;
+  display: flex;
+  flex-direction: row;
+}
+
+
+.group-details {
+  flex: 1;
+  padding-left: 20px;
+  padding-bottom: 20px;
+  border-color: var(--palegrey);
+}
+.group-list li {
+  padding: 10px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.group-list li:hover,
+.group-list li.active {
+  background-color:  rgba(67, 132, 67, 0.158);
+  border-radius: 5px;/* Adjust color as per your design */
+}
+
+.qr-code-container {
+  max-width: 100%;
+  align-items: center;
+}
+
+.qr-code-container img {
+  max-width: 100%;
+  width: 70%;
+  height: 300px;
+  border-radius: 5px;
+
+}
+  
+.join-whatsapp-button{
+width: 80%;
+ margin-bottom: 10px;
+ margin-left: 40px;
+ align-self: center;
+ background-color: var(--white);
+    color: var(--green);
+    font-family: Medium;
+    font-size: 14px;
+    text-decoration: none;
+    padding: 10px 10px;
+    border: 2px var(--green) solid;
+    border-radius: 30px; 
+}
+
+.announcement-actions {
+  align-self: center;
+  margin-bottom: 15px;
+}
+
+.announcement-actions button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color:var(--black);
+  font-size: 12px;
+
+ 
+}
+
+.announcement-actions button:hover {
+    color:var(--green);
+}
+.pinned-icon {
+  color: var(--green);
+}
+.pinned {
+  margin-bottom: 5px;
+    background-color: var(--brown);
+    color: var(--white);
+    padding: 12px;
+    border-radius: 0px 10px 10px 10px;
+    font-size: 0.85rem;
+}
+.announcement-form {
+  display: flex;
+  flex-direction: column;
+  margin-top: 20px;
+}
+
+.announcement-form textarea {
+  width: 100%;
+  padding: 12px;
+  font-size: 0.85rem;
+  background-color: var(--palegrey);
+  border-radius: 8px;
+  margin: 10px;
+  border: none;
+  font-family: Regular;
+  height:fit-content;
+box-sizing: border-box;
+}
+
+.announcement-form button {
+  background-color: var(--green);
+  width: 20%;
+  color: var(--white);
+  font-family: Light;
+  font-size: 0.85rem;
+  text-decoration: none;
+  padding: 10px 10px;
+  border: none;
+  border-radius: 8px;
+  align-self: left;
+  margin: 10px;
+
+}
+
+.announcement-form button:hover {
+  background-color: var(--orange);
+}
+
+.group-form{
+  display: flex;
+  flex-direction:  column;
+}
+.group-form input {
+  padding: 0.6rem;
+  margin: 0.2rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.group-form input[type="file"] {
+  padding: 0.6rem;
+  margin: 0.2rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.form-buttons{
+  display: flex;
+  flex-direction: row;
+}
+
+.group-back-button {
+  padding: 20px;
+  color: var(--brown);
+  font-family: Medium;
+  font-size: 15px;
+  text-decoration: none;
+  transition: 0.1s;
+  cursor: pointer;
+  background: none;
+  border: none;
+
+}
+
+.group-back-button:hover {
+  color: var(--yellow);
+
+}
+.submit-button {
+  align-self: flex-start;
+  padding: 10px 20px;
+  background-color: var(--green);
+  width: 20%;
+  color: var(--white);
+  font-family: Light;
+  font-size: 0.85rem;
+  text-decoration: none;
+  padding: 10px 10px;
+  border: none;
+  border-radius: 8px;
+  margin: 10px;
+}
+
+.add-group-button{
+  background-color: var(--green);
+  width: fit-content;
+  color: var(--white);
+  font-family: Light;
+  font-size: 0.8rem;
+  text-decoration: none;
+  padding: 10px 10px;
+  border: none;
+  border-radius: 8px;
+  align-self: left;
+  margin-top: 60px;
+
+}
+
+.add-group-button button:hover {
+  background-color: var(--orange);
+}

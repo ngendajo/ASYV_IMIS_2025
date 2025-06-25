@@ -1,0 +1,103 @@
+.opportunity-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background-color: var(--white);
+  border: 2px solid var(--green);
+  overflow: hidden;
+  border-radius: 8px;
+  padding: 20px;
+  cursor: pointer;
+  position: relative; /* Needed for absolute-positioned apply date */
+}
+
+/* New: Flex row for title and apply-by date */
+.card-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 6px;
+}
+
+/* New: Job title (replaces .card-header) */
+.card-title {
+  color: var(--brown);
+  font-family: Medium;
+  font-size: 16px;
+  margin: 0;
+}
+
+/* New: Company name subtitle */
+.card-subtitle {
+  color: var(--grey);
+  font-family: Regular;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+/* New: Apply-by date positioned on top right */
+.card-date {
+  color: var(--black);
+  font-family: Light;
+  font-size: 12px;
+  margin-left: 20px;
+}
+
+/* Keep the rest unchanged */
+.card-description {
+  color: var(--black);
+  font-family: Regular;
+  font-size: 14px;
+  line-height: 1.4;
+  margin-bottom: 10px;
+}
+
+.card-meta {
+  color: var(--black);
+  font-family: Light;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.card-link {
+  color: var(--green);
+  font-family: Regular;
+  font-size: 14px;
+  text-decoration: none;
+  margin-bottom: 16px;
+}
+
+.card-link:hover {
+  color: var(--brown);
+}
+
+.card-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.card-actions button {
+  background-color: var(--green); 
+  color: white;
+  border: none;
+  border-radius: 30px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-family: Regular;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.draft-label {
+  background-color: var(--brown, #7b5e57);
+  color: white;
+  font-size: 10px;
+  font-family: Bold;
+  padding: 3px 8px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  margin-left: 10px;
+  margin-top: 2px;
+  height: fit-content;
+}

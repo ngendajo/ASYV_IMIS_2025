@@ -1,0 +1,100 @@
+/* Center the story wrapper and make it responsive */
+.story-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: 50px;
+    margin: 0 auto;
+    padding: 30px;
+    max-width: 900px;
+  }
+  
+  /* Style the story content as a card with shadow */
+  .story-content {
+    background: #fff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    padding: 30px;
+    width: 100%;
+    margin-bottom: 20px;
+    margin-top: 25px;
+    font-family: Regular;
+  }
+  
+  /* Style the header with title and name below each other */
+  .story-header {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  .story-title {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+  
+  .story-name {
+    font-size: 18px;
+    color: #555;
+  }
+  
+  /* Style the description text */
+  .story-text-container {
+    font-size: 16px;
+    color: #333;
+    line-height: 2;
+    padding: 20px;
+  }
+  
+  /* Style the image poster */
+  .story-poster img {
+    max-width: 100%;
+    border-radius: 8px;
+  }
+  
+  .story-back-button {
+    /* font */
+    color: var(--brown);
+    font-family: Medium;
+    font-size: 18px;
+    text-decoration: none;
+    transition: 0.1s;
+    cursor: pointer;
+    /* box */
+    position: absolute;
+    top: 55px;
+    right: 50px;
+    background: none;
+    border: none;
+  }
+  .story-back-button:hover{
+    /* font */
+    color: var(--yellow);
+    border-bottom: 2px var(--yellow) solid;
+  }
+  @media (max-width: 768px) {
+  .story-wrapper {
+    padding: 20px;
+  }
+
+  .story-title {
+    font-size: 20px;
+  }
+
+  .story-name {
+    font-size: 16px;
+  }
+
+  .story-text-container {
+    font-size: 15px;
+    padding: 15px;
+  }
+
+  .story-back-button {
+    font-size: 16px;
+    top: 20px;
+    right: 20px;
+  }
+}

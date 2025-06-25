@@ -1,0 +1,160 @@
+/* === Responsive Dashboard Header === */
+.DashboardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  background-color: var(--white);
+  color: var(--green);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  box-shadow: 0 6px 6px var(--blackopa);
+  padding: 10px 20px;
+  height: 80px;
+  z-index: 100;
+  box-sizing: border-box;
+}
+
+/* === Header Left (Logo & Title) === */
+.DashboardHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.DashboardHeaderLeft img {
+  width: 70px;
+  margin-left: -10px;
+}
+
+.DashboardHeaderLeft p {
+  font-family: Regular;
+  font-size: 16px;
+  color: var(--green);
+  margin: 0;
+  white-space: nowrap;
+}
+
+/* === Header Right === */
+.DashboardHeaderRight {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* === Logout Button === */
+.DashboardHeaderLogout button {
+  background-color: var(--white);
+  color: var(--orange);
+  font-family: Medium;
+  font-size: 18px;
+  text-decoration: none;
+  cursor: pointer;
+  padding: 8px 20px;
+  border: 2px solid var(--orange);
+  border-radius: 30px;
+  transition: all 0.3s ease;
+}
+
+.DashboardHeaderLogout button:hover {
+  background-color: var(--orange);
+  color: var(--white);
+}
+
+/* === Hamburger Button (Hidden by default) === */
+.hamburger {
+  font-size: 1.5rem;
+  background: none;
+  border: none;
+  color: var(--green);
+  cursor: pointer;
+  display: none;
+}
+
+/* === Mobile Dropdown === */
+.MobileDropdownMenu {
+  position: absolute;
+  top: 80px;
+  left: 0;
+  right: 0;
+  background-color: var(--black);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 1.5rem;
+  z-index: 99;
+}
+
+.MobileDropdownItem {
+  color: var(--white);
+  text-decoration: none;
+  padding: 0.5rem 0;
+  font-family: Medium, sans-serif;
+}
+
+.MobileDropdownItem:hover {
+  background-color: var(--greenopa);
+}
+
+/* === Responsive Tweaks === */
+@media (max-width: 1024px) {
+  .hamburger {
+    display: block;
+  }
+
+  .DashboardHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0.5rem 1rem;
+    height: auto;
+  }
+
+  .DashboardHeaderLeft {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .DashboardHeaderRight {
+    width: 100%;
+    justify-content: flex-end;
+    margin-top: 0.5rem;
+  }
+
+  .DashboardHeaderLeft p {
+    font-size: 0.95rem;
+  }
+}
+
+/* === Compact Mobile Header Buttons (768px–1024px) === */
+.HomeHeaderRightCompact {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.HomeHeaderLoginCompact {
+  background-color: var(--white);
+  color: var(--orange);
+  font-family: Medium;
+  font-size: 16px;
+  padding: 6px 16px;
+  border: 2px solid var(--orange);
+  border-radius: 30px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.HomeHeaderLoginCompact:hover {
+  background-color: var(--orange);
+  color: var(--white);
+}
+
+.HomeHeaderHamburger {
+  font-size: 1.8rem;
+  background: none;
+  border: none;
+  color: var(--green);
+  cursor: pointer;
+}

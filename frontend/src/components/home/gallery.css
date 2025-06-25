@@ -1,0 +1,81 @@
+/* GalleryCarousel.css */
+
+.gallery-carousel {
+    width: 80%;
+
+    margin: auto;
+   /* Ensure the position is relative for absolute positioning of dots */
+  overflow: hidden;
+  overflow-block: hidden;
+
+   
+  }
+
+  .slick-arrow {
+    position: absolute;
+    top: 40%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 1;
+    border-radius: 50%;
+    transform: translateY(-50%);
+}
+
+.slick-prev {
+    left: 10px;
+}
+
+.slick-next {
+    right: 10px;
+}
+
+  
+  .slick-dots {
+    position: absolute;
+    bottom: 10px; 
+    width: 100%;
+    list-style: none;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    padding: 0;
+  }
+  
+  .slick-dots li {
+    margin: 0 2px; /* Adjust spacing between dots */
+    width: 12px; /* Adjust dot size */
+    height: 12px; /* Adjust dot size */
+  }
+  
+  .slick-dots li button:before {
+    font-size: 8px; /* Adjust dot icon size */
+    color: #eee5e5; /* Default color of inactive dots */
+  }
+  
+  .slick-dots li.slick-active button:before {
+    color: #020101; /* Color of active dot */
+  }
+  
+  .slick-slide {
+    transition: transform 0.3s ease-in-out;
+    display: flex;
+    justify-content: center; /* Center align items horizontally */
+  }
+  
+  .slick-slide img {
+    max-width: 100%; /* Ensure images fill the carousel width */
+    height: auto; /* Ensure images do not get cropped */
+    object-fit: contain;/* Ensure images fill the carousel height */
+    object-fit: cover; /* Maintain aspect ratio */
+    position: relative;
+    border-radius: 8px;
+
+   
+  }
+  
+
+  

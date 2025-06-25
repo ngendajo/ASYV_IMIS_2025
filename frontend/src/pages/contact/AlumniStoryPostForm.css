@@ -1,0 +1,216 @@
+/* AlumniStoryPostForm.css */
+.alumni-story-container {
+    display: flex;
+    width: 100%;
+    padding-bottom: 60px;
+  }
+  
+  .alumni-list-container {
+    width: 100%;
+    margin-top: 3rem;
+  }
+  
+  .story-form-container {
+    width: 50%;
+    font-family: Regular;
+    margin-top: 0px;
+    margin-left: 50px;
+  }
+
+  .tab-content{
+    padding: 30px;
+    font-family: Regular;
+    border-radius: 0px 0px 20px 20px;
+    background-color: var(--white);
+    box-shadow: 0 2px 10px var(--blackopa);
+  }
+  .story-tabs{
+    /* display */
+    display: flex;
+    justify-content: space-around;
+    /* color block */
+    background-color: var(--palegreen);
+    /* box */
+    width: 100%;
+}
+.story-tabs button{
+    /* color block */
+    background-color: var(--green);
+    /* font */
+    color: var(--white);
+    font-family: Medium;
+    font-size: 14px;
+    cursor: pointer;
+    /* box */
+    padding: 15px 0;
+    border: none;
+    border-radius: 30px 30px 0 0;
+    flex: 1;
+    transition: background-color 0.1s;
+   
+}
+.story-tabs button.active{
+    /* color block */
+    background-color: var(--yellow);
+    /* box */
+    padding: 20px 0;
+    transform: none;
+    border-radius: 30px 30px 0 0;
+}
+
+  
+  .story-form-container .page-title {
+    font-size: 16px;
+    margin-bottom: 15px;
+    margin-top: 10px;
+    text-align: center;
+    font-family: Medium;
+    color: var(--black);
+  }
+  
+  .story-form-container form {
+    margin-bottom: 20px;
+  }
+  
+  .story-form-group {
+    position: relative;
+    margin-bottom: 20px;
+  }
+  
+  .story-form-group input[type="text"],
+  .story-form-group textarea,
+  .story-form-group input[type="file"] {
+    width: 95%;
+    padding: 10px;
+    font-size: 16px;
+    background-color: var(--palegrey);
+    border-radius: 8px;
+    border: none;
+    outline: none;
+    font-family: Regular;
+    resize: none;
+  }
+  
+  .story-form-group textarea {
+    height: 10rem; /* Increased height for the story text area */
+    resize: vertical;
+  }
+  
+  .story-form-group label {
+    position: absolute;
+    top: 0;
+    left: 10px;
+    font-size: 16px;
+    color: var(--blackopa);
+  }
+  
+  .story-form-group input[type="file"] {
+    padding: 15;
+  }
+  
+  .submit-container {
+    margin-top: 20px;
+    text-align: center;
+  }
+  
+  .submit-container button {
+    background-color: var(--green);
+    color: var(--white);
+    font-family: Light;
+    font-size: 14px;
+    text-decoration: none;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 30px;
+    margin-left: 5px;
+    align-self: right;
+  }
+  
+  .submit-container button:hover {
+    background-color: var(--orange);
+  }
+  
+  @media (max-width: 600px) {
+    .story-form-container button {
+      width: 100%;
+      margin-bottom: 10px;
+    }
+  }
+  
+
+  .media-option {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .media-option label {
+    margin-bottom: 5px;
+  }
+
+  .list{
+    margin-top: 40px;
+  }
+
+  .post-item{
+    padding: 10px;
+    display: flex;
+    border-radius: 12px;
+    border: 1px solid #ccc;
+    height: 1.5rem;
+    align-items: center;
+    font-family: light;
+    font-size: 14px;
+    margin-bottom: 10px;
+    transition: background-color 0.3s ease;
+  }
+
+  .post-item:hover{
+    background-color:#eaeaea;
+  }
+
+  .story-delete-button:hover {
+    background-color: var(--green);
+  }
+  
+  .story-delete-button {
+    background-color: var(--coffee);
+  color: var(--white);
+  height: fit-content;
+  margin-left: 10px;
+  font-family: light;
+  border: none;
+  font-size: 10px;
+  text-decoration: none;
+  padding: 8px;
+  border-radius: 17px;
+  }
+
+
+.alu-pagination {
+    /* display */
+    display: flex;
+    justify-content: center;
+    list-style: none;
+    /* box */
+    width: 100%;
+    padding: 0;
+  
+}
+.alu-pagination li {
+    /* display */
+    display: inline;
+    /* box */
+    margin: 0 5px;
+}
+.alu-pagination li a {
+    /* font */
+    color: var(--grey);
+    font-family: Regular;
+    font-size: 16px;
+    text-decoration: none;
+    cursor: pointer;
+}
+.alu-pagination li.active a {
+    /* font */
+    color: var(--black);
+}

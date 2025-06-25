@@ -1,0 +1,82 @@
+.photo-gallery{
+    /* box */
+    width: 70%;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+}
+.gallery-slide{
+    /* box */
+    position: relative;
+}
+.photo-gallery .slick-prev,
+.photo-gallery .slick-next{
+    /* box */
+    position: absolute;
+    top: 47%;
+}
+.photo-gallery .slick-prev{
+    /* box */
+    left: -40px;
+}
+.photo-gallery .slick-next{
+    /* box */
+    right: -37px;
+}
+.photo-gallery .slick-prev::before,
+.photo-gallery .slick-next::before{
+    /* font */
+    color: var(--yellow);
+    opacity: 0.6;
+    font-family: Medium;
+    font-size: 40px;
+}
+.photo-gallery .slick-prev::before{
+    /* font */
+    content: '<';
+}
+.photo-gallery .slick-next::before{
+    /* font */
+    content: '>';
+}
+.photo-gallery .slick-prev:hover::before,
+.photo-gallery .slick-next:hover::before {
+    opacity: 1;
+}
+.photo-gallery .slick-dots{
+    /* box */
+    position: absolute;
+    bottom: -30px; 
+}
+.photo-gallery .slick-dots li{
+    /* box */
+    width: 20px;
+    margin: 0 1px;
+}
+.photo-gallery .slick-dots li button::before{
+    /* font */
+    color: var(--yellow);
+    opacity: 0.6;
+    font-size: 10px;
+}
+.photo-gallery .slick-dots li:hover button::before{
+    /* font */
+    color: var(--yellow);
+    opacity: 0.8;
+}
+.photo-gallery .slick-dots li.slick-active button::before{
+    /* font */
+    color: var(--yellow);
+    opacity: 1;
+}
+.slick-slide{
+    /* display */
+    display: flex;
+    justify-content: center;
+}
+.slick-slide img{
+    /* box */
+    max-width: 100%; /* Ensure images fill the carousel width */
+    height: auto; /* Ensure images do not get cropped */
+}

@@ -1,0 +1,239 @@
+.edu-card {
+    /* display */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    /* box */
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+    min-height: calc(100vh * 0.5);
+    border-radius: 8px;
+}
+.edu-card.alumni {
+    /* box */
+    min-height: calc(100vh * 0.4);
+    /* color block */
+    background-color: var(--white);
+    border: 2px solid var(--green);
+}
+.edu-card.editingPo {
+    /* color block */
+    background-color: var(--white);
+    border: 2px solid var(--green);
+}
+.edu-card.editingPe {
+    /* color block */
+    background-color: var(--palegrey);
+    border: 2px solid var(--coffee);
+}
+.edu-card.not-approved {
+    /* color block */
+    background-color: var(--palegrey);
+    border: 2px solid var(--coffee);
+}
+.edu-card.approved {
+    /* color block */
+    background-color: var(--white);
+    border: 2px solid var(--green);
+}
+.edu-state-con {
+    /* display */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* box */
+    padding-top: 10px;
+    margin-bottom: -20px;
+}
+.edu-state {
+    /* font */
+    font-family: Medium;
+    font-size: 16px;
+}
+.edu-state.editingPo {
+    color: var(--green);
+}
+.edu-state.editingPe {
+    color: var(--coffee);
+}
+.edu-state.not-approved {
+    color: var(--coffee);
+}
+.edu-state.approved {
+    color: var(--green);
+}
+.edu-card-header {
+    /* font */
+    color: var(--brown);
+    font-family: Medium;
+    font-size: 16px;
+    line-height: 1.2; 
+    /* box */
+    height: calc((100vh - 200px) * 0.12);
+    padding-top: 20px;
+    padding-left: 30px;
+    padding-right: 30px;
+}
+.edu-des {
+    /* font */
+    color: var(--black);
+    font-family: Regular;
+    font-size: 12px;
+    line-height: 1.2; 
+    /* box */
+    height: calc((100vh - 200px) * 0.2);
+    padding-left: 30px;
+    padding-right: 30px;
+}
+.edu-apply-by{
+    /* font */
+    color: var(--black);
+    font-family: Light;
+    font-size: 12px;
+    line-height: 1.2; 
+    /* box */
+    padding-left: 30px;
+    padding-right: 30px;
+}
+.edu-view-apply-button {
+    /* font */
+    color: var(--green);
+    font-family: Regular;
+    font-size: 16px;
+    line-height: 1.2; 
+    text-decoration: none;
+    cursor: pointer;
+    /* box */
+    padding-left: 30px;
+    padding-right: 30px;
+    margin-bottom: 30px;
+}
+.edu-view-apply-button:hover {
+    /* font */
+    color: var(--brown);
+}
+.edu-card input[type="text"],
+.edu-card input[type="url"],
+.edu-card input[type="date"],
+.edu-card textarea{
+    /* font */
+    color: var(--black);
+    caret-color: var(--grey);
+    font-family: Regular;
+    font-size: 14px;
+    /* box */
+    width: 86%;
+    padding: 6px 6px;
+    box-sizing: border-box;
+    border: none;
+    border-radius: 8px;
+    outline: none;
+    margin: 2% 7%;
+}
+.edu-card.editingPo input[type="text"],
+.edu-card.editingPo input[type="url"],
+.edu-card.editingPo input[type="date"],
+.edu-card.editingPo textarea{
+    /* font */
+    background-color: var(--palegrey);
+}
+.edu-card.editingPe input[type="text"],
+.edu-card.editingPe input[type="url"],
+.edu-card.editingPe input[type="date"],
+.edu-card.editingPe textarea{
+    /* font */
+    background-color: var(--white);
+}
+.edu-card input[type="text"]{
+    margin-top: 30px;
+}
+.edu-card textarea {
+    /* font */
+    line-height: 1.2;
+    /* box */
+    width: 86%;
+    max-width: 86%;
+    min-height: calc((100vh - 200px) * 0.2);
+    max-height: calc((100vh - 200px) * 0.2);
+}
+.edu-char-count {
+    /* font */
+    color: var(--grey);
+    font-family: Light;
+    font-size: 11px;
+    text-align: right;
+    /* box */
+    margin: 0 7%;
+    margin-top: -3%;
+}
+.edu-card input[type="url"] {
+    /* box */
+    margin-bottom: 20px;
+}
+.edu-admin-actions {
+    /* display */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+.edu-admin-actions button {
+    /* font */
+    font-family: Medium;
+    font-size: 16px;
+    text-decoration: none;
+    cursor: pointer;
+    /* box */
+    width: 100px;
+    padding: 5px 10px;
+    border-radius: 30px;
+    margin-bottom: 15px;
+}
+.edupost {
+    /* font */
+    background-color: var(--green);
+    color: var(--white);
+    border: 2px var(--green) solid;
+}
+.edupost:hover {
+    /* font */
+    background-color: var(--white);
+    color: var(--green);
+}
+.eduremove {
+    /* font */
+    background-color: var(--grey);
+    color: var(--white);
+    border: 2px var(--grey) solid;
+}
+.eduremove:hover {
+    /* font */
+    background-color: var(--white);
+    color: var(--grey);
+}
+.eduedit {
+    /* font */
+    background-color: var(--coffee);
+    color: var(--white);
+    border: 2px var(--coffee) solid;
+}
+.eduedit:hover {
+    /* font */
+    background-color: var(--white);
+    color: var(--coffee);
+}
+.edusave {
+    /* font */
+    background-color: var(--yellow);
+    color: var(--white);
+    border: 2px var(--yellow) solid;
+}
+.edusave:hover {
+    /* font */
+    background-color: var(--white);
+    color: var(--yellow);
+}
+.edu-admin-actions button:focus {
+    outline: none;
+}

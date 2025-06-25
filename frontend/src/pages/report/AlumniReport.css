@@ -1,0 +1,158 @@
+.DirectoryWrapper {
+    /* box */
+    width: 95%;
+    padding-bottom: 60px;
+    position: relative;
+}
+.DirectorySearchWrapper {
+    /* box */
+    width: 100%;
+    position: relative;
+    height: 75px;
+}
+.ReportDetail.filter-bar {
+    /* display */
+    display: flex;
+    /* box */
+    width: 100%;
+    margin-bottom: 40px;
+}
+.ReportDetail.filter-button {
+    /* font */
+    background-color: var(--white);
+    font-family: Medium;
+    font-size: 16px;
+    white-space: nowrap;
+    /* box */
+    width: 100%;
+    padding: 4px 6px;
+    box-sizing: border-box;
+    border: 2px var(--green) solid;
+    border-radius: 8px;
+    outline: none;
+    margin: 0 5px;
+}
+.ReportDetail.filter-button.filter-applied {
+    /* font */
+    color: var(--yellow);
+    /* box */
+    border-color: var(--yellow);
+}
+.ReportDetail.filter-button select {
+    /* font */
+    background: none;
+    color: var(--green);
+    font-family: Medium;
+    font-size: 16px;
+    /* box */
+    width: 85%;
+    padding: 4px 6px;
+    box-sizing: border-box;
+    border: none;
+    outline: none;
+}
+.ReportDetail.filter-button.filter-applied select {
+    /* font */
+    color: var(--yellow);
+}
+.ReportDetail.filter-button button {
+    /* font */
+    background: none;
+    color: var(--yellow);
+    font-family: Regular;
+    font-size: 16px;
+    /* box */
+    width: 15%;
+    padding: 4px 6px;
+    cursor: pointer;
+    margin-right: 2px;
+    border: none;
+    outline: none;
+}
+.ReportDetail.filter-button button:hover {
+    /* font */
+    color: var(--brown);
+}
+.DirectoryRest{
+    /* display */
+    display: flex;
+    flex-direction: row;
+    /* box */
+    width: 100%;
+}
+.DirectoryList{
+    /* display */
+    display: flex;
+    flex-direction: column;
+    width: 45%;
+}
+.report-title {
+    /* font */
+    color: var(--brown);
+    font-family: Medium;
+    font-size: 18px;
+    /* box */
+    margin-top: -8px;
+    margin-bottom: 16px;
+}
+.report-title button {
+    /* font */
+    background-color: var(--green);
+    color: var(--white);
+    font-family: Medium;
+    font-size: 16px;
+    text-decoration: none;
+    cursor: pointer;
+    /* box */
+    padding: 5px 15px;
+    border: 2px var(--green) solid;
+    border-radius: 30px;
+    margin-left: 20px;
+}
+.report-title button:hover {
+    /* font */
+    background-color: var(--white);
+    color: var(--green)
+}
+.report-content {
+    /* display */
+    display: flex;
+    flex-direction: column;
+    /* box */
+    width: 100%;
+}
+.DirectoryDetail{
+    /* display */
+    display: flex;
+    flex-direction: column;
+    /* box */
+    width: 50%;
+    margin-left: 5%;
+}
+.alu-pagination {
+    /* display */
+    display: flex;
+    justify-content: center;
+    list-style: none;
+    /* box */
+    width: 100%;
+    padding: 0;
+}
+.alu-pagination li {
+    /* display */
+    display: inline;
+    /* box */
+    margin: 0 5px;
+}
+.alu-pagination li a {
+    /* font */
+    color: var(--grey);
+    font-family: Regular;
+    font-size: 16px;
+    text-decoration: none;
+    cursor: pointer;
+}
+.alu-pagination li.active a {
+    /* font */
+    color: var(--black);
+}
