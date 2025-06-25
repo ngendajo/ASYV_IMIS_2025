@@ -131,6 +131,7 @@ class AlumniListSerializer(serializers.Serializer):
     phone = serializers.SerializerMethodField()
     employment = EmploymentSerializer(many=True, read_only=True)
     image_url = serializers.ImageField(source='user.image_url')
+    user_id = serializers.SerializerMethodField()
 
     class Meta:
         model = Kid
@@ -151,6 +152,9 @@ class AlumniListSerializer(serializers.Serializer):
     
     def get_phone(self, obj): 
         return obj.user.phone if obj.user else None
+    
+    def get_user_id(self, obj):
+        return obj.user.id if obj.user else None
     
     def get_combination(self, obj):
         academic = KidAcademics.objects.filter(kid=obj, level='S6').first()
