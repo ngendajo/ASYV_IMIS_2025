@@ -353,3 +353,128 @@ class FurtherEducationChoicesSerializer(serializers.Serializer):
 
     def get_statuses(self, obj):
         return [{'value': choice[0], 'label': choice[1]} for choice in FurtherEducation.STATUS_CHOICES]
+    
+    
+#Library management System
+    
+#author data serializer
+class AuthorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Author
+        fields = ['id', 'author_name']  # Or whatever fields you use
+        read_only_fields = ['id']  # <- Prevent client from setting the id
+
+#end author serilizer
+
+#category data serializer
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = '__all__'
+
+#end category serilizer
+
+#book data serializer
+class BookSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Book
+        fields = '__all__'
+        
+class DisplayBookSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Book
+        fields = '__all__'
+        depth=3
+        
+class BookListDisplaySerializer(serializers.Serializer):
+    book_name = serializers.CharField()
+    isbnumber = serializers.CharField()
+    category_name = serializers.CharField()
+    author_name = serializers.CharField()
+    number_of_books = serializers.CharField()
+    id = serializers.IntegerField()
+
+#end book serilizer
+
+#Issue_Book data serializer
+#Issue_Book data serializer
+class Issue_BookSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Issue_Book
+        fields = '__all__'
+
+
+#end Issue_Book serilizer
+
+#Reports
+class IssuedBookDisplaySerializer(serializers.Serializer):
+    grade_name = serializers.CharField()
+    studentid = serializers.CharField()
+    family_name = serializers.CharField()
+    combination_name = serializers.CharField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    email = serializers.CharField()
+    book_name = serializers.CharField()
+    isbnumber = serializers.CharField()
+    category_name = serializers.CharField()
+    author_name = serializers.CharField()
+    library_number = serializers.CharField()
+    issuedate = serializers.CharField()
+    returndate = serializers.CharField()
+    id = serializers.IntegerField()
+    
+class StudentListDisplaySerializer(serializers.Serializer):
+    grade_name = serializers.CharField()
+    studentid = serializers.CharField()
+    family_name = serializers.CharField()
+    combination_name = serializers.CharField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    email = serializers.CharField()
+    id = serializers.IntegerField()
+    grade_id = serializers.IntegerField()
+    combination_id = serializers.IntegerField()
+    eay = serializers.IntegerField()
+    gender = serializers.CharField()
+class GeneralReportDisplaySerializer(serializers.Serializer):
+    nbook_types = serializers.IntegerField()
+    nbooks = serializers.IntegerField()
+    nstudents = serializers.IntegerField()
+    nissued_books = serializers.IntegerField()
+    noverdue_books = serializers.IntegerField()
+    
+class MostBorrowerDisplaySerializer(serializers.Serializer):
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    grade_name = serializers.CharField()
+    family_name = serializers.CharField()
+    combination_name = serializers.CharField()
+    issue_count = serializers.IntegerField()
+    
+class BorrowerByGradeDisplaySerializer(serializers.Serializer):
+    grade_name = serializers.CharField()
+    family_name = serializers.CharField()
+    combination_name = serializers.CharField()
+    borrowers = serializers.IntegerField()
+    students = serializers.IntegerField()
+    
+class AllBorrowersDisplaySerializer(serializers.Serializer):
+    first_name=serializers.CharField()
+    last_name=serializers.CharField()
+    phone1=serializers.CharField()
+    email=serializers.CharField()
+    grade_name=serializers.CharField()
+    family_name=serializers.CharField()
+    combination_name=serializers.CharField()
+    book_name=serializers.CharField()
+    isbnumber=serializers.CharField()
+    category_name=serializers.CharField()
+    author_name=serializers.CharField()
+    issuedate = serializers.CharField()
+    returndate = serializers.CharField()
+    student_id= serializers.IntegerField()
+    user_id= serializers.IntegerField()
+    is_student=serializers.BooleanField()
+    is_alumni=serializers.BooleanField()
+    is_staff=serializers.BooleanField()

@@ -1,9 +1,12 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from django.db.models import Q
+from django.http import JsonResponse,HttpResponse,Http404
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
 from .serializers import *
+from django.db.models import OuterRef, Subquery, IntegerField,Count, Case, When, IntegerField,Q,Prefetch, F
 from django.core.exceptions import ValidationError,ObjectDoesNotExist
 from django.db.utils import IntegrityError
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -16,20 +19,25 @@ from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 from django.urls import reverse
 from rest_framework.decorators import api_view , permission_classes
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from rest_framework_simplejwt.exceptions import AuthenticationFailed
 from django.utils.translation import gettext_lazy as _
 import pandas as pd
 from django.db import transaction
 from rest_framework.decorators import action
 from django.utils import timezone
-
+from django.db import connection,DatabaseError
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from .filters import *
 from .utils import *
 import logging
-
+from openpyxl import Workbook
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import landscape, letter
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+import traceback
 from django.core.paginator import Paginator
 
 logger = logging.getLogger(__name__)
@@ -3506,6 +3514,7 @@ class DropdownOptionsAPIView(APIView):
         }
         return Response(data)
 
+
 @api_view(['GET'])
 def get_mamas(request):
        
@@ -3516,4 +3525,1578 @@ def get_mamas(request):
     return Response(mama_info.data, status=status.HTTP_200_OK)
 
         
+
+
+#Library Management System
+
+# Author data view
+
+class AuthorRegistrationView(APIView):
+    permission_classes = [IsAuthenticated, ]
+
+    def post(self, request):
+        data = request.data.copy()
+        data.pop('id', None)  # Remove 'id' if it's present
+
+        # Check for duplicates by fields you consider unique (e.g., 'name')
+        if Author.objects.filter(author_name=data.get('author_name')).exists():
+            raise serializers.ValidationError('This author already exists')
+
+        serializer = AuthorSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def get(self, request):
+        try:
+            # checking for the parameters from the URL
+            if request.query_params:
+                autho = Author.objects.filter(**request.query_params.dict())
+            else:
+                autho = Author.objects.all()
+
+            # if there is something in items else raise error
+            if autho:
+                serializer = AuthorSerializer(autho, many=True)
+                return Response(serializer.data)
+            else:
+                return Response([])
+            
+        except Exception as e:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def update_Author(request, pk):
+    autho = Author.objects.get(pk=pk)
+    data = AuthorSerializer(instance=autho, data=request.data)
+
+    if data.is_valid():
+        data.save()
+        return Response(data.data)
+    else:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_author(request, pk):
+    autho = get_object_or_404(Author, pk=pk)
+    autho.delete()
+    return Response(status=status.HTTP_202_ACCEPTED)
+
+
+# end
+
+# Category data view
+
+class CategoryRegistrationView(APIView):
+    #permission_classes = [IsAuthenticated, ]
+
+    def post(self, request):
+        serializer = CategorySerializer(data=request.data)
+        # validating for already existing data
+        if Category.objects.filter(**request.data).exists():
+            raise serializers.ValidationError('This data already exists')
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def get(self, request):
+        try:
+            # checking for the parameters from the URL
+            if request.query_params:
+                cat = Category.objects.filter(**request.query_params.dict())
+            else:
+                cat = Category.objects.all()
+
+            # if there is something in items else raise error
+            if cat:
+                serializer = CategorySerializer(cat, many=True)
+                return Response(serializer.data)
+            else:
+                return Response([])
+            
+        except Exception as e:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['POST'])
+#@permission_classes([IsAuthenticated])
+def update_Category(request, pk):
+    cat = Category.objects.get(pk=pk)
+    data = CategorySerializer(instance=cat, data=request.data)
+
+    if data.is_valid():
+        data.save()
+        return Response(data.data)
+    else:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['DELETE'])
+#@permission_classes([IsAuthenticated])
+def delete_category(request, pk):
+    cat = get_object_or_404(Category, pk=pk)
+    cat.delete()
+    return Response(status=status.HTTP_202_ACCEPTED)
+
+
+# end
+
+# Book data view
+
+class BookRegistrationView(APIView):
+    permission_classes = [IsAuthenticated, ]
+
+    def post(self, request):
+        serializer = BookSerializer(data=request.data)
+        # validating for already existing data
+        if Book.objects.filter(**request.data).exists():
+            raise serializers.ValidationError('This data already exists')
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def get(self, request):
+        try:
+            # checking for the parameters from the URL
+            if request.query_params:
+                book = Book.objects.filter(**request.query_params.dict())
+            else:
+                book = Book.objects.all()
+
+            # if there is something in items else raise error
+            if book:
+                serializer = DisplayBookSerializer(book, many=True)
+                return Response(serializer.data)
+            else:
+                return Response([])
+            
+        except Exception as e:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def update_Book(request, pk):
+    book = Book.objects.get(pk=pk)
+    data = BookSerializer(instance=book, data=request.data)
+
+    if data.is_valid():
+        data.save()
+        return Response(data.data)
+    else:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_book(request, pk):
+    book = get_object_or_404(Book, pk=pk)
+    book.delete()
+    return Response(status=status.HTTP_202_ACCEPTED)
+
+
+# end
+
+# Issue_Book data view
+class Issue_BookRegistrationView(APIView):
+    #permission_classes = [IsAuthenticated, ]
+    #pagination_class = CustomPagination  # Use custom pagination class
+
+    def post(self, request):
+        serializer = Issue_BookSerializer(data=request.data)
+        # validating for already existing data
+        if Issue_Book.objects.filter(**request.data).exists():
+            raise serializers.ValidationError('This data already exists')
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def update_Issue_Book(request, pk):
+    try:
+        issue = Issue_Book.objects.get(pk=pk)
+    except Issue_Book.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    data = {'returndate': request.data.get('returndate')}
+    serializer = Issue_BookSerializer(instance=issue, data=data, partial=True)
+
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    else:
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_Issue_Book(request, pk):
+    issue = get_object_or_404(Issue_Book, pk=pk)
+    issue.delete()
+    return Response(status=status.HTTP_202_ACCEPTED)
+
+# end
+
+#report data from library database 
+class IssuedBookDisplayAPIView(APIView):
+    permission_classes = [IsAuthenticated, ]  # You can add authentication if needed
+
+    def get(self, request, *args, **kwargs):
+        try:
+            # Get data
+            sql_query1 = """
+                SELECT 
+                    g.grade_name, 
+                    u.reg_number AS studentid, 
+                    f.family_name, 
+                    c.combination_name, 
+                    u.first_name, 
+                    u.rwandan_name AS last_name, 
+                    u.email, 
+                    b.book_name, 
+                    b.isbnumber, 
+                    cat.category_name, 
+                    a.author_name, 
+                    ib.library_number, 
+                    ib.issuedate, 
+                    ib.returndate, 
+                    ib.id AS id
+                FROM 
+                    api_user u
+                INNER JOIN 
+                    api_kid k ON u.id = k.user_id
+                INNER JOIN 
+                    api_family f ON k.family_id = f.id
+                INNER JOIN 
+                    api_grade g ON f.grade_id = g.id
+                INNER JOIN 
+                    api_kidacademics ka ON k.id = ka.kid_id
+                INNER JOIN 
+                    api_combination c ON ka.combination_id = c.id
+                INNER JOIN 
+                    api_issue_book ib ON ib.borrower_id = u.id
+                INNER JOIN 
+                    api_book b ON ib.book_id = b.id
+                INNER JOIN 
+                    api_category cat ON b.category_id = cat.id
+                INNER JOIN 
+                    api_author a ON b.author_id = a.id
+                WHERE 
+                    ib.returndate = 'Not yet Returned' 
+                    AND ka.academic_year = EXTRACT(YEAR FROM CURRENT_DATE)
+                ORDER BY 
+                    ib.issuedate DESC;
+
+            """
+
+            # Execute the SQL query
+            with connection.cursor() as cursor:
+                cursor.execute(sql_query1)
+                data1 = cursor.fetchall()
+
+            data = []
+            if data1 is not None:
+                for i in data1:
+                    data.append({
+                        'grade_name': i[0],
+                        'studentid': i[1],
+                        'family_name': i[2],
+                        'combination_name': i[3],
+                        'first_name': i[4],
+                        'last_name': i[5],
+                        'email': i[6],
+                        'book_name': i[7],
+                        'isbnumber': i[8],
+                        'category_name': i[9],
+                        'author_name': i[10],
+                        'library_number': i[11],
+                        'issuedate': i[12],
+                        'returndate': i[13],
+                        'id': i[14]
+                    })
+
+            serializer = IssuedBookDisplaySerializer(data=data, many=True)
+            serializer.is_valid()  # Validate serializer data
+            return Response(serializer.data)
+
+        except Exception as e:
+            # Log the exception or return a custom error response
+            return Response({'error': str(e)}, status=500)
+        
+class StudentListDisplayAPIView(APIView):
+    permission_classes = [IsAuthenticated, ]  # You can add authentication if needed
+
+    def get(self, request, *args, **kwargs):
+        try:
+            # Get data
+            sql_query1 = """
+                SELECT 
+                    g.grade_name,
+                    u.reg_number AS studentid,
+                    f.family_name,
+                    c.combination_name,
+                    u.first_name,
+                    u.rwandan_name AS last_name,
+                    u.email,
+                    k.id AS id,
+                    g.id AS grade_id,
+                    c.id AS combination_id,
+                    g.graduation_year_to_asyv AS eay,
+                    u.gender
+                FROM 
+                    api_user u
+                INNER JOIN 
+                    api_kid k ON u.id = k.user_id
+                INNER JOIN 
+                    api_family f ON k.family_id = f.id
+                INNER JOIN 
+                    api_grade g ON f.grade_id = g.id
+                INNER JOIN 
+                    api_kidacademics ka ON k.id = ka.kid_id
+                INNER JOIN 
+                    api_combination c ON ka.combination_id = c.id
+                WHERE 
+                    u.is_student = TRUE
+                    AND u.is_alumni = FALSE
+                    AND ka.academic_year = EXTRACT(YEAR FROM CURRENT_DATE);
+
+            """
+
+            # Execute the SQL query
+            with connection.cursor() as cursor:
+                cursor.execute(sql_query1)
+                data1 = cursor.fetchall()
+
+            data = []
+            if data1 is not None:
+                for i in data1:
+                    data.append({
+                        'grade_name': i[0],
+                        'studentid': i[1],
+                        'family_name': i[2],
+                        'combination_name': i[3],
+                        'first_name': i[4],
+                        'last_name': i[5],
+                        'email': i[6],
+                        'id': i[7],
+                        'grade_id': i[8],
+                        'combination_id': i[9],
+                        'eay': i[10],
+                        'gender': i[11]
+                    })
+
+            serializer = StudentListDisplaySerializer(data=data, many=True)
+            serializer.is_valid()  # Validate serializer data
+            return Response(serializer.data)
+
+        except Exception as e:
+            # Log the exception or return a custom error response
+            return Response({'error': str(e)}, status=500)
+class BookListDisplayAPIView(APIView):
+    permission_classes = [IsAuthenticated, ]  # You can add authentication if needed
+
+    def get(self, request, *args, **kwargs):
+        try:
+            # Get data
+            sql_query1 = """
+                SELECT book_name, isbnumber, category_name, author_name, number_of_books, 
+                       api_book.id AS id  FROM  api_book 
+                INNER JOIN api_category ON api_book.category_id = api_category.id 
+                INNER JOIN api_author ON api_book.author_id = api_author.id  
+                order by book_name asc;
+            """
+
+            # Execute the SQL query
+            with connection.cursor() as cursor:
+                cursor.execute(sql_query1)
+                data1 = cursor.fetchall()
+
+            data = []
+            if data1 is not None:
+                for i in data1:
+                    data.append({
+                        'book_name': i[0],
+                        'isbnumber': i[1],
+                        'category_name': i[2],
+                        'author_name': i[3],
+                        'number_of_books': i[4],
+                        'id': i[5]
+                    })
+
+            serializer = BookListDisplaySerializer(data=data, many=True)
+            serializer.is_valid()  # Validate serializer data
+            return Response(serializer.data)
+
+        except Exception as e:
+            # Log the exception or return a custom error response
+            return Response({'error': str(e)}, status=500)
+        
+
+
+        
+#Library report
+class BookReportExportAPIView(APIView):
+    permission_classes = [IsAuthenticated, ]
+    def get_data_from_database(self):
+        sql_query = """
+            select
+                ROW_NUMBER() OVER (ORDER BY category_name ASC) AS "Number",
+                api_book.book_name,
+                api_book.isbnumber,
+                api_category.category_name,
+                api_author.author_name,
+                api_book.number_of_books::int, 
+                COUNT(api_issue_book.id) AS issued_books,
+                (api_book.number_of_books::int - COUNT(api_issue_book.id)) AS current_books
+            FROM
+                api_book
+            INNER JOIN
+                api_category ON api_book.category_id = api_category.id
+            INNER JOIN
+                api_author ON api_book.author_id = api_author.id
+            LEFT JOIN
+                api_issue_book ON api_issue_book.book_id = api_book.id AND api_issue_book.returndate = 'Not yet Returned'
+            GROUP BY
+                api_book.book_name,
+                api_book.isbnumber,
+                api_category.category_name,
+                api_author.author_name,
+                api_book.number_of_books::int -- Casting to integer
+            ORDER BY
+                category_name ASC;
+        """
+        with connection.cursor() as cursor:
+            cursor.execute(sql_query)
+            data = cursor.fetchall()
+
+        # Calculate totals
+        total_books = sum(row[5] for row in data)
+        total_issued = sum(row[6] for row in data)
+        total_current = sum(row[7] for row in data)
+
+        # Append totals as a new row
+        total_row = ["", "Total", "", "", "", total_books, total_issued, total_current]
+        data.append(total_row)
+
+        return data
+
+    def generate_pdf(self, data):
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="list_of_books.pdf"'
+        doc = SimpleDocTemplate(response, pagesize=landscape(letter))
+        elements = []
+
+        # Add title
+        styles = getSampleStyleSheet()
+        title_style = styles['Title']
+        title_paragraph = Paragraph("LFHS@ASYV Library List of Books", title_style)
+        elements.append(title_paragraph)
+
+        # Add data table
+        table_style = TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                                ('GRID', (0, 0), (-1, -1), 1, colors.black)])
+        
+        table_data = [['#','Book Name', 'ISBN Number', 'Category', 'Author', 'Number of Books', 'Issued Books','current_books']]
+        table_data.extend(data)
+
+        # Calculate maximum column widths based on available page width
+        available_width = doc.width
+        num_cols = len(table_data[0])
+        max_col_width = available_width / num_cols
+
+        # Add table content with wrapped paragraphs
+        wrapped_table_data = []
+        for row in table_data:
+            wrapped_row = []
+            for cell in row:
+                cell_style = ParagraphStyle(name='WrapStyle', wordWrap='LTR')
+                wrapped_cell = Paragraph(str(cell), cell_style)
+                wrapped_row.append(wrapped_cell)
+            wrapped_table_data.append(wrapped_row)
+
+        table = Table(wrapped_table_data)
+        table.setStyle(table_style)
+
+        elements.append(table)
+        doc.build(elements)
+        return response
+
+    def get(self, request, *args, **kwargs):
+        try:
+            data = self.get_data_from_database()
+            if data:
+                return self.generate_pdf(data)
+            else:
+                return Response({'error': 'No data found.'}, status=404)
+        except Exception as e:
+            # Log the exception or return a custom error response
+            return Response({'error': str(e)}, status=500)
+
+class Issued_BookReportExportAPIView(APIView):
+    permission_classes = [IsAuthenticated, ]
+    def get_data_from_database(self):
+        sql_query = """
+            SELECT 
+                g.grade_name,
+                f.family_name,
+                c.combination_name,
+                u.reg_number AS studentid,
+                u.rwandan_name AS last_name,
+                u.first_name,
+                b.book_name,
+                b.isbnumber,
+                cat.category_name,
+                a.author_name,
+                ib.issuedate,
+                ib.returndate 
+            FROM 
+                api_grade g
+            INNER JOIN 
+                api_family f ON g.id = f.grade_id 
+            INNER JOIN 
+                api_kid k ON f.id = k.family_id 
+            INNER JOIN 
+                api_user u ON k.user_id = u.id 
+            INNER JOIN 
+                api_kidacademics ka ON k.id = ka.kid_id
+            INNER JOIN 
+                api_combination c ON ka.combination_id = c.id 
+            INNER JOIN 
+                api_issue_book ib ON ib.borrower_id = u.id 
+            INNER JOIN 
+                api_book b ON ib.book_id = b.id 
+            INNER JOIN 
+                api_category cat ON b.category_id = cat.id 
+            INNER JOIN 
+                api_author a ON b.author_id = a.id 
+            WHERE 
+                ib.returndate = 'Not yet Returned'
+                AND ka.academic_year = EXTRACT(YEAR FROM CURRENT_DATE)
+            ORDER BY 
+                g.grade_name ASC, 
+                f.family_name ASC;
+
+        """
+        with connection.cursor() as cursor:
+            cursor.execute(sql_query)
+            data = cursor.fetchall()
+
+        return data
+
+    def generate_pdf(self, data):
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="list_of_Issued_books.pdf"'
+        doc = SimpleDocTemplate(response, pagesize=landscape(letter))
+        elements = []
+
+        # Define a base style for titles
+        base_title_style = getSampleStyleSheet()['Title']
+
+        # Define different title styles with different font sizes
+        title_style_small = ParagraphStyle(
+            'TitleSmall',
+            parent=base_title_style,
+            fontSize=12  # Set the font size to 12
+        )
+
+        title_style_medium = ParagraphStyle(
+            'TitleMedium',
+            parent=base_title_style,
+            fontSize=14  # Set the font size to 18
+        )
+        title_paragraph = Paragraph("LFHS@ASYV Library List of Issued Books", base_title_style)
+        elements.append(title_paragraph)
+        table_style = TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                                  ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                                  ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                                  ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                                  ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                                  ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                                  ('GRID', (0, 0), (-1, -1), 1, colors.black)])
+
+        # Group data by grade_name
+        grouped_data = {}
+        for row in data:
+            grade_name = row[0]  # Assuming grade_name is in the first position of each tuple
+            family_name = row[1]  # Assuming family_name is in the second position of each tuple
+            if grade_name not in grouped_data:
+                grouped_data[grade_name] = {}
+            if family_name not in grouped_data[grade_name]:
+                grouped_data[grade_name][family_name] = []
+            # Exclude grade_name and family_name when extending the list
+            grouped_data[grade_name][family_name].append(tuple(row[2:]))  # Start from the third element
+            
+        # Log grouped_data
+        
+        available_width = doc.width
+        # Create tables for each grade_name
+        for grade_name, families in grouped_data.items():
+            # Add grade_name as title
+            grade_title = Paragraph(grade_name+" Grade", title_style_medium)
+            elements.append(grade_title)
+
+            # Create tables for each family_name
+            for family_name, family_data in families.items():
+                # Add family_name as title
+                family_title = Paragraph("Books Issued in "+family_name+" Family from "+grade_name+" Grade", title_style_small)
+                elements.append(family_title)
+
+                # Prepare data for table
+                table_data = [['#','Student ID', 'Name','Book Name', 'ISBN Number', 'Category', 'Author',
+                               'Issue Date', 'Return Date']]
+                for idx, item in enumerate(family_data, start=1):
+                    #logging.debug("Item tuple: %s", item)  # Log the contents of item
+                    table_data.append([
+                        idx,
+                        item[1],
+                        item[2]+" "+item[3]+" ("+item[0]+")",
+                        item[4],
+                        item[5],
+                        item[6],
+                        item[7],
+                        item[8],
+                        item[9]
+                    ])
+                
+                # Calculate maximum column widths based on available page width
+                
+                num_cols = len(table_data[0])
+                max_col_width = available_width / num_cols
+
+                # Add table content with wrapped paragraphs
+                wrapped_table_data = []
+                for row in table_data:
+                    wrapped_row = []
+                    for cell in row:
+                        cell_style = ParagraphStyle(name='WrapStyle', wordWrap='LTR')
+                        wrapped_cell = Paragraph(str(cell), cell_style)
+                        wrapped_row.append(wrapped_cell)
+                    wrapped_table_data.append(wrapped_row)
+
+                table = Table(wrapped_table_data)
+                table.setStyle(table_style)
+
+                elements.append(table)
+                
+
+        # Build the PDF document
+        doc.build(elements)
+
+        return response
+
+    def get(self, request, *args, **kwargs):
+        try:
+            data = self.get_data_from_database()
+            if data:
+                return self.generate_pdf(data)
+            else:
+                return Response({'error': 'No data found.'}, status=404)
+        except Exception as e:
+            # Log the exception or return a custom error response
+            return Response({'error': str(e)}, status=500)
+        
+class Overdue_BookReportExportAPIView(APIView):
+    permission_classes = [IsAuthenticated, ]
+    def get_data_from_database(self):
+        sql_query = """
+           SELECT 
+                g.grade_name,
+                f.family_name,
+                c.combination_name,
+                u.reg_number AS studentid,
+                u.rwandan_name AS last_name,
+                u.first_name,
+                b.book_name,
+                b.isbnumber,
+                cat.category_name,
+                a.author_name,
+                ib.issuedate,
+                ib.returndate,
+                (NOW()::date - ib.issuedate::date) AS days_overdue
+            FROM 
+                api_grade g
+            INNER JOIN 
+                api_family f ON g.id = f.grade_id
+            INNER JOIN 
+                api_kid k ON f.id = k.family_id
+            INNER JOIN 
+                api_user u ON k.user_id = u.id
+            INNER JOIN 
+                api_kidacademics ka ON k.id = ka.kid_id
+            INNER JOIN 
+                api_combination c ON ka.combination_id = c.id
+            INNER JOIN  
+                api_issue_book ib ON ib.borrower_id = u.id
+            INNER JOIN  
+                api_book b ON ib.book_id = b.id
+            INNER JOIN 
+                api_category cat ON b.category_id = cat.id
+            INNER JOIN  
+                api_author a ON b.author_id = a.id
+            WHERE  
+                ib.returndate = 'Not yet Returned' 
+                AND (NOW()::date - ib.issuedate::date) > 29
+                AND ka.academic_year = EXTRACT(YEAR FROM CURRENT_DATE)
+            ORDER BY   
+                g.grade_name ASC,  
+                f.family_name ASC;
+
+        """
+        with connection.cursor() as cursor:
+            cursor.execute(sql_query)
+            data = cursor.fetchall()
+
+        return data
+
+    def generate_pdf(self, data):
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="list_of_Issued_books.pdf"'
+        doc = SimpleDocTemplate(response, pagesize=landscape(letter))
+        elements = []
+
+        # Define a base style for titles
+        base_title_style = getSampleStyleSheet()['Title']
+
+        # Define different title styles with different font sizes
+        title_style_small = ParagraphStyle(
+            'TitleSmall',
+            parent=base_title_style,
+            fontSize=12  # Set the font size to 12
+        )
+
+        title_style_medium = ParagraphStyle(
+            'TitleMedium',
+            parent=base_title_style,
+            fontSize=14  # Set the font size to 18
+        )
+        title_paragraph = Paragraph("LFHS@ASYV Library List of Issued Books", base_title_style)
+        elements.append(title_paragraph)
+        table_style = TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                                  ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                                  ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                                  ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                                  ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                                  ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                                  ('GRID', (0, 0), (-1, -1), 1, colors.black)])
+
+        # Group data by grade_name
+        grouped_data = {}
+        for row in data:
+            grade_name = row[0]  # Assuming grade_name is in the first position of each tuple
+            family_name = row[1]  # Assuming family_name is in the second position of each tuple
+            if grade_name not in grouped_data:
+                grouped_data[grade_name] = {}
+            if family_name not in grouped_data[grade_name]:
+                grouped_data[grade_name][family_name] = []
+            # Exclude grade_name and family_name when extending the list
+            grouped_data[grade_name][family_name].append(tuple(row[2:]))  # Start from the third element
+            
+        # Log grouped_data
+        
+        available_width = doc.width
+        # Create tables for each grade_name
+        for grade_name, families in grouped_data.items():
+            # Add grade_name as title
+            grade_title = Paragraph(grade_name+" Grade", title_style_medium)
+            elements.append(grade_title)
+
+            # Create tables for each family_name
+            for family_name, family_data in families.items():
+                # Add family_name as title
+                family_title = Paragraph("Books Issued in "+family_name+" Family from "+grade_name+" Grade", title_style_small)
+                elements.append(family_title)
+
+                # Prepare data for table
+                table_data = [['#','Student ID', 'Name','Book Name', 'ISBN Number', 'Category', 'Author',
+                               'Issue Date', 'days_overdue']]
+                for idx, item in enumerate(family_data, start=1):
+                    #logging.debug("Item tuple: %s", item)  # Log the contents of item
+                    table_data.append([
+                        idx,
+                        item[1],
+                        item[2]+" "+item[3]+" ("+item[0]+")",
+                        item[4],
+                        item[5],
+                        item[6],
+                        item[7],
+                        item[8],
+                        item[10]
+                    ])
+                
+                # Calculate maximum column widths based on available page width
+                
+                num_cols = len(table_data[0])
+                max_col_width = available_width / num_cols
+
+                # Add table content with wrapped paragraphs
+                wrapped_table_data = []
+                for row in table_data:
+                    wrapped_row = []
+                    for cell in row:
+                        cell_style = ParagraphStyle(name='WrapStyle', wordWrap='LTR')
+                        wrapped_cell = Paragraph(str(cell), cell_style)
+                        wrapped_row.append(wrapped_cell)
+                    wrapped_table_data.append(wrapped_row)
+
+                table = Table(wrapped_table_data)
+                table.setStyle(table_style)
+
+                elements.append(table)
+                
+
+        # Build the PDF document
+        doc.build(elements)
+
+        return response
+
+    def get(self, request, *args, **kwargs):
+        try:
+            data = self.get_data_from_database()
+            if data:
+                return self.generate_pdf(data)
+            else:
+                return Response({'error': 'No data found.'}, status=404)
+        except Exception as e:
+            # Log the exception or return a custom error response
+            return Response({'error': str(e)}, status=500)
+        
+class GeneralReportDisplayAPIView(APIView):
+    permission_classes = [IsAuthenticated, ]  # You can add authentication if needed
+
+    def get(self, request, *args, **kwargs):
+        try:
+            # Combined SQL Query
+            sql_query = """
+                with book_data as (
+                    select 
+                        count(api_book.id) as nbook_types, 
+                        sum(cast(api_book.number_of_books as integer)) as nbooks 
+                    from 
+                        api_book
+                ),
+                student_data as (
+                    select 
+                        count(api_user.id) as nstudents 
+                    from 
+                        api_user 
+                    where 
+                        api_user.is_student and not is_alumni
+                ),
+                issue_data as (
+                    select 
+                        count(api_issue_book.id) as nissued_books,
+                        sum(case when (now()::date - issuedate::date) > 29 then 1 else 0 end) as noverdue_books 
+                    from 
+                        api_issue_book 
+                    where 
+                        returndate = 'Not yet Returned'
+                )
+                select 
+                    bd.nbook_types,
+                    bd.nbooks,
+                    sd.nstudents,
+                    id.nissued_books,
+                    id.noverdue_books
+                from 
+                    book_data bd,
+                    student_data sd,
+                    issue_data id;
+            """
+
+            # Execute the SQL query
+            with connection.cursor() as cursor:
+                cursor.execute(sql_query)
+                data1 = cursor.fetchall()
+
+            data = []
+            if data1:
+                data.append({
+                    "nbook_types": data1[0][0],
+                    "nbooks": data1[0][1],
+                    "nstudents": data1[0][2],
+                    "nissued_books": data1[0][3],
+                    "noverdue_books": data1[0][4]
+                })
+
+            serializer = GeneralReportDisplaySerializer(data=data, many=True)
+            serializer.is_valid()  # Validate serializer data
+            return Response(serializer.data)
+
+        except Exception as e:
+            # Log the exception or return a custom error response
+            return Response({'error': str(e)}, status=500)
+        
+class StudentsReportExportAPIView(APIView):
+    permission_classes = [IsAuthenticated, ]
+    def get_data_from_database(self):
+        sql_query = """
+           SELECT 
+                ROW_NUMBER() OVER (ORDER BY g.grade_name, c.combination_name) AS number,
+                u.email,
+                u.rwandan_name AS last_name,
+                u.first_name,
+                u.reg_number AS studentid,
+                g.grade_name,
+                f.family_name,
+                c.combination_name
+            FROM 
+                api_user u
+            INNER JOIN 
+                api_kid k ON u.id = k.user_id
+            INNER JOIN 
+                api_family f ON f.id = k.family_id
+            INNER JOIN 
+                api_kidacademics ka ON k.id = ka.kid_id
+            INNER JOIN 
+                api_combination c ON ka.combination_id = c.id
+            INNER JOIN 
+                api_grade g ON g.id = f.grade_id
+            WHERE 
+                u.is_student = TRUE
+                AND u.is_alumni = FALSE
+                AND ka.academic_year = EXTRACT(YEAR FROM CURRENT_DATE)
+            ORDER BY 
+                g.grade_name, 
+                c.combination_name;
+
+
+        """
+        with connection.cursor() as cursor:
+            cursor.execute(sql_query)
+            data = cursor.fetchall()
+
+        return data
+
+    def generate_excel(self, data):
+        # Create a new Workbook
+        wb = Workbook()
+
+        # Get the active worksheet
+        ws = wb.active
+        ws.append(["No","Email", "Last Name", "First Name", "Reg.No", "Grade", "Family", "Class"])
+        # Add rows
+        students_data_name = 'students_data'
+        ws.title = students_data_name
+        #logging.debug(data)
+        
+        for row_data in data:
+            ws.append(row_data)
+
+        # Save the workbook
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename=LFHS_students_data.xlsx'
+        wb.save(response)
+        return response
+
+    def get(self, request, *args, **kwargs):
+        try:
+            data = self.get_data_from_database()
+            if data:
+                return self.generate_excel(data)
+            else:
+                return Response({'error': 'No data found.'}, status=404)
+        except Exception as e:
+            # Log the exception or return a custom error response
+            return Response({'error': str(e)}, status=500)
+
+#example of url: api/mostborrower/ or api/mostborrower/?start_date=2023-09-25T00:00:00&end_date=2024-05-31T23:59:59
+class MostBorrowerDisplayAPIView(APIView):
+    # permission_classes = [IsAuthenticated, ]  # You can add authentication if needed
+
+    def get(self, request, *args, **kwargs):
+        try:
+            # Get query parameters for start_date and end_date
+            start_date = request.query_params.get('start_date')
+            end_date = request.query_params.get('end_date')
+
+            if start_date and end_date:
+                # Ensure start_date and end_date are in the correct format
+                try:
+                    start_date = datetime.strptime(start_date, '%Y-%m-%dT%H:%M:%S')
+                    end_date = datetime.strptime(end_date, '%Y-%m-%dT%H:%M:%S')
+                except ValueError:
+                    return Response({'error': 'Invalid date-time format. Use YYYY-MM-DDTHH:MM:SS.'}, status=400)
+                
+                # SQL query for the specified date range
+                sql_query = f"""
+                    SELECT 
+                        u.rwandan_name AS last_name,
+                        u.first_name,
+                        g.grade_name,
+                        f.family_name,
+                        c.combination_name,
+                        COUNT(ib.id) AS issue_count
+                        FROM 
+                        api_user u
+                        INNER JOIN 
+                        api_issue_book ib ON u.id = ib.borrower_id
+                        INNER JOIN 
+                        api_kid k ON u.id = k.user_id
+                        INNER JOIN 
+                        api_family f ON f.id = k.family_id
+                        INNER JOIN 
+                        api_grade g ON f.grade_id = g.id
+                        INNER JOIN 
+                        api_kidacademics ka ON k.id = ka.kid_id
+                        INNER JOIN 
+                        api_combination c ON ka.combination_id = c.id
+                        WHERE 
+                        u.is_student = TRUE
+                        AND u.is_alumni = FALSE
+                        AND ib.issuedate >= '{start_date}'
+                        AND ib.issuedate <= '{end_date}'
+                        AND ka.academic_year = EXTRACT(YEAR FROM CURRENT_DATE)
+                        GROUP BY 
+                        u.rwandan_name,
+                        u.first_name,
+                        g.grade_name,
+                        f.family_name,
+                        c.combination_name
+                        ORDER BY 
+                        issue_count DESC
+                        LIMIT 5;
+
+                """
+            else:
+                # SQL query for the current month
+                sql_query = """
+                    SELECT 
+                        u.rwandan_name AS last_name, 
+                        u.first_name, 
+                        g.grade_name, 
+                        f.family_name, 
+                        c.combination_name, 
+                        COUNT(ib.id) AS issue_count
+                    FROM 
+                        api_user u
+                    INNER JOIN 
+                        api_kid k ON u.id = k.user_id
+                    INNER JOIN 
+                        api_family f ON k.family_id = f.id
+                    INNER JOIN 
+                        api_grade g ON f.grade_id = g.id
+                    INNER JOIN 
+                        api_kidacademics ka ON k.id = ka.kid_id
+                    INNER JOIN 
+                        api_combination c ON ka.combination_id = c.id
+                    INNER JOIN 
+                        api_issue_book ib ON u.id = ib.borrower_id
+                    WHERE 
+                        u.is_student = TRUE
+                        AND u.is_alumni = FALSE
+                        AND DATE_TRUNC('month', CAST(ib.issuedate AS DATE)) = DATE_TRUNC('month', CURRENT_DATE)
+                        AND ka.academic_year = EXTRACT(YEAR FROM CURRENT_DATE)
+                    GROUP BY 
+                        u.rwandan_name, 
+                        u.first_name, 
+                        g.grade_name, 
+                        f.family_name, 
+                        c.combination_name
+                    ORDER BY 
+                        issue_count DESC
+                    LIMIT 5;
+
+
+                """
+
+            # Execute the SQL query
+            with connection.cursor() as cursor:
+                cursor.execute(sql_query)
+                data1 = cursor.fetchall()
+
+            data = []
+            if data1 is not None:
+                for i in data1:
+                    data.append({
+                        'last_name': i[0],
+                        'first_name': i[1],
+                        'grade_name': i[2],
+                        'family_name': i[3],
+                        'combination_name': i[4],
+                        'issue_count': i[5]
+                    })
+
+            serializer = MostBorrowerDisplaySerializer(data=data, many=True)
+            serializer.is_valid()  # Validate serializer data
+            return Response(serializer.data)
+
+        except Exception as e:
+            # Log the exception or return a custom error response
+            return Response({'error': str(e)}, status=500)
+
+class BorrowerByGradeDisplayAPIView(APIView):
+    # permission_classes = [IsAuthenticated, ]  # You can add authentication if needed
+
+    def get(self, request, *args, **kwargs):
+        try:
+            # Get query parameters for start_date and end_date
+            start_date = request.query_params.get('start_date')
+            end_date = request.query_params.get('end_date')
+
+            if start_date and end_date:
+                # Ensure start_date and end_date are in the correct format
+                try:
+                    start_date = datetime.strptime(start_date, '%Y-%m-%dT%H:%M:%S')
+                    end_date = datetime.strptime(end_date, '%Y-%m-%dT%H:%M:%S')
+                except ValueError:
+                    return Response({'error': 'Invalid date-time format. Use YYYY-MM-DDTHH:MM:SS.'}, status=400)
+                
+                # SQL query for the specified date range
+                sql_query = f"""
+                    SELECT 
+                        g.grade_name,
+                        f.family_name,
+                        c.combination_name,
+                        COUNT(DISTINCT ib.borrower_id) AS borrows,
+                        COUNT(DISTINCT u.id) AS students
+                    FROM 
+                        api_user u
+                    INNER JOIN 
+                        api_kid k ON u.id = k.user_id
+                    INNER JOIN 
+                        api_family f ON k.family_id = f.id
+                    INNER JOIN  
+                        api_grade g ON f.grade_id = g.id
+                    INNER JOIN 
+                        api_kidacademics ka ON k.id = ka.kid_id
+                    INNER JOIN 
+                        api_combination c ON ka.combination_id = c.id
+                    LEFT JOIN 
+                        api_issue_book ib ON u.id = ib.borrower_id 
+                        AND ib.issuedate >= '{start_date}'
+                        AND ib.issuedate <= '{end_date}'
+                    WHERE 
+                        u.is_student = TRUE
+                        AND u.is_alumni = FALSE
+                        AND ka.academic_year = EXTRACT(YEAR FROM CURRENT_DATE)
+                    GROUP BY 
+                        g.grade_name,
+                        f.family_name,
+                        c.combination_name
+                    ORDER BY 
+                        g.grade_name ASC,
+                        f.family_name ASC,
+                        c.combination_name ASC,  
+                        borrows DESC;
+
+                """
+            else:
+                # SQL query for the current month
+                sql_query = """
+                    SELECT 
+                        g.grade_name,
+                        f.family_name,
+                        c.combination_name,
+                        COUNT(DISTINCT ib.borrower_id) AS borrows,
+                        COUNT(DISTINCT u.id) AS students
+                    FROM 
+                        api_user u
+                    INNER JOIN 
+                        api_kid k ON u.id = k.user_id
+                    INNER JOIN 
+                        api_family f ON k.family_id = f.id
+                    INNER JOIN  
+                        api_grade g ON f.grade_id = g.id
+                    INNER JOIN 
+                        api_kidacademics ka ON k.id = ka.kid_id
+                    INNER JOIN 
+                        api_combination c ON ka.combination_id = c.id
+                    LEFT JOIN 
+                        api_issue_book ib ON u.id = ib.borrower_id 
+                        AND DATE_TRUNC('month', CAST(ib.issuedate AS DATE)) = DATE_TRUNC('month', CURRENT_DATE)
+                    WHERE 
+                        u.is_student = TRUE
+                        AND u.is_alumni = FALSE
+                        AND ka.academic_year = EXTRACT(YEAR FROM CURRENT_DATE)
+                    GROUP BY 
+                        g.grade_name,
+                        f.family_name,
+                        c.combination_name
+                    ORDER BY 
+                        g.grade_name ASC,
+                        f.family_name ASC,
+                        c.combination_name ASC,  
+                        borrows DESC;
+
+
+                """
+
+            # Execute the SQL query
+            with connection.cursor() as cursor:
+                cursor.execute(sql_query)
+                data1 = cursor.fetchall()
+
+            data = []
+            if data1 is not None:
+                for i in data1:
+                    data.append({
+                        'grade_name': i[0],
+                        'family_name': i[1],
+                        'combination_name': i[2],
+                        'borrowers': i[3],
+                        'students': i[4]
+                    })
+
+            serializer = BorrowerByGradeDisplaySerializer(data=data, many=True)
+            serializer.is_valid()  # Validate serializer data
+            return Response(serializer.data)
+
+        except Exception as e:
+            # Log the exception or return a custom error response
+            return Response({'error': str(e)}, status=500)
+class AllBorrowersDisplayAPIView(APIView):
+    permission_classes = [IsAuthenticated, ]  # You can add authentication if needed
+
+    def get(self, request, *args, **kwargs):
+        try:   
+            # SQL query for the specified date range
+            sql_query = f"""
+                SELECT
+                    u.first_name,
+                    u.rwandan_name AS last_name,
+                    u.phone,
+                    u.email,
+                    g.grade_name,
+                    f.family_name,
+                    c.combination_name,
+                    b.book_name,
+                    b.isbnumber,
+                    cat.category_name,
+                    a.author_name,
+                    ib.issuedate,
+                    u.is_student,
+                    u.is_alumni,
+                    u.is_staff,
+                    ib.returndate,
+                    k.id AS kid_id,
+                    u.id AS user_id
+                FROM
+                    api_user u
+                INNER JOIN
+                    api_issue_book ib ON ib.borrower_id = u.id
+                INNER JOIN
+                    api_book b ON ib.book_id = b.id
+                INNER JOIN
+                    api_category cat ON b.category_id = cat.id
+                INNER JOIN
+                    api_author a ON a.id = b.author_id
+                LEFT JOIN
+                    api_kid k ON u.id = k.user_id
+                LEFT JOIN
+                    api_family f ON k.family_id = f.id
+                LEFT JOIN
+                    api_grade g ON f.grade_id = g.id
+                INNER JOIN
+                    api_kidacademics ka ON k.id = ka.kid_id
+                INNER JOIN
+                    api_combination c ON ka.combination_id = c.id
+                WHERE
+                    ka.academic_year = EXTRACT(YEAR FROM CURRENT_DATE);
+
+            """
+
+            # Execute the SQL query
+            with connection.cursor() as cursor:
+                cursor.execute(sql_query)
+                data1 = cursor.fetchall()
+
+            data = []
+            if data1:
+                for i in data1:
+                    data.append({
+                        'first_name': i[0],
+                        'last_name': i[1],
+                        'phone1': i[2],
+                        'email': i[3],
+                        'grade_name': i[4],
+                        'family_name': i[5],
+                        'combination_name': i[6],
+                        'book_name': i[7],
+                        'isbnumber': i[8],
+                        'category_name': i[9],
+                        'author_name': i[10],
+                        'issuedate': i[11],
+                        'is_student':i[12],
+                        'is_alumni':i[13],
+                        'is_staff':i[14],
+                        'returndate': i[15],
+                        'student_id': i[16],
+                        'user_id': i[17]
+                    })
+
+            serializer = AllBorrowersDisplaySerializer(data=data, many=True)
+            serializer.is_valid()  # Validate serializer data
+            return Response(serializer.data)
+
+        except Exception as e:
+            # Log the exception or return a custom error response
+            return Response({'error': str(e)}, status=500)
+        
+class StudentswithBookReportExportInExcelAPIView(APIView):
+    permission_classes = [IsAuthenticated, ]
+    def get_data_from_database(self):
+        sql_query = """
+           SELECT 
+                    ROW_NUMBER() OVER (ORDER BY g.grade_name, c.combination_name) AS number,
+                    u.rwandan_name AS last_name,
+                    u.first_name,
+                    u.reg_number AS studentid,
+                    g.grade_name,
+                    f.family_name,
+                    c.combination_name,
+                    b.book_name,
+                    b.isbnumber,
+                    cat.category_name,
+                    a.author_name,
+                    TO_CHAR(
+                        CASE 
+                            WHEN ib.issuedate LIKE '%T%' THEN TO_TIMESTAMP(ib.issuedate, 'YYYY-MM-DD"T"HH24:MI:SS')
+                            WHEN ib.issuedate LIKE '%-%' THEN TO_TIMESTAMP(ib.issuedate, 'YYYY-MM-DD HH24:MI:SS')
+                            WHEN ib.issuedate LIKE '%/%' THEN TO_TIMESTAMP(ib.issuedate, 'MM/DD/YYYY HH24:MI')
+                            ELSE NULL
+                        END, 
+                        'DD Mon, YYYY HH24:MI:SS'
+                    ) AS issuedate,
+                    ib.returndate
+                FROM 
+                    api_grade g
+                INNER JOIN 
+                    api_family f ON g.id = f.grade_id
+                INNER JOIN 
+                    api_kid k ON f.id = k.family_id
+                INNER JOIN 
+                    api_user u ON k.user_id = u.id
+                INNER JOIN 
+                    api_kidacademics ka ON k.id = ka.kid_id
+                INNER JOIN 
+                    api_combination c ON ka.combination_id = c.id
+                INNER JOIN 
+                    api_issue_book ib ON ib.borrower_id = u.id
+                INNER JOIN 
+                    api_book b ON ib.book_id = b.id
+                INNER JOIN 
+                    api_category cat ON b.category_id = cat.id
+                INNER JOIN 
+                    api_author a ON b.author_id = a.id
+                WHERE 
+                    ib.returndate = 'Not yet Returned'
+                    AND ka.academic_year = EXTRACT(YEAR FROM CURRENT_DATE)
+                ORDER BY 
+                    g.grade_name ASC, 
+                    f.family_name ASC;
+
+        """
+        with connection.cursor() as cursor:
+            cursor.execute(sql_query)
+            data = cursor.fetchall()
+
+        return data
+
+    def generate_excel(self, data):
+        # Create a new Workbook
+        wb = Workbook()
+
+        # Get the active worksheet
+        ws = wb.active
+        ws.append(["No", "Last Name","First Name", "Reg.No", "Grade", "Family", "Class","Book Name","ISBN","Category","Author","Isued Date","Returned Date"])
+        # Add rows
+        isued_book_data_name = 'students_with_book_report'
+        ws.title = isued_book_data_name
+        #logging.debug(data)
+        
+        for row_data in data:
+            ws.append(row_data)
+
+        # Save the workbook
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename=LFHS_Issued_Books_to_students_data.xlsx'
+        wb.save(response)
+        return response
+
+    def get(self, request, *args, **kwargs):
+        try:
+            data = self.get_data_from_database()
+            if data:
+                return self.generate_excel(data)
+            else:
+                return Response({'error': 'No data found.'}, status=404)
+        except Exception as e:
+            # Log the exception or return a custom error response
+            return Response({'error': str(e)}, status=500)
+def transform_grade_and_combination(grade_name, combination_name):
+    # Map grade_name to its short form
+    grade_mapping = {
+        "Ijabo": "S4",
+        "Ishami": "S5",
+        "Intwali": "S6"
+    }
+    
+    # If grade_name is EY2024_2025, return the combination_name as it is
+    if grade_name == "EY2024_2025":
+        return combination_name
+    
+    # Otherwise, extract the short grade name
+    short_grade = grade_mapping.get(grade_name, grade_name)
+    
+    # Extract the text inside parentheses from combination_name
+    if "(" in combination_name and ")" in combination_name:
+        combination_text = combination_name.split("(")[-1].split(")")[0]
+    else:
+        combination_text = combination_name  # Fallback if no parentheses exist
+    
+    # Return the combined string in the format grade_combination
+    return f"{short_grade}_{combination_text}"
+
+def format_issueddate(date_str):
+    try:
+        # Try parsing in ISO 8601 format (e.g., 2024-05-28T08:59:27.108Z or 2024-05-29 15:13:50)
+        if 'T' in date_str:  # For ISO format with T and Z
+            formatted_date = datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S.%fZ")
+        else:  # For format like '2023-05-29 15:11:41'
+            formatted_date = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
+        
+        # Return the formatted date in a user-friendly format
+        return formatted_date.strftime("%Y-%m-%d %H:%M:%S")
+    
+    except ValueError:
+        # Handle invalid date format
+        return "Invalid Date"
+           
+def library_book_export_view(request):
+    try:
+        current_year = timezone.now().year
+
+        # Subquery to get the latest unreturned book for each user
+        latest_unreturn_book = Issue_Book.objects.filter(
+            borrower=OuterRef('user_id'),
+            returndate='Not yet Returned'
+        ).select_related('book').order_by('-issuedate').values(
+            'book__book_name', 'book__isbnumber', 'issuedate'
+        )[:1]
+
+        # Subquery to get the combination name based on the current academic year
+        latest_combination = KidAcademics.objects.filter(
+            kid=OuterRef('pk'),
+            academic_year=current_year
+        ).select_related('combination').values('combination__combination_name')[:1]
+
+        # Query to fetch kids with their latest unreturned book and grade/combination
+        queryset = Kid.objects.select_related(
+            'user', 'family__grade'
+        ).annotate(
+            book_name=Subquery(latest_unreturn_book.values('book__book_name')),
+            isbn_number=Subquery(latest_unreturn_book.values('book__isbnumber')),
+            issued_date=Subquery(latest_unreturn_book.values('issuedate')),
+            grade_name=F('family__grade__grade_name'),
+            combination_name=Subquery(latest_combination)
+        ).filter(
+            book_name__isnull=False
+        )
+
+        # Prepare data for Excel
+        data = []
+        st_ids = 1
+        for kid in queryset:
+            try:
+                if kid.issued_date:
+                    try:
+                        issue_date = datetime.strptime(kid.issued_date, '%Y-%m-%dT%H:%M:%S.%fZ')
+                    except ValueError:
+                        try:
+                            issue_date = datetime.strptime(kid.issued_date, '%Y-%m-%d %H:%M:%S')
+                        except ValueError:
+                            try:
+                                issue_date = datetime.strptime(kid.issued_date, '%m/%d/%Y %H:%M')
+                            except ValueError:
+                                issue_date = None
+
+                    if issue_date:
+                        issue_date = timezone.make_aware(issue_date)
+                        days_since_issue = (timezone.now().date() - issue_date.date()).days
+                    else:
+                        days_since_issue = 'Invalid Date'
+                else:
+                    days_since_issue = 0
+            except (ValueError, TypeError):
+                days_since_issue = 'Invalid Date'
+
+            data.append({
+                "#": st_ids,
+                'First Name': kid.user.first_name or '',
+                'Last Name': kid.user.rwandan_name or '',
+                'Reg.No': kid.user.reg_number or '',
+                'Class': transform_grade_and_combination(kid.grade_name, kid.combination_name or ''),
+                'Family': kid.family.family_name if kid.family else '',
+                'Book Name': kid.book_name or '',
+                'ISBN Number': kid.isbn_number or '',
+                'Issued Date': format_issueddate(kid.issued_date),
+                'Days Since Issue': days_since_issue
+            })
+            st_ids += 1
+
+        df = pd.DataFrame(data)
+
+        if df.empty:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'No data found for export'
+            }, status=404)
+
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename=library_book_issuance.xlsx'
+
+        with pd.ExcelWriter(response, engine='xlsxwriter') as writer:
+            df.to_excel(writer, index=False, sheet_name='Students')
+
+            workbook = writer.book
+            worksheet = writer.sheets['Students']
+
+            header_format = workbook.add_format({
+                'bold': True,
+                'text_wrap': True,
+                'valign': 'top',
+                'fg_color': '#D7E4BC',
+                'border': 1
+            })
+
+            for col_num, value in enumerate(df.columns.values):
+                worksheet.write(0, col_num, value, header_format)
+
+            for i, col in enumerate(df.columns):
+                column_len = max(df[col].astype(str).map(len).max(), len(col)) + 2
+                worksheet.set_column(i, i, column_len)
+
+        return response
+
+    except Exception as e:
+        error_traceback = traceback.format_exc()
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e),
+            'traceback': error_traceback
+        }, status=500)
 

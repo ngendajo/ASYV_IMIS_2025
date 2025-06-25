@@ -419,3 +419,47 @@ class FurtherEducation(models.Model):
 
     def __str__(self):
         return str(self.alumn.user.first_name + ' - ' + self.college.college_name)
+    
+#Library Management System
+
+# Authors models
+class Author(models.Model):
+    author_name = models.CharField(max_length=500)
+
+    def __str__(self):
+        return str(self.author_name)
+    
+# Category models
+class Category(models.Model):
+    category_name = models.CharField(max_length=500)
+    #category_id = models.IntegerField(unique=True,null=True)
+
+    def __str__(self):
+        return str(self.category_name)
+    
+# Books models
+class Book(models.Model):
+    book_name = models.CharField(max_length=500)
+    isbnumber = models.CharField(max_length=100)
+    number_of_books = models.CharField(max_length=30)
+    category = models.ForeignKey(Category,on_delete=models.PROTECT, related_name="categ")
+    author = models.ForeignKey(Author,related_name="autho",on_delete=models.PROTECT)
+
+    def __str__(self):
+        return str(self.book_name)
+    
+# Issue Books models
+class Issue_Book(models.Model):
+    book = models.ForeignKey(Book,on_delete=models.PROTECT, related_name="boo")
+    borrower = models.ForeignKey(User,on_delete=models.PROTECT, related_name="borrow")
+    library_number = models.CharField(max_length=30)
+    issuedate = models.CharField(max_length=70)
+    returndate = models.CharField(max_length=70)
+    
+
+    def __str__(self):
+        return str(self.book.book_name + self.borrower.first_name + "borrow")
+
+
+    def __str__(self):
+        return str(self.term_name)
