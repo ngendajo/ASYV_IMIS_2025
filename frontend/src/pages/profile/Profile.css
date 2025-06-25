@@ -1,0 +1,14 @@
+.profile-section {
+    margin-top: 40px;
+    margin-left: 140px;
+    font-family: Medium;
+    background-color: var(--palegreen); 
+
+  }
+
+  .profile {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: var(--palegreen); /* Set the background color for the whole page */
+}

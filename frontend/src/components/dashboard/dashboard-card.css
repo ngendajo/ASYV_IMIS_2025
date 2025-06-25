@@ -1,0 +1,93 @@
+.Dash-card-container {
+  width: 100%;
+  max-width: 280px;
+  height: 240px;
+  margin: 0 auto;
+  padding: 15px 0;
+  background-color: var(--palegrey);
+  border-radius: 8px;
+  box-shadow: 0px 6px 6px var(--blackopa);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease-in-out;
+}
+
+.Dash-card-container:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.Dash-card-img-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: calc((100vh - 200px) * 0.17);
+  height: calc((100vh - 200px) * 0.17);
+  background-color: var(--white);
+  border-radius: 50%;
+  margin-bottom: calc((100vh - 200px) * 0.05);
+  box-shadow: 0 1px 5px var(--blackopa);
+}
+
+.Dash-card-img {
+  width: calc((100vh - 200px) * 0.10);
+  height: calc((100vh - 200px) * 0.10);
+  object-fit: contain;
+}
+
+.Dash-card-btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  background-color: var(--green);
+  color: var(--white);
+  font-family: Medium;
+  font-size: 18px;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  width: 60%;
+  padding: 5px 15px;
+  box-shadow: 0 1px 5px var(--blackopa);
+  border: 2px var(--green) solid;
+  border-radius: 25px;
+  transition: background-color 0.2s ease, border 0.2s ease;
+}
+
+.Dash-card-btn:hover {
+  background-color: var(--brown);
+  color: var(--white);
+  border: 2px var(--brown) solid;
+}
+
+/* MOBILE ADJUSTMENTS */
+@media (max-width: 768px) {
+  .Dash-card-container {
+    max-width: 100%;
+    height: auto;
+    padding: 10px 0;
+  }
+
+  .Dash-card-img-container {
+    width: calc((100vh - 200px) * 0.13);
+    height: calc((100vh - 200px) * 0.13);
+    margin-bottom: calc((100vh - 200px) * 0.03);
+  }
+
+  .Dash-card-img {
+    width: calc((100vh - 200px) * 0.08);
+    height: calc((100vh - 200px) * 0.08);
+  }
+
+  .Dash-card-btn {
+    font-size: 16px;
+    padding: 4px 12px;
+    width: 70%;
+  }
+}

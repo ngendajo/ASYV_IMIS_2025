@@ -1,0 +1,133 @@
+.add-data-container {
+    width: 95%;
+    margin: auto;
+    padding: 40px 0;
+  }
+  
+  .page-title {
+    font-family: Bold;
+    font-size: 28px;
+    margin-bottom: 30px;
+    color: var(--brown);
+  }
+  
+  .white-card {
+    background-color: var(--white);
+    border: 2px solid var(--green);
+    border-radius: 10px;
+    padding: 5px 20px;
+    margin-bottom: 30px;
+  }
+  
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: Medium;
+    font-size: 16px;
+    color: var(--brown);
+    cursor: pointer;
+  }
+  
+  .form-section {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .form-section label {
+    font-family: Medium;
+    font-size: 14px;
+    margin-bottom: 4px;
+    color: var(--brown);
+  }
+  
+  label.required::after {
+    content: " *";
+    color: red;
+    margin-left: 4px;
+  }
+  
+  .form-section input,
+  .form-section select {
+    padding: 10px;
+    font-size: 14px;
+    border: 1px solid var(--grey);
+    border-radius: 5px;
+    font-family: Regular;
+    background-color: #fdfdfd;
+  }
+  
+  .form-section button {
+    margin-top: 10px;
+    align-self: flex-start;
+    background-color: var(--green);
+    color: var(--white);
+    font-family: Medium;
+    font-size: 14px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .form-section button:hover {
+    background-color: var(--yellow);
+    color: var(--black);
+  }
+  
+  .inline-link {
+    font-family: Regular;
+    font-size: 14px;
+    margin-top: 10px;
+    color: var(--green);
+    cursor: pointer;
+    text-decoration: underline;
+    width: fit-content;
+  }
+  
+  .nested-section {
+    margin-top: 15px;
+    padding: 15px;
+    border-left: 3px solid var(--green);
+    background-color: #f7f7f7;
+    border-radius: 8px;
+  }
+  .nested-section label {
+    display: block;
+    margin-top: 15px;
+    font-family: Medium;
+    font-size: 14px;
+    color: var(--brown);
+  }
+  
+  .nested-section input,
+  .nested-section select {
+    display: block;
+    width: 100%;
+    margin-top: 5px;
+    padding: 10px;
+    font-size: 14px;
+    border-radius: 5px;
+    border: 1px solid var(--grey);
+    font-family: Regular;
+    background-color: #fdfdfd;
+  }
+  
+  .family-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 10px;
+  }
+  .family-group label {
+    margin-top: 10px;
+  }
+  
+  .checkbox-inline {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 15px;
+  }
+

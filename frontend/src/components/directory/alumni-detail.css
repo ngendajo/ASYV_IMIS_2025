@@ -1,0 +1,224 @@
+/* 1. white card */
+.alumni-detail {
+    /* flex */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* color block */
+    background-color: var(--white);
+    box-shadow: 0 2px 10px var(--blackopa);
+    /* box */
+    position: relative;
+    min-height: 560px;
+    overflow-y: auto;
+    padding: 20px;
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+/* 2. Profile */
+.backToGraph {
+    /* font */
+    color: var(--brown);
+    font-family: Medium;
+    font-size: 16px;
+    text-decoration: none;
+    transition: 0.1s;
+    cursor: pointer;
+    /* box */
+    position: absolute;
+    top: 30px;
+    right: 30px;
+    background: none;
+    border: none;
+}
+.backToGraph:hover{
+    /* font */
+    color: var(--yellow);
+}
+.detail-pic {
+    /* box */
+    width: 120px;
+    border-radius: 50%;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+.detail-first-name {
+    /* font */
+    color: var(--black);
+    font-family: Medium;
+    font-size: 20px;
+    /* box */
+    margin-bottom: -5px;
+}
+.detail-last-name {
+    /* font */
+    color: var(--black);
+    font-family: Medium;
+    font-size: 20px;
+    /* box */
+    margin-bottom: 5px;
+}
+.detail-contact-info {
+    /* font */
+    color: var(--black);
+    font-family: Regular;
+    font-size: 14px;
+}
+.detail-grid {
+    /* display */
+    display: grid;
+    grid-template-columns: auto 1fr;
+    /* box */
+    width: 80%;
+    padding: 20px;
+    gap: 0 12px;
+}
+.DetailTitle {
+    /* font */
+    color: var(--green);
+    font-size: 18px;
+    font-family: Medium;
+    /* box */
+    padding: 3px 0;
+}
+.DetailValue {
+    /* font */
+    color: var(--black);
+    font-size: 16px;
+    font-family: Regular;
+    /* box */
+    padding: 6px 0;
+    padding-left: 12px;
+    border-left: 2px solid var(--palegrey);
+}
+.alumni-detail-button{
+    display: flex;
+    gap: 10px;
+}
+.alumni-detail-button button{
+    /* font */
+    font-family: Medium;
+    font-size: 16px;
+    text-decoration: none;
+    cursor: pointer;
+    /* box */
+    width: 100px;
+    padding: 5px 10px;
+    border-radius: 30px;
+    margin-bottom: 10px;
+}
+.alumni-view-button{
+    background-color: var(--green);
+    color: var(--white);
+    border: 2px var(--green) solid;
+}
+.alumni-view-button:hover{
+    /* font */
+    background-color: var(--white);
+    color: var(--green);
+}
+.alumni-delete-button{
+    /* font */
+    background-color: var(--grey);
+    color: var(--white);
+    border: 2px var(--grey) solid;
+}
+.alumni-delete-button:hover{
+    /* font */
+    background-color: var(--white);
+    color: var(--grey)
+}
+.detail-empty-message{
+    /* font */
+    color: var(--green);
+    font-family: Medium;
+    font-size: 18px;
+    /* box */
+    margin-top: 20px;
+}
+/* 3. graph */
+.detail-graph{
+    /* box */
+    width: 100%;
+    margin-top: 20px;
+}
+.detail-graph-title{
+    /* font */
+    color: var(--brown);
+    font-family: Medium;
+    font-size: 18px;
+    text-align: center;
+}
+.detail-graph-description{
+    /* font */
+    color: var(--coffee);
+    font-family: Regular;
+    font-size: 12px;
+    text-align: center;
+    /* box */
+    margin-bottom: 10px;
+}
+
+/* 4. Zoomed In */
+.big-space{
+    height: 40px
+}
+
+.outcome-summary {
+    margin-top: 2rem;
+  }
+  .outcome-title {
+    font-weight: bold;
+    margin-bottom: 1rem;
+  }
+  .outcome-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+  .outcome-item {
+    background: #f7f7f7;
+    padding: 1rem;
+    border-radius: 8px;
+  }
+  .label {
+    font-size: 0.9rem;
+    color: #666;
+  }
+  .value {
+    font-size: 1.2rem;
+    font-weight: bold;
+  }
+
+  .modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5); /* dark backdrop */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-card {
+  background-color: white;
+  border-radius: 12px;
+  padding: 2rem;
+  width: 90%;
+  max-width: 700px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* optional */
+}
+
+.modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 1.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #444;
+}
