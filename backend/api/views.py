@@ -2917,6 +2917,7 @@ def get_student_information(request, user_id):
                             'level': academic.level,
                             'combination_name': academic.combination.combination_name,
                             'combination_abbreviation': academic.combination.abbreviation,
+                            'marks': academic.marks,
                         })
                 except Exception as e:
                     logger.error(f"Error retrieving combinations for user_id {user_id}: {str(e)}")
@@ -2979,6 +2980,7 @@ def get_student_information(request, user_id):
             elif request.method == 'PUT':
                 serializer = StudentProfileSerializer(data=request.data)
                 if serializer.is_valid():
+                    print("serializer is valid")
                     try:
                         serializer.update({'user': user, 'kid': kid}, serializer.validated_data)
                         return Response({'message': 'Profile updated successfully'}, status=status.HTTP_200_OK)
@@ -2987,6 +2989,7 @@ def get_student_information(request, user_id):
                         logger.error(f"Error updating student profile for user_id {user_id}: {str(e)}")
                         return Response({'error': 'Error updating profile', 'details': str(e)},
                                         status=status.HTTP_400_BAD_REQUEST)
+                print("serializaer not valid")
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
             
@@ -3494,7 +3497,23 @@ class DropdownOptionsAPIView(APIView):
                 {"value": "P", "label": "Part-time"}, 
                 {"value": "S", "label": "Self-employed"}, 
                 {"value": "I", "label": "Intern"}, 
+            ], 
+            "scholarship" : [
+                {"value": "F", "label": "Full"}, 
+                {"value": "P", "label": "Partial"}, 
+                {"value": "S", "label": "Self-sponsor"}, 
             ]
         }
         return Response(data)
+
+@api_view(['GET'])
+def get_mamas(request):
+       
+    # Basic Information
+    mamas = User.objects.filter(is_mama=True, is_active=True)
+    mama_info =UserSerializer(mamas, many=True)
+
+    return Response(mama_info.data, status=status.HTTP_200_OK)
+
+        
 

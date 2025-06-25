@@ -59,18 +59,39 @@ class ResetPasswordSerializer(serializers.Serializer):
 #End User login serialisers
 
 #Grades and Families
-class GradeSerializer(serializers.ModelSerializer):
+
+class GradeInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Grade
-        fields = '__all__'
-
+        fields = ['grade_name', 'admission_year_to_asyv', 'graduation_year_to_asyv']
 
 class FamilySerializer(serializers.ModelSerializer):
-    grade = GradeSerializer()
+    grade_info = GradeInfoSerializer(source='grade', read_only=True)
 
     class Meta:
         model = Family
-        fields = '__all__'
+        fields = ['id', 'family_name', 'family_number', 'mother', 'grade_info']
+
+class GradeSerializer(serializers.ModelSerializer):
+    families = FamilySerializer(many=True, write_only=True)
+
+    class Meta:
+        model = Grade
+        fields = [
+            'id',
+            'grade_name',
+            'admission_year_to_asyv',
+            'graduation_year_to_asyv',
+            'families'
+        ]
+
+    def create(self, validated_data):
+        families_data = validated_data.pop('families', [])
+        grade = Grade.objects.create(**validated_data)
+        for family_data in families_data:
+            Family.objects.create(grade=grade, **family_data)
+        return grade
+
         
 #Leap crud
 class LeapSerializer(serializers.ModelSerializer):
@@ -244,7 +265,7 @@ class FurtherEducationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FurtherEducation
-        fields = ['id', 'alumn', 'college', 'level', 'degree', 'status', 'location']
+        fields = ['id', 'alumn', 'college', 'level', 'degree', 'status', 'location', 'scholarship', 'scholarship_details']
 
     def get_location(self, obj):
         return f"{obj.college.city}, {obj.college.country}"

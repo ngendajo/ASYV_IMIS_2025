@@ -70,6 +70,6 @@ urlpatterns = [
     path('alumni-currentinfo/<int:kid_id>/', views.CurrentInfoUpdateView.as_view(), name ='alumni-currentinfo'),
     #selection options
     path('options/all-dropdowns/', views.DropdownOptionsAPIView.as_view(), name='profile-dropdowns'),
-
+    path('options/mamas/', views.get_mamas, name='mamas-info')
 
 ]
