@@ -26,7 +26,7 @@ export default function ReturnBook() {
     
         const getData = async () =>{
             try{
-                const response = await axios.get(baseUrl + '/issue-book-detail/id' + params.id, {
+                const response = await axios.get(baseUrl + '/issue-book-detail/' + params.id, {
                     headers: {
                         "Authorization": 'Bearer ' + String(auth.accessToken)
                     },
