@@ -158,87 +158,100 @@ export default function Issue() {
             required
           />
           <span>
-            {studentid!=="" && filteredData.length>0?
-            <>
-            {filteredData.map((student) => (
-              <span key={student.user_id}>
-                <label>
-                  {student.first_name} {student.rwandan_name}, Student ID: {student.reg_number},  From {student.grade_name} Grade, {student.family_name} Family, {student.combination_name} Class
-                  <input type="hidden" name="borrower" value={student.user_id}/>
-                </label>
-                <label className="invalid">Number of Books you have :{student.no_books}</label>
-                {(student.no_books)>0?
-                    (
-                      <span className="invalid">
-                        {student.issued_books.map((borr, index) => (
-                            <span key={index}>
-                              {index + 1}. {borr.book_name}, ISB:{borr.isbnumber}, library number:{borr.library_number}, Issued Date:{moment(borr.issuedate).format("Do MMMM YYYY, h:mm:ss a")}, No. day(s) pass:{Math.floor((issuedate.getTime() - new Date(borr.issuedate).getTime()) / (1000 * 60 * 60 * 24))}  <br/>
-                            </span>
-                          ))}
-                      </span>
-                    ) : (
-                      <></>
-                    )
-                }
-                {(student.no_books)>1?
-                      <span className="invalid">You have <strong>two or more books</strong>. You are not allowed to borrow another book. </span>:
-                      <>
-                       {(student.issued_books.filter(
-                      (borr) =>(Math.floor((issuedate.getTime() - new Date(borr.issuedate).getTime()) / (1000 * 60 * 60 * 24)))>28 
-                    ).length)>0?
+            {studentid !== "" && filteredData && typeof filteredData === 'object' ? (
+              <>
+                <span key={filteredData.user_id}>
+                  <label>
+                    {filteredData.first_name} {filteredData.rwandan_name}, Student ID: {filteredData.reg_number}, From {filteredData.grade_name} Grade, {filteredData.family_name} Family, {filteredData.combination_name} Class
+                    <input type="hidden" name="borrower" value={filteredData.user_id} />
+                  </label>
+                  <label className="invalid">Number of Books you have: {filteredData.no_books}</label>
+
+                  {filteredData.no_books > 0 && (
                     <span className="invalid">
-                      You have overdue books
-                    </span>:
+                      {filteredData.issued_books.map((borr, index) => (
+                        <span key={index}>
+                          {index + 1}. {borr.book_name}, ISB: {borr.isbnumber}, library number: {borr.library_number}, Issued Date: {moment(borr.issuedate).format("Do MMMM YYYY, h:mm:ss a")}, No. day(s) pass: {Math.floor((issuedate.getTime() - new Date(borr.issuedate).getTime()) / (1000 * 60 * 60 * 24))} <br />
+                        </span>
+                      ))}
+                    </span>
+                  )}
+
+                  {filteredData.no_books > 1 ? (
+                    <span className="invalid">
+                      You have <strong>two or more books</strong>. You are not allowed to borrow another book.
+                    </span>
+                  ) : (
                     <>
-                     <label>
-                          Enter a Valid ISB Number
-                        </label>
-                        <input 
-                          className='credentials' 
-                          type="text"
-                          id="book"
-                          autoComplete="off" 
-                          onBlur={(e) => getbook(e.target.value)}
-                          required
-                        />
-                        <p></p>
-                        {isbnumber===""?
-                        <p className="invalid">Enter SSBNumber</p>:
+                      {filteredData.issued_books.filter(
+                        (borr) =>
+                          Math.floor(
+                            (issuedate.getTime() - new Date(borr.issuedate).getTime()) /
+                              (1000 * 60 * 60 * 24)
+                          ) > 28
+                      ).length > 0 ? (
+                        <span className="invalid">You have overdue books</span>
+                      ) : (
                         <>
-                          {library_numberOptions.length>0?
-                          <>
-                          <span>{book_name},<br/> ISB Nmuber: {isbnumber}</span><br/>
-                          <select className='credentials'  value={library_number} onChange={(e) => setLibrary_number(e.target.value)}>
-                          <option value="" disabled>select Book Number</option>
-                            {library_numberOptions.map((option) => (
-                            <option key={option} value={option}>
-                              {option}
-                            </option>
-                          ))}
-                          </select>
-                          </>
-                          :
-                          <>
-                          {book_name===""?
-                            <span className="invalid">There is no that book in the database</span>:
-                            <span className="invalid">The books in the library have been exhausted; they have all been borrowed.</span> 
-                          }
-                            
-                          </>
-                          }
+                          <label>Enter a Valid ISB Number</label>
+                          <input
+                            className="credentials"
+                            type="text"
+                            id="book"
+                            autoComplete="off"
+                            onBlur={(e) => getbook(e.target.value)}
+                            required
+                          />
+                          {isbnumber === "" ? (
+                            <p className="invalid">Enter ISBNumber</p>
+                          ) : (
+                            <>
+                              {library_numberOptions.length > 0 ? (
+                                <>
+                                  <span>
+                                    {book_name},<br /> ISB Number: {isbnumber}
+                                  </span>
+                                  <br />
+                                  <select
+                                    className="credentials"
+                                    value={library_number}
+                                    onChange={(e) => setLibrary_number(e.target.value)}
+                                  >
+                                    <option value="" disabled>
+                                      select Book Number
+                                    </option>
+                                    {library_numberOptions.map((option) => (
+                                      <option key={option} value={option}>
+                                        {option}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </>
+                              ) : (
+                                <>
+                                  {book_name === "" ? (
+                                    <span className="invalid">
+                                      There is no such book in the database
+                                    </span>
+                                  ) : (
+                                    <span className="invalid">
+                                      All copies of this book are currently borrowed.
+                                    </span>
+                                  )}
+                                </>
+                              )}
+                            </>
+                          )}
                         </>
-                        }
+                      )}
                     </>
-                  
-                    }
-                      </>
-                    }
-              </span>
-            ))}
-            </>:<p className="invalid">
-              Enter a Valid student ID
-            </p>
-            }
+                  )}
+                </span>
+              </>
+            ) : (
+              <p className="invalid">Enter a Valid student ID</p>
+            )}
+
         </span>
             {(bookid==="" || library_number==="" || issuedate==="")?
             <></>:
