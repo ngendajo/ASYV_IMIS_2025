@@ -113,6 +113,8 @@ const AlumniDirectory = () => {
           withCredentials: true,
         });
 
+        console.log(response.data.data)
+
         const alumnilist = response.data.data.map((element) => ({
           id: element.id,
           user_id: element.user_id,
@@ -129,8 +131,9 @@ const AlumniDirectory = () => {
           combination: element.combination.combination_name || '',
           employment: element.employment?.[0]?.title || '',
           industry: element.employment?.[0]?.industry || '',
+          further_education: element.further_education?.[0]?.college.college_name || '',
         }));
-        console.log("sample alumni data", alumnilist[1])
+        console.log("sample alumni data", alumnilist);
         setAlumniData((prevData) =>
             pagination.current_page === 1 ? alumnilist : [...prevData, ...alumnilist]
           );
