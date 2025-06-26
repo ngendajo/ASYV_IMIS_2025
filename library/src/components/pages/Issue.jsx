@@ -36,7 +36,7 @@ export default function Issue() {
                 },
                 withCredentials:true 
             });
-            //console.log(response.data)
+            console.log(response.data)
             if(id!==""){
               setFilteredData(response.data)
             }else{
@@ -84,18 +84,20 @@ export default function Issue() {
             },
             withCredentials:true
         });
-        const response2 = await axios.get(baseUrl + '/issue/?book__isbnumber=' + id, {
+        const response2 = await axios.get(baseUrl + '/library-numbers/' + id+'/', {
             headers: {
                 "Authorization": 'Bearer ' + String(auth.accessToken)
             },
             withCredentials: true
         });
         var library_numbers_list=[]
-        response2.data.results.forEach(e=>{
-          if(e.returndate==="Not yet Returned"){
-            library_numbers_list.push(e.library_number)
+        if (response2.data && Array.isArray(response2.data.results)) {
+              response2.data.results.forEach(e => {
+                  if (e.library_number) {
+                      library_numbers_list.push(e.library_number);
+                  }
+              });
           }
-      })
       console.log(library_numbers_list)
         let data=response.data;
         if (data && data.length > 0) {

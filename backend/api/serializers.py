@@ -460,6 +460,10 @@ class IssuedBookSerializer(serializers.ModelSerializer):
         model = Issue_Book
         fields = ['book_name', 'issuedate', 'returndate', 'category_name', 'author_name','isbnumber','library_number']
 
+class LibraryNumberSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Issue_Book
+        fields = ['library_number']
 
 class KidBookProfileSerializer(serializers.Serializer):
     user_id = serializers.IntegerField()

@@ -5139,4 +5139,10 @@ class KidBookProfileView(APIView):
         }
 
         return Response(response_data, status=status.HTTP_200_OK)
+    
+class LibraryNumbersByISBNView(APIView):
+    def get(self, request, isbnumber):
+        issues = Issue_Book.objects.filter(book__isbnumber=isbnumber)
+        serializer = LibraryNumberSerializer(issues, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 

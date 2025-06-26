@@ -71,6 +71,7 @@ urlpatterns = [
     path('issue/', views.Issue_BookRegistrationView.as_view(), name='issue_book_api'),
     path('issue-book-detail/<int:id>/', views.IssueBookDetailView.as_view(), name='issue-book-detail'),
     path('kid-books/<str:reg_number>/', views.KidBookProfileView.as_view(), name='kid-books-by-reg-number'),
+    path('library-numbers/<str:isbnumber>/', views.LibraryNumbersByISBNView.as_view(), name='library-numbers-by-isbn'),
     path('issued/', views.IssuedBookDisplayAPIView.as_view(), name='issued_book_api'),
     path('exportissued/', views.Issued_BookReportExportAPIView.as_view(), name='issued_book_api_in_pdf'),
     path('exportoverdue/', views.Overdue_BookReportExportAPIView.as_view(), name='overdue_book_api_in_pdf'),
