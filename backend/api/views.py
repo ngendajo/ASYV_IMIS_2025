@@ -39,6 +39,7 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 import traceback
 from django.core.paginator import Paginator
+from rest_framework.generics import RetrieveAPIView
 
 logger = logging.getLogger(__name__)
 from .models import *
@@ -3725,6 +3726,12 @@ class Issue_BookRegistrationView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+
+class IssueBookDetailView(RetrieveAPIView):
+    queryset = Issue_Book.objects.all()
+    serializer_class = IssueDetailSerializer
+    lookup_field = 'id' 
 
 
 
@@ -5099,4 +5106,37 @@ def library_book_export_view(request):
             'message': str(e),
             'traceback': error_traceback
         }, status=500)
+class KidBookProfileView(APIView):
+    def get(self, request, reg_number):
+        try:
+            user = User.objects.get(reg_number=reg_number)
+            kid = user.kid
+        except (User.DoesNotExist, Kid.DoesNotExist):
+            return Response({'detail': 'Kid with given reg_number not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        current_year = datetime.now().year
+        academics = kid.academics.filter(academic_year=current_year).first()
+        combination_name = academics.combination.combination_name if academics else ""
+
+        grade_name = kid.family.grade.grade_name if kid.family and kid.family.grade else ""
+        family_name = kid.family.family_name if kid.family else ""
+
+        issued_books = Issue_Book.objects.filter(
+                borrower=user, returndate="Not yet Returned"
+            )
+        serialized_issued_books = IssuedBookSerializer(issued_books, many=True).data
+
+        response_data = {
+            "user_id": user.id,
+            "first_name": user.first_name,
+            "rwandan_name": user.rwandan_name,
+            "reg_number": user.reg_number,
+            "grade_name": grade_name,
+            "family_name": family_name,
+            "combination_name": combination_name,
+            "no_books": len(serialized_issued_books),
+            "issued_books": serialized_issued_books
+        }
+
+        return Response(response_data, status=status.HTTP_200_OK)
 

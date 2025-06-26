@@ -5,6 +5,7 @@ from django.core.exceptions import ValidationError
 from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from .models import *
+from datetime import datetime
 
 User = get_user_model()
         
@@ -409,6 +410,67 @@ class Issue_BookSerializer(serializers.ModelSerializer):
 
 
 #end Issue_Book serilizer
+
+class IssueDetailSerializer(serializers.ModelSerializer):
+    first_name = serializers.CharField(source='borrower.first_name', read_only=True)
+    rwandan_name = serializers.CharField(source='borrower.rwandan_name', read_only=True)
+    grade_name = serializers.SerializerMethodField()
+    family_name = serializers.SerializerMethodField()
+    combination_name = serializers.SerializerMethodField()
+    book_name = serializers.CharField(source='book.book_name', read_only=True)
+    author_name = serializers.CharField(source='book.author.author_name', read_only=True)
+    category_name = serializers.CharField(source='book.category.category_name', read_only=True)
+    issue_id = serializers.IntegerField(source='id', read_only=True)
+
+    class Meta:
+        model = Issue_Book
+        fields = [
+            'issue_id', 'first_name', 'rwandan_name',
+            'grade_name', 'book_name', 'author_name', 'category_name',
+            'issuedate', 'returndate',
+            'family_name', 'combination_name'
+        ]
+
+    def get_grade_name(self, obj):
+        kid = getattr(obj.borrower, 'kid', None)
+        if kid and kid.family and kid.family.grade:
+            return kid.family.grade.grade_name
+        return None
+
+    def get_family_name(self, obj):
+        kid = getattr(obj.borrower, 'kid', None)
+        return kid.family.family_name if kid and kid.family else None
+
+    def get_combination_name(self, obj):
+        from datetime import datetime
+        current_year = datetime.now().year
+        kid = getattr(obj.borrower, 'kid', None)
+        if kid:
+            academic = kid.academics.filter(academic_year=current_year).first()
+            return academic.combination.combination_name if academic else None
+        return None
+    
+class IssuedBookSerializer(serializers.ModelSerializer):
+    book_name = serializers.CharField(source='book.book_name')
+    isbnumber = serializers.CharField(source='book.isbnumber')
+    category_name = serializers.CharField(source='book.category.category_name')
+    author_name = serializers.CharField(source='book.author.author_name')
+
+    class Meta:
+        model = Issue_Book
+        fields = ['book_name', 'issuedate', 'returndate', 'category_name', 'author_name','isbnumber','library_number']
+
+
+class KidBookProfileSerializer(serializers.Serializer):
+    user_id = serializers.IntegerField()
+    first_name = serializers.CharField()
+    rwandan_name = serializers.CharField()
+    reg_number = serializers.CharField()
+    grade_name = serializers.CharField()
+    family_name = serializers.CharField()
+    combination_name = serializers.CharField()
+    no_books = serializers.IntegerField()
+    issued_books = IssuedBookSerializer(many=True)
 
 #Reports
 class IssuedBookDisplaySerializer(serializers.Serializer):

@@ -25,7 +25,7 @@ import IssuedBooks from './components/pages/IssuedBooks';
 // import Grades from './components/pages/Grades';
 // import Comb from './components/pages/Comb';
 // import Combs from './components/pages/Combs';
-import Student from './components/pages/Student';
+//import Student from './components/pages/Student';
 import Students from './components/pages/Students';
 import Staffs from './components/pages/Staffs';
 import Staff from './components/pages/Staff';
@@ -43,14 +43,14 @@ import EditStaff from './components/pages/EditStaff';
 //import EditGrade from './components/pages/EditGrade';
 import EditStudent from './components/pages/EditStudent';
 import ReturnBook from './components/pages/ReturnBook';
-import UploadBooks from './components/pages/UploadBooks';
-import UpStudents from './components/pages/UpStudents';
-import UpIssue from './components/pages/UpIssue';
+// import UploadBooks from './components/pages/UploadBooks';
+// import UpStudents from './components/pages/UpStudents';
+// import UpIssue from './components/pages/UpIssue';
 import OverdueBooks from './components/pages/OverdueBooks';
 
 //import TeacherSubjectForm from './components/schoolTimeTable/TeacherSubjectForm';
-import TeacherSubjectList from './components/schoolTimeTable/TeacherSubjectList';
-import TimeSlots from './components/schoolTimeTable/TimeSlots';
+// import TeacherSubjectList from './components/schoolTimeTable/TeacherSubjectList';
+// import TimeSlots from './components/schoolTimeTable/TimeSlots';
 // import GradeTimeSlots from './components/schoolTimeTable/GradeTimeSlots';
 // import Subjects from './components/schoolTimeTable/Subjects';
 // import Academics from './components/schoolTimeTable/Academics';
@@ -94,9 +94,9 @@ function App() {
                 <Route element={<RequireAuth />}>
                   <Route path='/' element={<MainDashboard />}>
                     <Route path='/' element={<Dashboard />}/>
-                    <Route path="/schooltimetable" element={<TeacherSubjectList />} />
+                    {/* <Route path="/schooltimetable" element={<TeacherSubjectList />} /> */}
                     <Route element={<AuthCheck allowedRoles={["superuser","librarian","crc"]} />}>
-                      <Route path="/timeslots" element={<TimeSlots />} />
+                      {/* <Route path="/timeslots" element={<TimeSlots />} /> */}
                       {/* <Route path="/grade-timeslots" element={<GradeTimeSlots />} />
                       <Route path="/subjects" element={<Subjects />} />
                       <Route path="/rooms" element={<Rooms />} />
@@ -121,7 +121,7 @@ function App() {
                       <Route path='comb' element={<Comb />}/>
                       <Route path='combs' element={<Combs />}/>
                       <Route path='add-comb/:id' element={<Editcombination/>}/> */}
-                      <Route path='student' element={<Student />}/>
+                      {/* <Route path='student' element={<Student />}/> */}
                       <Route path='students' element={<Students />}/>
                       <Route path='student/:id' element={<EditStudent/>}/>
                       <Route path='staff' element={<Staff />}/>
@@ -131,11 +131,11 @@ function App() {
                       <Route path='fastatistics' element={<Fastatistics/>}/>
                       <Route path='costatistics' element={<Costatistics/>}/>
                     </Route>
-                    <Route element={<AuthCheck allowedRoles={["superuser"]} />}>
+                    {/* <Route element={<AuthCheck allowedRoles={["superuser"]} />}>
                       <Route path='upbook' element={<UploadBooks/>}/>
                       <Route path='upstudent' element={<UpStudents/>}/>
                       <Route path='upissue' element={<UpIssue/>}/>
-                    </Route>
+                    </Route> */}
                     {/* <Route element={<AuthCheck allowedRoles={["superuser","teacher","librarian","crc"]} />}>
                       <Route path='absenteeism' element={<Absenteeism/>}/>
                       <Route path='newattendace' element={<Newattendace/>}/>

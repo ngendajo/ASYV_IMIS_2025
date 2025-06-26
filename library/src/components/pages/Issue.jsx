@@ -29,7 +29,7 @@ export default function Issue() {
     const getstudent = async (id) =>{
       setStudentid(id)
         try{
-            const response = await axios.get(baseUrl+'/usersbooks/?student_info__studentid='+id,{
+            const response = await axios.get(baseUrl+'/kid-books/'+id+'/',{
                 headers: {
                     "Authorization": 'Bearer ' + String(auth.accessToken),
                     "Content-Type": 'multipart/form-data'
@@ -84,13 +84,12 @@ export default function Issue() {
             },
             withCredentials:true
         });
-        const response2 = await axios.get(baseUrl+'/issue/?book__isbnumber='+id,{
-          headers: {
-              "Authorization": 'Bearer ' + String(auth.accessToken),
-              "Content-Type": 'multipart/form-data'
-          },
-          withCredentials:true
-      });
+        const response2 = await axios.get(baseUrl + '/issue/?book__isbnumber=' + id, {
+            headers: {
+                "Authorization": 'Bearer ' + String(auth.accessToken)
+            },
+            withCredentials: true
+        });
         var library_numbers_list=[]
         response2.data.results.forEach(e=>{
           if(e.returndate==="Not yet Returned"){
@@ -160,24 +159,18 @@ export default function Issue() {
             {studentid!=="" && filteredData.length>0?
             <>
             {filteredData.map((student) => (
-              <span key={student.id}>
+              <span key={student.user_id}>
                 <label>
-                  {student.first_name} {student.last_name}, Student ID: {student.student_info.studentid}, Email: {student.email}, From {student.student_info.family.grade.grade_name} Grade, {student.student_info.family.family_name} Family, {student.student_info.combination.combination_name} Class
-                  <input type="hidden" name="borrower" value={student.id}/>
+                  {student.first_name} {student.rwandan_name}, Student ID: {student.reg_number},  From {student.grade_name} Grade, {student.family_name} Family, {student.combination_name} Class
+                  <input type="hidden" name="borrower" value={student.user_id}/>
                 </label>
-                <label className="invalid">Number of Books you have :{student.borrowings.filter(
-                      (borr) => borr.returndate === "Not yet Returned"
-                    ).length}</label>
-                {(student.borrowings.filter(
-                      (borr) => borr.returndate === "Not yet Returned"
-                    ).length)>0?
+                <label className="invalid">Number of Books you have :{student.no_books}</label>
+                {(student.no_books)>0?
                     (
                       <span className="invalid">
-                        {student.borrowings
-                          .filter((borr) => borr.returndate === "Not yet Returned")
-                          .map((borr, index) => (
+                        {student.issued_books.map((borr, index) => (
                             <span key={index}>
-                              {index + 1}. {borr.book.book_name}, ISB:{borr.book.isbnumber}, library number:{borr.library_number}, Issued Date:{moment(borr.issuedate).format("Do MMMM YYYY, h:mm:ss a")}, No. day(s) pass:{Math.floor((issuedate.getTime() - new Date(borr.issuedate).getTime()) / (1000 * 60 * 60 * 24))}  <br/>
+                              {index + 1}. {borr.book_name}, ISB:{borr.isbnumber}, library number:{borr.library_number}, Issued Date:{moment(borr.issuedate).format("Do MMMM YYYY, h:mm:ss a")}, No. day(s) pass:{Math.floor((issuedate.getTime() - new Date(borr.issuedate).getTime()) / (1000 * 60 * 60 * 24))}  <br/>
                             </span>
                           ))}
                       </span>
@@ -185,13 +178,11 @@ export default function Issue() {
                       <></>
                     )
                 }
-                {(student.borrowings.filter(
-                      (borr) => borr.returndate === "Not yet Returned"
-                    ).length)>1?
-                      <span className="invalid">You have <strong>two books</strong>. You are not allowed to borrow another book. </span>:
+                {(student.no_books)>1?
+                      <span className="invalid">You have <strong>two or more books</strong>. You are not allowed to borrow another book. </span>:
                       <>
-                       {(student.borrowings.filter(
-                      (borr) => borr.returndate === "Not yet Returned" && (Math.floor((issuedate.getTime() - new Date(borr.issuedate).getTime()) / (1000 * 60 * 60 * 24)))>28 
+                       {(student.issued_books.filter(
+                      (borr) =>(Math.floor((issuedate.getTime() - new Date(borr.issuedate).getTime()) / (1000 * 60 * 60 * 24)))>28 
                     ).length)>0?
                     <span className="invalid">
                       You have overdue books
