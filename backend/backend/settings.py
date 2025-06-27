@@ -14,12 +14,12 @@ MEDIA_ROOT = os.path.join(os.path.dirname(BASE_DIR), 'media')
 SECRET_KEY = "django-insecure-ku9yvru**wfd1vus*#p_#-(mg2$jf4$y6fss-8f*jn1qzyj9_^"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-#DEBUG = True #for local host
-DEBUG = False #for server
+DEBUG = True #for local host
+#DEBUG = False #for server
 
-#ALLOWED_HOSTS = ['127.0.0.1','localhost'] #for local host
+ALLOWED_HOSTS = ['127.0.0.1','localhost'] #for local host
 #ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.6.175']
-ALLOWED_HOSTS = ['10.10.88.228','backend.asyv.ac.rw'] #for server
+#ALLOWED_HOSTS = ['10.10.88.228','backend.asyv.ac.rw'] #for server
 
 
 # Application definition
@@ -78,8 +78,8 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'asyvimis',
         'USER': 'postgres',
-        'PASSWORD': 'amafaranga',#for server
-        #'PASSWORD': 'asyvams',#for local host
+        #'PASSWORD': 'amafaranga',#for server
+        'PASSWORD': 'asyvams',#for local host
         'HOST': 'localhost',
         'PORT': '5432',
     }
