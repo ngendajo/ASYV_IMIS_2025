@@ -3174,6 +3174,32 @@ class AlumniAcademicView(APIView):
 
 #alumni directory api
 class AlumniDirectoryView(APIView):
+    def get_all_filter_options(self):
+        genders_available = User.objects.values_list('gender', flat=True).distinct()
+        graduation_years_available = Grade.objects.values(
+            'graduation_year_to_asyv', 'grade_name'
+        ).distinct().order_by('-graduation_year_to_asyv')
+        families_available = Family.objects.values(
+            'id', 'family_name'
+        ).distinct().order_by('family_name')
+        combinations_available = KidAcademics.objects.filter(
+            level='S6'
+        ).values(
+            'combination_id', 'combination__abbreviation', 'combination__combination_name'
+        ).distinct()
+        industries_available = Employment.objects.values_list('industry', flat=True).distinct().order_by('industry')
+        colleges_available = FurtherEducation.objects.values(
+            'college__college_name'
+        ).distinct().order_by('college__college_name')
+
+        return {
+            'gender': list(genders_available),
+            'graduation_year': list(graduation_years_available),
+            'family': list(families_available),
+            'combination': list(combinations_available),
+            'industry': list(industries_available),
+            'college': list(colleges_available),
+        }
     def get(self, request):
         page = int(request.GET.get('page', 1))
         page_size = int(request.GET.get('page_size', 10))
@@ -3244,16 +3270,7 @@ class AlumniDirectoryView(APIView):
         }
 
           # Return filter options
-        genders_available = alumni.values_list('user__gender', flat=True).distinct()
-        graduation_years_available = alumni.values('family__grade__graduation_year_to_asyv',
-                                                    'family__grade__grade_name').distinct().order_by('-family__grade__graduation_year_to_asyv')
-        families_available = alumni.values('family__id', 'family__family_name').distinct().order_by('family__family_name')
-        combinations_available = KidAcademics.objects.filter(
-            kid__in=alumni, level='S6'
-        ).values('combination_id', 'combination__abbreviation', 'combination__combination_name').distinct()
-        industries_available = Employment.objects.filter(alumn__in=alumni).values_list('industry', flat=True).distinct().order_by('industry')
-        colleges_available = FurtherEducation.objects.filter(alumn__in=alumni).values('college__college_name').distinct().order_by('college__college_name')
-        
+        filters = self.get_all_filter_options()
       
         paginator = Paginator(alumni, page_size)
         page_obj = paginator.get_page(page)
@@ -3264,14 +3281,7 @@ class AlumniDirectoryView(APIView):
 
         return Response({
         "success": True,
-        "filters": {
-            "gender": list(genders_available),
-            "graduation_year": list(graduation_years_available),
-            "family": list(families_available),
-            "combination": list(combinations_available),
-            "industry": list(industries_available),
-            "college": list(colleges_available),
-        },
+        "filters": filters,
         "data": serialized_alumni,
         "outcome_summary": outcome_data,
         "pagination": {
@@ -3435,9 +3445,27 @@ class AlumniOutcomeTrends(APIView):
                 'most_attended_colleges': year_data['most_attended_colleges'], 
             })
 
+            # === OVERALL STATS ===
+            overall_total = sum(year['total'] for year in results.values())
+            overall_employment = sum(
+                year['employment_only'] + year['both'] for year in results.values()
+            )
+            overall_further_edu = sum(
+                year['further_edu_only'] + year['both'] for year in results.values()
+            )
+
+            overall_summary = {
+                'total_alumni': overall_total,
+                'employment_total': overall_employment,
+                'employment_percent': round(overall_employment / overall_total * 100, 2) if overall_total else 0,
+                'further_education_total': overall_further_edu,
+                'further_education_percent': round(overall_further_edu / overall_total * 100, 2) if overall_total else 0,
+            }
+
         # Return per-year data + overall most attended colleges
         return Response({
             'yearly_outcomes': data,
+            'overall_summary': overall_summary,
         })
 
 

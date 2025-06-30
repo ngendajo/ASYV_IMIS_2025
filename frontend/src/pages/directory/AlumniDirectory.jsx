@@ -11,6 +11,7 @@ import baseUrlforImg from '../../api/baseUrlforImg';
 import useAuth from '../../hooks/useAuth';
 import { saveAs } from 'file-saver';
 import * as XLSX from 'xlsx';
+import qs from 'qs';
 
 import OutcomePieChart from '../../components/directory/outcome-pie-chart.jsx';
 
@@ -19,6 +20,7 @@ const AlumniDirectory = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [alumniData, setAlumniData] = useState([]);
   const [outcomeSummary, setOutcomeSummary] = useState({});
+  const [showFilters, setShowFilters] = useState(false);
 
   const [filters, setFilters] = useState({
     gender: [],
@@ -26,15 +28,36 @@ const AlumniDirectory = () => {
     family: [],
     combination: [],
     industry: [],
-    college:[],
+    college: [],
   });
 
-  const [genderFilter, setGenderFilter] = useState('');
-  const [gradeFilter, setGradeFilter] = useState('');
-  const [familyFilter, setFamilyFilter] = useState('');
-  const [combinationFilter, setCombinationFilter] = useState('');
-  const [industryFilter, setIndustryFilter] = useState('');
-  const [collegeFilter, setCollegeFilter] = useState('');
+  // UI filter selections
+const [filterUI, setFilterUI] = useState({
+  gender: [],
+  graduation_year: [],
+  family: [],
+  combination: [],
+  industry: [],
+  college: [],
+});
+
+// Filters used in the actual request
+const [appliedFilters, setAppliedFilters] = useState({
+  gender: [],
+  graduation_year: [],
+  family: [],
+  combination: [],
+  industry: [],
+  college: [],
+});
+
+
+  // const [genderFilter, setGenderFilter] = useState([]);
+  // const [gradeFilter, setGradeFilter] = useState([]);
+  // const [familyFilter, setFamilyFilter] = useState([]);
+  // const [combinationFilter, setCombinationFilter] = useState([]);
+  // const [industryFilter, setIndustryFilter] = useState([]);
+  // const [collegeFilter, setCollegeFilter] = useState([]);
 
   const [pagination, setPagination] = useState({
     current_page: 1,
@@ -49,39 +72,39 @@ const AlumniDirectory = () => {
   const observer = useRef();
   const loader = useRef(null);
 
-  const genderOptions = [{ label: 'All', value: '' }, ...filters.gender.map((item) => ({
-    label: item === 'M' ? 'Male' : item === 'F' ? 'Female' : item,
-    value: item,
-  }))];
+  // const genderOptions = [{ label: 'All', value: '' }, ...filters.gender.map((item) => ({
+  //   label: item === 'M' ? 'Male' : item === 'F' ? 'Female' : item,
+  //   value: item,
+  // }))];
 
-  const gradeOptions = filters.graduation_year.map((item) => {
-    const year = item.family__grade__graduation_year_to_asyv;
-    const name = item.family__grade__grade_name;
-    const label = `${name} (${year})`;
-    const value = year;
-    return (
-      <option key={value} value={value}>
-        {label}
-      </option>
-    );
-  });
+  // const gradeOptions = filters.graduation_year.map((item) => {
+  //   const year = item.family__grade__graduation_year_to_asyv;
+  //   const name = item.family__grade__grade_name;
+  //   const label = `${name} (${year})`;
+  //   const value = year;
+  //   return (
+  //     <option key={value} value={value}>
+  //       {label}
+  //     </option>
+  //   );
+  // });
 
-  const familyOptions = filters.family.map((item) => ({
-    label: item.family__family_name,
-    value: item.family__id,
-  }));
+  // const familyOptions = filters.family.map((item) => ({
+  //   label: item.family__family_name,
+  //   value: item.family__id,
+  // }));
 
-  const combinationOptions = filters.combination.map((item) => ({
-    label: item.combination__combination_name,
-    value: item.combination_id,
-  }));
+  // const combinationOptions = filters.combination.map((item) => ({
+  //   label: item.combination__combination_name,
+  //   value: item.combination_id,
+  // }));
 
-  const industryOptions = filters.industry;
+  // const industryOptions = filters.industry;
 
-    const collegeOptions = (filters.college || []).map((item) => ({
-    label: item.college__college_name,
-    value: item.college__id,
-    }));
+  //   const collegeOptions = (filters.college || []).map((item) => ({
+  //   label: item.college__college_name,
+  //   value: item.college__id,
+  //   }));
 
 
 
@@ -94,25 +117,27 @@ const AlumniDirectory = () => {
         page: pagination.current_page,
         page_size: pagination.page_size,
       };
-      if (genderFilter) params.gender = genderFilter;
-      if (gradeFilter) params.year = gradeFilter;
-      if (familyFilter) params.family = familyFilter;
-      if (combinationFilter) params.combination = combinationFilter;
-      if (industryFilter) params.industry = industryFilter;
+      if (appliedFilters.gender.length > 0) params.gender = appliedFilters.gender;
+      if (appliedFilters.graduation_year.length > 0) params.year = appliedFilters.graduation_year;
+      if (appliedFilters.family.length > 0) params.family = appliedFilters.family;
+      if (appliedFilters.combination.length > 0) params.combination = appliedFilters.combination;
+      if (appliedFilters.industry.length > 0) params.industry = appliedFilters.industry;
+      if (appliedFilters.college.length > 0) params.college = appliedFilters.college;
+
       if (searchTerm) params.search = searchTerm;
-      if (collegeFilter) params.college = collegeFilter;
 
       try {
         console.log("Request params:", params);
         const response = await axios.get(baseUrl + '/alumni-directory/', {
           params,
+          paramsSerializer: params => qs.stringify(params, { arrayFormat: 'repeat' }),
           headers: {
             Authorization: 'Bearer ' + auth.accessToken,
             'Content-Type': 'multipart/form-data',
           },
           withCredentials: true,
         });
-
+        console.log(response.data);  
         console.log(response.data.data)
 
         const alumnilist = response.data.data.map((element) => ({
@@ -152,13 +177,7 @@ const AlumniDirectory = () => {
     };
 
     fetchAlumni();
-  }, [auth, pagination.current_page, pagination.page_size, genderFilter, gradeFilter, familyFilter, 
-    combinationFilter, industryFilter, searchTerm, collegeFilter]);
-  
-useEffect(() => {
-    setAlumniData([]);
-    setPagination((prev) => ({ ...prev, current_page: 1 }));
-}, [genderFilter, gradeFilter, familyFilter, combinationFilter, industryFilter, searchTerm, collegeFilter]);
+  }, [auth, pagination.current_page, pagination.page_size, searchTerm, appliedFilters]);
 
 useEffect(() => {
     const isDesktop = window.innerWidth >= 768; // adjust breakpoint if needed
@@ -197,51 +216,69 @@ useEffect(() => {
   }, [pagination.has_next, loading]);
   
 
-const handleDownload = async () => {
-    try {
-      const params = {
-        page_size: 10000,
-      };
-      if (genderFilter) params.gender = genderFilter;
-      if (gradeFilter) params.year = gradeFilter;
-      if (familyFilter) params.family = familyFilter;
-      if (combinationFilter) params.combination = combinationFilter;
-      if (industryFilter) params.industry = industryFilter;
-      if (collegeFilter) params.college = collegeFilter;
+// const handleDownload = async () => {
+//     try {
+//       const params = {
+//         page_size: 10000,
+//       };
+//       if (genderFilter) params.gender = genderFilter;
+//       if (gradeFilter) params.year = gradeFilter;
+//       if (familyFilter) params.family = familyFilter;
+//       if (combinationFilter) params.combination = combinationFilter;
+//       if (industryFilter) params.industry = industryFilter;
+//       if (collegeFilter) params.college = collegeFilter;
 
-      const response = await axios.get(baseUrl + '/alumni-directory/', {
-        params,
-        headers: {
-          Authorization: 'Bearer ' + auth.accessToken,
-          'Content-Type': 'multipart/form-data',
-        },
-        withCredentials: true,
-      });
+//       const response = await axios.get(baseUrl + '/alumni-directory/', {
+//         params,
+//         headers: {
+//           Authorization: 'Bearer ' + auth.accessToken,
+//           'Content-Type': 'multipart/form-data',
+//         },
+//         withCredentials: true,
+//       });
 
-      const allAlumni = response.data.data.map((element) => ({
-        id: element.id,
-        email: element.email,
-        firstName: element.first_name,
-        lastName: element.rwandan_name,
-        phone: element.phone,
-        grade: element.family.grade_info.grade_name || 'none',
-        family: element.family.family_name || 'none',
-        combination: element.combination.combination_name || '',
-        industry: element.employment.industry || '',
-      }));
+//       const allAlumni = response.data.data.map((element) => ({
+//         id: element.id,
+//         email: element.email,
+//         firstName: element.first_name,
+//         lastName: element.rwandan_name,
+//         phone: element.phone,
+//         grade: element.family.grade_info.grade_name || 'none',
+//         family: element.family.family_name || 'none',
+//         combination: element.combination.combination_name || '',
+//         industry: element.employment.industry || '',
+//       }));
 
-      const worksheet = XLSX.utils.json_to_sheet(allAlumni);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Alumni');
-      const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-      const data = new Blob([excelBuffer], { type: 'application/octet-stream' });
-      saveAs(data, 'alumni_list.xlsx');
-    } catch (err) {
-      console.error('Download error:', err);
-    }
-  };
+//       const worksheet = XLSX.utils.json_to_sheet(allAlumni);
+//       const workbook = XLSX.utils.book_new();
+//       XLSX.utils.book_append_sheet(workbook, worksheet, 'Alumni');
+//       const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+//       const data = new Blob([excelBuffer], { type: 'application/octet-stream' });
+//       saveAs(data, 'alumni_list.xlsx');
+//     } catch (err) {
+//       console.error('Download error:', err);
+//     }
+//   };
   const handleSearchChange = (value) => {
     setSearchTerm(value);
+  };
+
+  const applyFilters = () => {
+    setAppliedFilters(filterUI);
+    setPagination((prev) => ({ ...prev, current_page: 1 }));
+    setAlumniData([]); // Clear current data to load fresh results
+  };
+
+  const toggleCheckbox = (filterKey, value) => {
+    setFilterUI((prev) => {
+      const current = prev[filterKey];
+      return {
+        ...prev,
+        [filterKey]: current.includes(value)
+          ? current.filter((v) => v !== value)
+          : [...current, value],
+      };
+    });
   };
 
   return (
@@ -255,74 +292,130 @@ const handleDownload = async () => {
         <SearchBar value={searchTerm} onChange={handleSearchChange} placeholder="Search alumni..." per="100" />
       </div>
 
-      <div className="filter-bar">
-        {/* Gender */}
-        <div className={`filter-button ${genderFilter ? 'filter-applied' : ''}`}>
-          {genderFilter && <button onClick={() => setGenderFilter('')}>&#x2715;</button>}
-          <select onChange={(e) => setGenderFilter(e.target.value)}>
-            {genderOptions.map((option) => (
-              <option key={option.value || 'All'} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        {/* Grade */}
-        <div className={`filter-button ${gradeFilter ? 'filter-applied' : ''}`}>
-          {gradeFilter && <button onClick={() => setGradeFilter('')}>&#x2715;</button>}
-          <select value={gradeFilter} onChange={(e) => setGradeFilter(e.target.value)}>
-            <option value="" disabled>Grade</option>
-            {gradeOptions}
-          </select>
-        </div>
-        {/* Family */}
-        <div className={`filter-button ${familyFilter ? 'filter-applied' : ''}`}>
-          {familyFilter && <button onClick={() => setFamilyFilter('')}>&#x2715;</button>}
-          <select value={familyFilter} onChange={(e) => setFamilyFilter(e.target.value)}>
-            <option value="" disabled>Family</option>
-            {familyOptions.sort((a, b) => a.label.localeCompare(b.label)).map((family) => (
-              <option key={family.value} value={family.value}>{family.label}</option>
-            ))}
-          </select>
-        </div>
-        {/* Combination */}
-        <div className={`filter-button ${combinationFilter ? 'filter-applied' : ''}`}>
-          {combinationFilter && <button onClick={() => setCombinationFilter('')}>&#x2715;</button>}
-          <select value={combinationFilter} onChange={(e) => setCombinationFilter(e.target.value)}>
-            <option value="" disabled>Combination</option>
-            {combinationOptions.sort((a, b) => a.label.localeCompare(b.label)).map((combo) => (
-              <option key={combo.value} value={combo.value}>{combo.label}</option>
-            ))}
-          </select>
-        </div>
-        {/* Industry */}
-        <div className={`filter-button ${industryFilter ? 'filter-applied' : ''}`}>
-          {industryFilter && <button onClick={() => setIndustryFilter('')}>&#x2715;</button>}
-          <select value={industryFilter} onChange={(e) => setIndustryFilter(e.target.value)}>
-            <option value="" disabled>Industry</option>
-            {industryOptions.sort().map((industry) => (
-              <option key={industry} value={industry}>{industry}</option>
-            ))}
-          </select>
-        </div>
-        {/* College */}
-        <div className={`filter-button ${collegeFilter ? 'filter-applied' : ''}`}>
-        {collegeFilter && <button onClick={() => setCollegeFilter('')}>&#x2715;</button>}
-        <select value={collegeFilter} onChange={(e) => setCollegeFilter(e.target.value)}>
-            <option value="" disabled>College</option>
-            {(collegeOptions || [])
-            .sort((a, b) => a.label.localeCompare(b.label))
-            .map((c) => (
-                <option key={c.value} value={c.value}>{c.label}</option>
-            ))}
-        </select>
-        </div>
-      </div>
+      <button onClick={() => setShowFilters(!showFilters)} className="filter-toggle">
+        {showFilters ? 'Hide Filters' : 'Show Filters'}
+      </button>
 
-      <div className="directory-title">
+      {showFilters && (
+        <div className="filter-panel">
+           <div className="filters-scroll-area"></div>
+              {/* Gender */}
+              <div className="filter-group">
+                <p><strong>Gender</strong></p>
+                {filters.gender.map((g) => (
+                  <label key={g}>
+                    <input
+                      type="checkbox"
+                      value={g}
+                      checked={filterUI.gender.includes(g)}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setFilterUI((prev) => ({
+                          ...prev,
+                          gender: prev.gender.includes(val)
+                            ? prev.gender.filter((v) => v !== val)
+                            : [...prev.gender, val],
+                        }));
+                      }}
+                    />
+                    {g === 'M' ? 'Male' : g === 'F' ? 'Female' : g}
+                  </label>
+                ))}
+              </div>
+
+              {/* Grade */}
+              <div className="filter-group">
+                <p><strong>Graduation Year</strong></p>
+                {filters.graduation_year.map((item) => {
+                  const value = item.graduation_year_to_asyv;
+                  const label = `${item.grade_name} (${value})`;
+                  return (
+                    <label key={value}>
+                      <input
+                        type="checkbox"
+                        value={value}
+                        checked={filterUI.graduation_year.includes(String(value))}
+                        onChange={() => toggleCheckbox('graduation_year', String(value))}
+                      />
+                      {label}
+                    </label>
+                  );
+                })}
+              </div>
+              {/* Family */}
+              <div className="filter-group">
+                <p><strong>Family</strong></p>
+                {filters.family.map((f) => (
+                  <label key={f.id}>
+                    <input
+                      type="checkbox"
+                      value={f.id}
+                      checked={filterUI.family.includes(f.id)}
+                      onChange={() => toggleCheckbox('family', f.id)}
+                    />
+                    {f.family_name}
+                  </label>
+                ))}
+              </div>
+              {/* Combination */}
+              <div className="filter-group">
+                <p><strong>Combination</strong></p>
+                {filters.combination.map((combo) => (
+                  <label key={combo.combination_id}>
+                    <input
+                      type="checkbox"
+                      value={combo.combination_id}
+                      checked={filterUI.combination.includes(combo.combination_id)}
+                      onChange={() => toggleCheckbox('combination', combo.combination_id)}
+                    />
+                    {combo.combination__combination_name}
+                  </label>
+                ))}
+              </div>
+              {/* Industry */}
+              <div className="filter-group">
+                <p><strong>Industry</strong></p>
+                {filters.industry.map((industry) => (
+                  <label key={industry}>
+                    <input
+                      type="checkbox"
+                      value={industry}
+                      checked={filterUI.industry.includes(industry)}
+                      onChange={() => toggleCheckbox('industry', industry)}
+                    />
+                    {industry}
+                  </label>
+                ))}
+              </div>
+              {/* College */}
+              <div className="filter-group">
+                <p><strong>College</strong></p>
+                {filters.college.map((item, index) => {
+                  const name = item.college__college_name;
+                  return (
+                    <label key={index}>
+                      <input
+                        type="checkbox"
+                        value={name}
+                        checked={filterUI.college.includes(name)}
+                        onChange={() => toggleCheckbox('college', name)}
+                      />
+                      {name}
+                      </label>
+                    )})};
+              </div>
+              <div className="apply-button-wrapper">
+                <button className="apply-button" onClick={applyFilters}>Apply Filters</button>
+              </div>
+          </div>
+          
+      )}
+      
+
+      {/* <div className="directory-title">
         Search Results:
         <button onClick={handleDownload}>Download Excel</button>
-      </div>
+      </div> */}
 
       <div className="directory-content">
         <AlumniList alumni={alumniData} onSelect={setSelectedAlumni} />
@@ -337,11 +430,6 @@ const handleDownload = async () => {
             <AlumniDetail
               selectedAlumni={selectedAlumni}
               handleClear={handleClear}
-              gradeFilter={gradeFilter}
-              familyFilter={familyFilter}
-              combinationFilter={combinationFilter}
-              industryFilter={industryFilter}
-              outcomeSummary={outcomeSummary}
             />
           </div>
         </div>
