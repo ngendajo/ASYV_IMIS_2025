@@ -200,43 +200,55 @@
 }
 
 
-.filter-toggle {
-    margin-bottom: 1rem;
-  }
-  
-  .filter-panel {
+.filter-container {
+    position: absolute;
+    top: 60px;
+    right: 20px;
+    z-index: 999;
+    width: 320px;
+    max-height: 80vh;
     background: #fff;
     border: 1px solid #ccc;
-    max-height: 80vh;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: column;
-    position: relative;
   }
   
-  /* Scrollable area */
-  .filters-scroll-area {
+  /* Scrollable filter panel container */
+  .filter-panel {
+    display: flex;
+    flex-direction: column;
     overflow-y: auto;
-    padding: 1rem;
-    flex-grow: 1;
+    height: 100%;
+    padding-bottom: 60px; /* space for sticky button */
   }
   
-  /* Each filter group styling */
+  /* Each filter group (Gender, Family, etc.) */
   .filter-group {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
+    padding: 0 1rem;
   }
   
   .filter-group h4 {
     font-size: 1rem;
-    margin-bottom: 0.5rem;
+    margin: 0.5rem 0;
   }
   
-  .filter-group label {
+  /* Inner scrollable area within each group */
+  .filter-items-scroll {
+    max-height: 120px;
+    overflow-y: auto;
+    padding-right: 5px;
+  }
+  
+  .filter-items-scroll label {
     display: block;
-    margin-bottom: 0.3rem;
-    font-size: 0.95rem;
+    margin-bottom: 0.4rem;
+    font-size: 0.9rem;
   }
   
-  /* Sticky apply button */
+  /* Sticky apply button at bottom */
   .apply-button-wrapper {
     position: sticky;
     bottom: 0;
@@ -254,5 +266,6 @@
     border-radius: 4px;
     cursor: pointer;
   }
+  
   
   
