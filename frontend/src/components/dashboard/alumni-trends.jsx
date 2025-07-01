@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Select from 'react-select';
 import {
-  LineChart, Line, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
 import axios from 'axios';
 import baseUrl from '../../api/baseUrl';
@@ -182,20 +182,49 @@ const AlumniOutcomesDashboard = () => {
 
       <OutcomeSummaryGrid summary={summaryData} />
 
-      {/* Line Chart */}
+      {/* Stacked Bar Chart */}
       <section aria-label="Alumni outcomes trends">
-        <div className="chart-wrapper" role="img" aria-label="Line chart showing employment and education percentages by year">
+        <div
+          className="chart-wrapper"
+          role="img"
+          aria-label="Stacked bar chart showing employment and education percentages by year"
+        >
           <ResponsiveContainer width="100%" height={320}>
-            <LineChart data={filteredData} margin={{ top: 20, right: 40, bottom: 20, left: 0 }}>
+            <BarChart
+              data={filteredData}
+              margin={{ top: 20, right: 40, bottom: 20, left: 0 }}
+            >
               <XAxis dataKey="graduation_year" tick={{ fontSize: 12 }} />
               <YAxis tick={{ fontSize: 12 }} />
               <Tooltip formatter={(value) => `${value}%`} />
               <Legend verticalAlign="top" height={36} />
-              <Line type="monotone" dataKey="employment_only_percent" stroke="#4f81bd" name="Employment Only (%)" strokeWidth={3} />
-              <Line type="monotone" dataKey="further_edu_only_percent" stroke="#9bbb59" name="Further Edu Only (%)" strokeWidth={3} />
-              <Line type="monotone" dataKey="both_percent" stroke="#ffbb55" name="Both (%)" strokeWidth={3} />
-              <Line type="monotone" dataKey="neither_percent" stroke="#e84c3d" name="Neither (%)" strokeWidth={3} />
-            </LineChart>
+
+              {/* Stacked Bars */}
+              <Bar
+                dataKey="employment_only_percent"
+                stackId="a"
+                fill="#4f81bd"
+                name="Employment Only (%)"
+              />
+              <Bar
+                dataKey="further_edu_only_percent"
+                stackId="a"
+                fill="#9bbb59"
+                name="Further Edu Only (%)"
+              />
+              <Bar
+                dataKey="both_percent"
+                stackId="a"
+                fill="#ffbb55"
+                name="Both (%)"
+              />
+              <Bar
+                dataKey="neither_percent"
+                stackId="a"
+                fill="#e84c3d"
+                name="Neither (%)"
+              />
+            </BarChart>
           </ResponsiveContainer>
         </div>
       </section>
