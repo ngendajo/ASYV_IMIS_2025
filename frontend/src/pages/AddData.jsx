@@ -5,6 +5,7 @@ import axios from "../api/axios";
 import GradeForm from "../components/AddData/addGradeData";
 import GradeList from "../components/AddData/listGradeData";
 import AddStudents from "../components/AddData/addKidData";
+import AddStaff from "../components/AddData/addStaffData";
 
 const AddData = () => {
   const [expanded, setExpanded] = useState(null);
@@ -71,72 +72,7 @@ const AddData = () => {
           <span>{expanded === "staff" ? "▲" : "▼"}</span>
         </div>
         {expanded === "staff" && (
-          <div className="form-section">
-            <label className="required">Username</label>
-            <input type="text" />
-
-            <label className="required">Registration Number</label>
-            <input type="text" />
-
-            <label className="required">First Name</label>
-            <input type="text" />
-
-            <label>Middle Name</label>
-            <input type="text" />
-
-            <label className="required">Rwandan Name</label>
-            <input type="text" />
-
-            <label className="required">Gender</label>
-            <select>
-              <option value="">Select</option>
-              <option value="M">Male</option>
-              <option value="F">Female</option>
-            </select>
-
-            <label>Date of Birth</label>
-            <input type="date" />
-
-            <label>Phone</label>
-            <input type="tel" />
-
-            <label>Alternate Phone</label>
-            <input type="tel" />
-
-            <label>Email</label>
-            <input type="email" />
-
-            <label>Alternate Email</label>
-            <input type="email" />
-
-            <label className="required">Password</label>
-            <input type="password" />
-
-            <label className="required">Confirm Password</label>
-            <input type="password" />
-
-            <label className="required">Position</label>
-            <select onChange={(e) => handlePositionChange(e.target.value)}>
-              <option value="">Select position</option>
-              <option value="crc">CRC</option>
-              <option value="teacher">Teacher</option>
-              <option value="librarian">Librarian</option>
-              <option value="mother">Mother</option>
-            </select>
-
-            <div className="checkbox-inline">
-              <label htmlFor="superuser">Superuser</label>
-              <input
-                id="superuser"
-                type="checkbox"
-                checked={isSuperuser}
-                onChange={(e) => setIsSuperuser(e.target.checked)}
-              />
-            </div>
-
-
-            <button>Add Staff</button>
-          </div>
+          <AddStaff />
         )}
       </div>
     </div>
