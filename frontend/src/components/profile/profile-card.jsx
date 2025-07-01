@@ -161,12 +161,13 @@ const ProfileCard = ({ propId }) => {
         alumn: element.alumn,
         level: element.level,
         degree: element.degree,
-        college: element.college,
+        college: element.college.college_name,
         country: element.location,
         scholarship: element.scholarship,
         scholarship_details: element.scholarship_details,
         status: element.status
       }));
+      console.log("studies", studies)
       setStudy(sortStudyLevel(studies));
     } catch (err) {
       console.log(err);

@@ -44,10 +44,10 @@ export default function LoginPopUp({showLogin, toggleLoginPopup}) {
                 const refresh = response?.data.refresh;
                 const token = response?.data.token;
                 const user = jwtDecode(token); // Using the token field which contains user data
+                console.log("Decoded JWT user object:", user);
 
                 // You can now access user data directly from the decoded token
-                // since it includes: first_name, rwandan_name, email, phone, is_superuser, etc.
-                console.log(user);
+                // since it includes: first_name, rwandan_name, email, phone, is_superuser, etc
 
                 setAuth({ user, accessToken, refresh });
                 setEmail('');

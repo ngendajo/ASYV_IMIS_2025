@@ -120,6 +120,23 @@ class KidSerializer(serializers.ModelSerializer):
         model = Kid
         fields = '__all__'
 
+class CollegeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = College
+        fields = '__all__'
+
+
+class FurtherEducationSerializer(serializers.ModelSerializer): 
+    college = CollegeSerializer(read_only=True)
+    location = serializers.SerializerMethodField(read_only=True)
+
+
+    class Meta:
+        model = FurtherEducation
+        fields = ['id', 'alumn', 'college', 'level', 'degree', 'status', 'location', 'scholarship', 'scholarship_details']
+
+    def get_location(self, obj):
+        return f"{obj.college.city}, {obj.college.country}"
 
 class AlumniListSerializer(serializers.Serializer):
     family = FamilySerializer()
@@ -132,12 +149,13 @@ class AlumniListSerializer(serializers.Serializer):
     employment = EmploymentSerializer(many=True, read_only=True)
     image_url = serializers.ImageField(source='user.image_url')
     user_id = serializers.SerializerMethodField()
+    further_education = FurtherEducationSerializer(source='furthereducation', many=True, read_only=True)
 
     class Meta:
         model = Kid
         fields = ['id', 'first_name', 'rwandan_name', 
                   'gender', 'email', 'phone', 'image_url', 'family', 
-                  'employment', 'combination']
+                  'employment', 'further_education', 'combination']
     def get_gender(self, obj): 
         return obj.user.gender if obj.user else None
     
@@ -255,24 +273,6 @@ class AlumniDirectorySerializer(serializers.Serializer):
     alumni = KidSerializer(many=True)
     employment_count = serializers.IntegerField()
     education_count = serializers.IntegerField()
-
-class CollegeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = College
-        fields = '__all__'
-
-
-class FurtherEducationSerializer(serializers.ModelSerializer): 
-    college = serializers.PrimaryKeyRelatedField(queryset=College.objects.all())
-    location = serializers.SerializerMethodField(read_only=True)
-
-
-    class Meta:
-        model = FurtherEducation
-        fields = ['id', 'alumn', 'college', 'level', 'degree', 'status', 'location', 'scholarship', 'scholarship_details']
-
-    def get_location(self, obj):
-        return f"{obj.college.city}, {obj.college.country}"
     
 class BasicInformationSerializer(serializers.Serializer):
     user_id = serializers.IntegerField(required=False)
