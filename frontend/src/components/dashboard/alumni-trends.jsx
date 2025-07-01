@@ -79,6 +79,8 @@ const AlumniOutcomesDashboard = () => {
   const [alumniLocations, setAlumniLocations] = useState([]);
 
   const [hasLoadedInitially, setHasLoadedInitially] = useState(false);
+  const [showChart, setShowChart] = useState(true);
+  const toggleView = () => setShowChart(!showChart);
 
   useEffect(() => {
     const fetchYears = async () => {
@@ -182,97 +184,89 @@ const AlumniOutcomesDashboard = () => {
 
       <OutcomeSummaryGrid summary={summaryData} />
 
-      {/* Stacked Bar Chart */}
+      {/* Stacked Bar Chart/Table */}
       <section aria-label="Alumni outcomes trends">
-        <div
-          className="chart-wrapper"
-          role="img"
-          aria-label="Stacked bar chart showing employment and education percentages by year"
-        >
-          <ResponsiveContainer width="100%" height={320}>
-            <BarChart
-              data={filteredData}
-              margin={{ top: 20, right: 40, bottom: 20, left: 0 }}
-            >
-              <XAxis dataKey="graduation_year" tick={{ fontSize: 12 }} />
-              <YAxis tick={{ fontSize: 12 }} />
-              <Tooltip formatter={(value) => `${value}%`} />
-              <Legend verticalAlign="top" height={36} />
-
-              {/* Stacked Bars */}
-              <Bar
-                dataKey="employment_only_percent"
-                stackId="a"
-                fill="#4f81bd"
-                name="Employment Only (%)"
-              />
-              <Bar
-                dataKey="further_edu_only_percent"
-                stackId="a"
-                fill="#9bbb59"
-                name="Further Edu Only (%)"
-              />
-              <Bar
-                dataKey="both_percent"
-                stackId="a"
-                fill="#ffbb55"
-                name="Both (%)"
-              />
-              <Bar
-                dataKey="neither_percent"
-                stackId="a"
-                fill="#e84c3d"
-                name="Neither (%)"
-              />
-            </BarChart>
-          </ResponsiveContainer>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h3>Alumni Outcomes Trends</h3>
+          <button onClick={toggleView}>
+            {showChart ? 'Show Data Table' : 'Show Chart'}
+          </button>
         </div>
-      </section>
 
-      {/* Data Table */}
-      <section className="table-section" aria-label="Alumni outcomes data table">
-        <div className="scrollable-table-container" tabIndex={0}>
-          <table className="trend-table" role="grid" aria-describedby="table-description">
-            <caption id="table-description" className="sr-only">
-              Alumni outcomes counts and percentages by graduation year
-            </caption>
-            <thead>
-              <tr>
-                <th scope="col" className="sticky-col sticky-left">Metric</th>
-                {selectedYearsSorted.map(year => (
-                  <th key={year} scope="col" className="sticky-col">{year}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {metrics.map(metric => (
-                <tr key={metric.keyCount} className="hover-row">
-                  <th scope="row" className="sticky-col sticky-left metric-label">
-                    {metric.labelCount}
-                    {metric.labelPercent && <><br />{metric.labelPercent}</>}
-                  </th>
-                  {selectedYearsSorted.map(year => {
-                    const yearData = filteredData.find(d => d.graduation_year === year);
-                    return (
-                      <td key={year} className="numeric-cell">
-                        {yearData ? (
-                          <>
-                            {metric.keyCount && yearData[metric.keyCount] !== undefined
-                              ? yearData[metric.keyCount]
-                              : "-"}
-                            {metric.keyPercent && yearData[metric.keyPercent] !== undefined && (
-                              <div className="percent-text">({yearData[metric.keyPercent]}%)</div>
-                            )}
-                          </>
-                        ) : "-"}
-                      </td>
-                    );
-                  })}
+        {showChart ? (
+          <div
+            className="chart-wrapper"
+            role="img"
+            aria-label="Stacked bar chart showing employment and education percentages by year"
+          >
+            <ResponsiveContainer width="100%" height={320}>
+              <BarChart
+                data={filteredData}
+                margin={{ top: 20, right: 40, bottom: 20, left: 0 }}
+              >
+                <XAxis dataKey="graduation_year" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} />
+                <Tooltip formatter={(value) => `${value}%`} />
+                <Legend verticalAlign="top" height={36} />
+                <Bar dataKey="employment_only_percent" stackId="a" fill="#4f81bd" name="Employment Only (%)" />
+                <Bar dataKey="further_edu_only_percent" stackId="a" fill="#9bbb59" name="Further Edu Only (%)" />
+                <Bar dataKey="both_percent" stackId="a" fill="#ffbb55" name="Both (%)" />
+                <Bar dataKey="neither_percent" stackId="a" fill="#e84c3d" name="Neither (%)" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        ) : (
+          <div
+            className="scrollable-table-container"
+            tabIndex={0}
+            style={{ overflowX: 'auto', marginTop: '1rem' }}
+          >
+            <table className="trend-table" role="grid" aria-describedby="table-description">
+              <caption id="table-description" className="sr-only">
+                Alumni outcomes counts and percentages by graduation year
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col" className="sticky-col sticky-left">Metric</th>
+                  {selectedYearsSorted.map((year) => (
+                    <th key={year} scope="col" className="sticky-col">{year}</th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {metrics.map((metric) => (
+                  <tr key={metric.keyCount} className="hover-row">
+                    <th scope="row" className="sticky-col sticky-left metric-label">
+                      {metric.labelCount}
+                      {metric.labelPercent && <><br />{metric.labelPercent}</>}
+                    </th>
+                    {selectedYearsSorted.map((year) => {
+                      const yearData = filteredData.find(
+                        (d) => d.graduation_year === year
+                      );
+                      return (
+                        <td key={year} className="numeric-cell">
+                          {yearData ? (
+                            <>
+                              {metric.keyCount && yearData[metric.keyCount] !== undefined
+                                ? yearData[metric.keyCount]
+                                : "-"}
+                              {metric.keyPercent && yearData[metric.keyPercent] !== undefined && (
+                                <div className="percent-text">
+                                  ({yearData[metric.keyPercent]}%)
+                                </div>
+                              )}
+                            </>
+                          ) : "-"}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
 
       {/* Lists Section */}

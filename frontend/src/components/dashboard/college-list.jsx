@@ -5,76 +5,91 @@ const CollegesByCountry = ({ collegesByCountry }) => {
     return <p>No college attendance data available.</p>;
   }
 
-  // Prepare all countries with top 3 colleges sorted
-  const countriesWithTop3 = Object.entries(collegesByCountry).map(([country, colleges]) => {
-    const topColleges = colleges
+  // Sort colleges per country by attendance_count descending
+  const countriesSorted = Object.entries(collegesByCountry).map(([country, colleges]) => {
+    const sortedColleges = colleges
       .slice()
-      .sort((a, b) => b.attendance_count - a.attendance_count)
-      .slice(0, 3);
-    return { country, colleges: topColleges };
+      .sort((a, b) => b.attendance_count - a.attendance_count);
+    return { country, colleges: sortedColleges };
   });
 
   return (
-    <div
-      style={{
-        maxHeight: '500px',  // container height for vertical scrolling
-        overflowY: 'auto',
-        padding: '1rem',
-        border: '1px solid #ccc',
-        borderRadius: '4px',
-      }}
-    >
-      {countriesWithTop3.map(({ country, colleges }) => (
+    <div style={{ padding: '1rem', border: '1px solid #ccc', borderRadius: '4px' }}>
+      {countriesSorted.map(({ country, colleges }) => (
         <div key={country} style={{ marginBottom: '2rem' }}>
           <h4>{country}</h4>
-          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '400px' }}>
-            <thead>
-              <tr>
-                <th
-                  style={{
-                    textAlign: 'left',
-                    borderBottom: '1px solid #ccc',
-                    padding: '0.3rem',
-                  }}
-                >
-                  College
-                </th>
-                <th
-                  style={{
-                    textAlign: 'left',
-                    borderBottom: '1px solid #ccc',
-                    padding: '0.3rem',
-                  }}
-                >
-                  Attendance Count
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {colleges.map(({ college, attendance_count }) => (
-                <tr key={college}>
-                  <td
+          <div
+            style={{
+              maxHeight: '180px', // Enough for header + ~3 rows
+              overflowY: 'auto',
+              border: '1px solid #ccc',
+              borderRadius: '4px',
+            }}
+          >
+            <table
+              style={{
+                width: '100%',
+                borderCollapse: 'collapse',
+                minWidth: '400px',
+              }}
+            >
+              <thead
+                style={{
+                  position: 'sticky',
+                  top: 0,
+                  backgroundColor: '#fff',
+                  zIndex: 1,
+                }}
+              >
+                <tr>
+                  <th
                     style={{
-                      padding: '0.3rem',
-                      borderBottom: '1px solid #eee',
                       textAlign: 'left',
+                      borderBottom: '1px solid #ccc',
+                      padding: '0.3rem',
+                      backgroundColor: '#f9f9f9',
                     }}
                   >
-                    {college}
-                  </td>
-                  <td
+                    College
+                  </th>
+                  <th
                     style={{
-                      padding: '0.3rem',
-                      borderBottom: '1px solid #eee',
                       textAlign: 'left',
+                      borderBottom: '1px solid #ccc',
+                      padding: '0.3rem',
+                      backgroundColor: '#f9f9f9',
                     }}
                   >
-                    {attendance_count}
-                  </td>
+                    Attendance Count
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {colleges.map(({ college, attendance_count }) => (
+                  <tr key={college}>
+                    <td
+                      style={{
+                        padding: '0.3rem',
+                        borderBottom: '1px solid #eee',
+                        textAlign: 'left',
+                      }}
+                    >
+                      {college}
+                    </td>
+                    <td
+                      style={{
+                        padding: '0.3rem',
+                        borderBottom: '1px solid #eee',
+                        textAlign: 'left',
+                      }}
+                    >
+                      {attendance_count}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       ))}
     </div>
