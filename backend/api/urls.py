@@ -97,7 +97,8 @@ urlpatterns = [
 
     path('alumni-directory/', views.AlumniDirectoryView.as_view(), name='alumni directory'), 
     path('alumni-map/', views.AlumniCountryMap.as_view(), name="alumni-country-map"), 
-    path('alumni-trends/', views.AlumniOutcomeTrends.as_view(), name="alumni-outcome-trends"),  
+    path('alumni-trends/', views.AlumniOutcomeTrends.as_view(), name="alumni-outcome-trends"), 
+    path('alumni-years/', views.AlumniYearsView.as_view(), name = "grad years"),
     
     #profile 
     path('kid/<int:user_id>/', views.get_student_information, name='kid-info'),

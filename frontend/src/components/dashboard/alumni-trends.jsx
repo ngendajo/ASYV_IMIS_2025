@@ -10,6 +10,10 @@ import EmploymentDistribution from './employment-distribution';
 import DistributionList from './industry-distribution';
 import "./alumni-trends.css";
 
+import OutcomeSummaryGrid from './outcome-summary';
+import AlumniLocationMap from './alumni-location';
+import CollegesByCountry from './college-list';
+
 // Helper functions (logic unchanged)
 const aggregateDistributions = (dataArray, key) => {
   const agg = {};
@@ -28,50 +32,105 @@ const aggregateDistributions = (dataArray, key) => {
   return agg;
 };
 
-const aggregateColleges = (dataArray) => {
+const aggregateCollegesByCountry = (dataArray) => {
   const agg = {};
+
   dataArray.forEach(item => {
-    const colleges = item.most_attended_colleges;
-    if (colleges) {
-      colleges.forEach(college => {
-        if (!agg[college.college]) {
-          agg[college.college] = { attendance_count: 0 };
+    const countries = item.most_attended_colleges;
+    if (countries) {
+      // countries is an object with country keys
+      Object.entries(countries).forEach(([country, collegeList]) => {
+        if (!agg[country]) {
+          agg[country] = {};
         }
-        agg[college.college].attendance_count += college.attendance_count || 0;
+        collegeList.forEach(({ college, attendance_count }) => {
+          if (!agg[country][college]) {
+            agg[country][college] = 0;
+          }
+          agg[country][college] += attendance_count || 0;
+        });
       });
     }
   });
-  return Object.entries(agg).map(([college, val]) => ({
-    college,
-    attendance_count: val.attendance_count,
-  }));
+
+  // Convert nested objects to arrays
+  const formatted = {};
+  Object.entries(agg).forEach(([country, collegesObj]) => {
+    formatted[country] = Object.entries(collegesObj).map(([college, attendance_count]) => ({
+      college,
+      attendance_count,
+    }));
+  });
+
+  return formatted;
 };
 
 const AlumniOutcomesDashboard = () => {
+  const [allYears, setAllYears] = useState([]);
   const [data, setData] = useState([]);
+  const [summaryData, setSummaryData] = useState({
+    total_alumni: 0,
+    employment_total: 0,
+    employment_percent: 0,
+    further_education_total: 0,
+    further_education_percent: 0,
+  });
   const [selectedYears, setSelectedYears] = useState([]);
   const [alumniLocations, setAlumniLocations] = useState([]);
 
+  const [hasLoadedInitially, setHasLoadedInitially] = useState(false);
+
   useEffect(() => {
-    axios.get(baseUrl + '/alumni-trends/')
-      .then(res => setData(res.data.yearly_outcomes))
-      .catch(err => console.error('Error loading data:', err));
-
-    axios.get(baseUrl + '/alumni-map/')
-      .then(res => setAlumniLocations(res.data))
-      .catch(err => console.error('Error loading alumni locations:', err));
+    const fetchYears = async () => {
+      try {
+        const res = await axios.get(`${baseUrl}/alumni-years/`);
+        const years = res.data.years || [];
+        setAllYears(years);
+      } catch (err) {
+        console.error('Error fetching all years:', err);
+      }
+    };
+    fetchYears();
   }, []);
+  
 
-  const yearOptions = data.map(item => ({
-    value: item.graduation_year,
-    label: item.graduation_year.toString(),
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        let trendsUrl = `${baseUrl}/alumni-trends/`;
+        if (hasLoadedInitially && selectedYears.length > 0) {
+          const yearParams = selectedYears.map(y => `year=${y.value}`).join('&');
+          trendsUrl += `?${yearParams}`;
+        }
+  
+        const [trendsRes, locationsRes] = await Promise.all([
+          axios.get(trendsUrl),
+          axios.get(baseUrl + '/alumni-map/')
+        ]);
+  
+        setData(trendsRes.data.yearly_outcomes);
+        setSummaryData(trendsRes.data.overall_summary);
+        setAlumniLocations(locationsRes.data);
+        setHasLoadedInitially(true);
+      } catch (err) {
+        console.error('Error fetching data:', err);
+      }
+    };
+  
+    fetchData();
+  }, [selectedYears, hasLoadedInitially]);
+  
+  const yearOptions = allYears.map(year => ({
+    value: year,
+    label: year.toString(),
   }));
 
   const filteredData = selectedYears.length
     ? data.filter(d => selectedYears.some(y => y.value === d.graduation_year))
     : data;
 
-  const collegeData = aggregateColleges(filteredData);
+  const collegeData = aggregateCollegesByCountry(filteredData);
+  console.log(collegeData);
   const employmentStatusData = aggregateDistributions(filteredData, 'employment_status_distribution');
   const industryData = aggregateDistributions(filteredData, 'industry_distribution');
 
@@ -120,6 +179,8 @@ const AlumniOutcomesDashboard = () => {
           noOptionsMessage={() => "No years available"}
         />
       </div>
+
+      <OutcomeSummaryGrid summary={summaryData} />
 
       {/* Line Chart */}
       <section aria-label="Alumni outcomes trends">
@@ -188,8 +249,8 @@ const AlumniOutcomesDashboard = () => {
       {/* Lists Section */}
       <section className="lists-section">
         <div className="list-card">
-          <h2 className="list-title">Top Colleges Attended</h2>
-          <CollegesList data={collegeData} />
+          <h2 className="list-title">Colleges Attended by Country</h2>
+          <CollegesByCountry collegesByCountry={collegeData} />
         </div>
 
         <div className="list-card">

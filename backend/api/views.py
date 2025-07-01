@@ -3324,15 +3324,20 @@ class EmploymentBulkCreateUpdateView(APIView):
         
 from django.db.models import Count
 
+class AlumniYearsView(APIView):
+    def get(self, request):
+        years = Grade.objects.order_by('graduation_year_to_asyv').values_list('graduation_year_to_asyv', flat=True).distinct()
+        return Response({'years': list(years)})
+
 class AlumniOutcomeTrends(APIView):
     def get(self, request):
-        year = request.query_params.get('year')
+        year = request.query_params.getlist('year')
         gender = request.query_params.get('gender')
 
         alumni_qs = Kid.objects.filter(graduation_status='graduated').select_related('family__grade')
 
         if year:
-            alumni_qs = alumni_qs.filter(family__grade__graduation_year_to_asyv=year)
+            alumni_qs = alumni_qs.filter(family__grade__graduation_year_to_asyv__in=year)
         if gender:
             alumni_qs = alumni_qs.filter(user__gender=gender)
 
@@ -3356,6 +3361,7 @@ class AlumniOutcomeTrends(APIView):
             .filter(status__in=['O', 'G'], alumn_id__in=filtered_alumni_ids)
             .values(
                 'college__college_name',
+                'college__country',
                 'alumn__family__grade__graduation_year_to_asyv'  # graduation year
             )
             .annotate(attendance_count=Count('college'))
@@ -3364,14 +3370,22 @@ class AlumniOutcomeTrends(APIView):
 
         # Map colleges per year
         colleges_by_year = {}
+        
         for item in college_attendance_qs:
             yr = item['alumn__family__grade__graduation_year_to_asyv']
-            colleges_by_year.setdefault(yr, [])
-            colleges_by_year[yr].append({
+            country = item['college__country'] or 'Unknown'
+
+            if yr not in colleges_by_year:
+                colleges_by_year[yr] = {}
+
+            if country not in colleges_by_year[yr]:
+                colleges_by_year[yr][country] = []
+
+            colleges_by_year[yr][country].append({
                 'college': item['college__college_name'],
                 'attendance_count': item['attendance_count'],
             })
-
+            
         status_keys = [key for key, _ in Employment.EMPLOYMENT_CHOICES]
         status_map = dict(Employment.EMPLOYMENT_CHOICES)
         industry_map = dict(Employment.INDUSTRY_CHOICES)
@@ -3388,7 +3402,7 @@ class AlumniOutcomeTrends(APIView):
                 'neither': 0,
                 'employment_status_counts': {key: 0 for key in status_keys},
                 'industry_counts': {key: 0 for key in industry_map.keys()},
-                'most_attended_colleges': colleges_by_year.get(yr, [])
+                'most_attended_colleges': colleges_by_year.get(yr, {})
             }
 
         for emp in employments_qs:
@@ -3413,7 +3427,10 @@ class AlumniOutcomeTrends(APIView):
                 results[grad_year]['neither'] += 1
 
         data = []
-        for yr in sorted(results):
+        selected_years = list(map(int, year)) if year else sorted(results.keys())
+
+
+        for yr in selected_years:
             year_data = results[yr]
             total = year_data['total']
             if total == 0:
@@ -3444,16 +3461,18 @@ class AlumniOutcomeTrends(APIView):
                 'neither_percent': round(year_data['neither'] / total * 100, 2),
                 'employment_status_distribution': employment_status_readable,
                 'industry_distribution': industry_readable,
-                'most_attended_colleges': year_data['most_attended_colleges'], 
+                'most_attended_colleges': year_data['most_attended_colleges'],
             })
 
-            # === OVERALL STATS ===
-            overall_total = sum(year['total'] for year in results.values())
+            # === OVERALL STATS (filtered by selected year if provided) ===
+            filtered_results = {yr: results[yr] for yr in selected_years}
+
+            overall_total = sum(year['total'] for year in filtered_results.values())
             overall_employment = sum(
-                year['employment_only'] + year['both'] for year in results.values()
+                year['employment_only'] + year['both'] for year in filtered_results.values()
             )
             overall_further_edu = sum(
-                year['further_edu_only'] + year['both'] for year in results.values()
+                year['further_edu_only'] + year['both'] for year in filtered_results.values()
             )
 
             overall_summary = {
