@@ -314,6 +314,7 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['is_librarian'] = self.user.is_librarian
         token['is_student'] = self.user.is_student
         token['is_teacher'] = self.user.is_teacher
+        token['is_crc'] = self.user.is_crc
         token['username'] = self.user.username
         token['reg_number'] = self.user.reg_number
         token['middle_name'] = self.user.middle_name
@@ -3200,6 +3201,7 @@ class AlumniDirectoryView(APIView):
             'industry': list(industries_available),
             'college': list(colleges_available),
         }
+    
     def get(self, request):
         page = int(request.GET.get('page', 1))
         page_size = int(request.GET.get('page_size', 10))
