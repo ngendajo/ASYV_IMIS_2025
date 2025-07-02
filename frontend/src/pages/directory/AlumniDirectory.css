@@ -248,24 +248,33 @@
     font-size: 0.9rem;
   }
   
-  /* Sticky apply button at bottom */
-  .apply-button-wrapper {
-    position: sticky;
-    bottom: 0;
-    background: white;
-    padding: 1rem;
-    border-top: 1px solid #ddd;
-    text-align: center;
+ .filter-toggle {
+  background-color: var(--green);
+  color: white;
+  font-family: Medium;
+  font-size: 16px;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  margin: 16px 0;
+  cursor: pointer;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  display: inline-block;
+}
+
+.filter-toggle:hover {
+  background-color: var(--brown);
+  color: white;
+}
+
+.filter-toggle:active {
+  transform: scale(0.98);
+}
+
+@media (max-width: 768px) {
+  .filter-toggle {
+    width: 100%;
+    font-size: 14px;
+    padding: 12px;
   }
-  
-  .apply-button {
-    background-color: #007bff;
-    color: #fff;
-    padding: 0.6rem 1.2rem;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  
-  
-  
+}

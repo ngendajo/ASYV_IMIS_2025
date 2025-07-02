@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import AlumniList from '../../components/directory/alumni-list';
 import AlumniDetail from '../../components/directory/alumni-detail.jsx';
 import SearchBar from '../../components/dashboard/search-bar';
+import FilterPanel from '../../components/directory/filter-panel';
 import './AlumniDirectory.css';
 
 import axios from 'axios';
@@ -270,24 +271,32 @@ useEffect(() => {
   };
 
   const toggleCheckbox = (filterKey, value) => {
-    setFilterUI((prev) => {
-      const current = prev[filterKey];
-      return {
+    if (value === '__CLEAR_ALL__') {
+      setFilterUI((prev) => ({
         ...prev,
-        [filterKey]: current.includes(value)
-          ? current.filter((v) => v !== value)
-          : [...current, value],
-      };
-    });
+        [filterKey]: [],
+      }));
+    } else {
+      setFilterUI((prev) => {
+        const current = prev[filterKey];
+        return {
+          ...prev,
+          [filterKey]: current.includes(value)
+            ? current.filter((v) => v !== value)
+            : [...current, value],
+        };
+      });
+    }
   };
+
 
   return (
     <div className="DirectoryWrapper">
-        {auth.user?.is_superuser && (
+        {/* {auth.user?.is_superuser && (
             <div className = "ChartWrapper">
             <OutcomePieChart summary={outcomeSummary} />
         </div>
-        )}
+        )} */}
       <div className="DirectorySearchWrapper">
         <SearchBar value={searchTerm} onChange={handleSearchChange} placeholder="Search alumni..." per="100" />
       </div>
@@ -297,133 +306,13 @@ useEffect(() => {
       </button>
 
       {showFilters && (
-      <div className="filter-container">
-        <div className="filter-panel">
-           <div className="filters-scroll-area"></div>
-              {/* Gender */}
-              <div className="filter-group">
-                <p><strong>Gender</strong></p>
-                <div className="filter-items-scroll">
-                  {filters.gender.map((g) => (
-                    <label key={g}>
-                      <input
-                        type="checkbox"
-                        value={g}
-                        checked={filterUI.gender.includes(g)}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setFilterUI((prev) => ({
-                            ...prev,
-                            gender: prev.gender.includes(val)
-                              ? prev.gender.filter((v) => v !== val)
-                              : [...prev.gender, val],
-                          }));
-                        }}
-                      />
-                      {g === 'M' ? 'Male' : g === 'F' ? 'Female' : g}
-                    </label>
-                    ))}
-                  </div>
-              </div>
-
-              {/* Grade */}
-              <div className="filter-group">
-                <p><strong>Graduation Year</strong></p>
-                <div className="filter-items-scroll">
-                  {filters.graduation_year.map((item) => {
-                    const value = item.graduation_year_to_asyv;
-                    const label = `${item.grade_name} (${value})`;
-                    return (
-                      <label key={value}>
-                        <input
-                          type="checkbox"
-                          value={value}
-                          checked={filterUI.graduation_year.includes(String(value))}
-                          onChange={() => toggleCheckbox('graduation_year', String(value))}
-                        />
-                        {label}
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
-              {/* Family */}
-              <div className="filter-group">
-                <p><strong>Family</strong></p>
-                <div className="filter-items-scroll">
-                  {filters.family.map((f) => (
-                    <label key={f.id}>
-                      <input
-                        type="checkbox"
-                        value={f.id}
-                        checked={filterUI.family.includes(f.id)}
-                        onChange={() => toggleCheckbox('family', f.id)}
-                      />
-                      {f.family_name}
-                    </label>
-                    ))}
-                </div>
-              </div>
-              {/* Combination */}
-              <div className="filter-group">
-                <p><strong>Combination</strong></p>
-                <div className="filter-items-scroll">
-                  {filters.combination.map((combo) => (
-                    <label key={combo.combination_id}>
-                      <input
-                        type="checkbox"
-                        value={combo.combination_id}
-                        checked={filterUI.combination.includes(combo.combination_id)}
-                        onChange={() => toggleCheckbox('combination', combo.combination_id)}
-                      />
-                      {combo.combination__combination_name}
-                    </label>
-                   ))}
-                </div>
-              </div>
-              {/* Industry */}
-              <div className="filter-group">
-                <p><strong>Industry</strong></p>
-                <div className="filter-items-scroll">
-                  {filters.industry.map((industry) => (
-                    <label key={industry}>
-                      <input
-                        type="checkbox"
-                        value={industry}
-                        checked={filterUI.industry.includes(industry)}
-                        onChange={() => toggleCheckbox('industry', industry)}
-                      />
-                      {industry}
-                    </label>
-                  ))}
-                </div>
-              </div>
-              {/* College */}
-              <div className="filter-group">
-                <p><strong>College</strong></p>
-                <div className="filter-items-scroll">
-                  {filters.college.map((item, index) => {
-                    const name = item.college__college_name;
-                    return (
-                      <label key={index}>
-                        <input
-                          type="checkbox"
-                          value={name}
-                          checked={filterUI.college.includes(name)}
-                          onChange={() => toggleCheckbox('college', name)}
-                        />
-                        {name}
-                        </label>
-                      )})};
-                  </div>
-              </div>
-              <div className="apply-button-wrapper">
-                <button className="apply-button" onClick={applyFilters}>Apply Filters</button>
-              </div>
-          </div>
-        </div>
-          
-      )}
+      <FilterPanel
+        filters={filters}
+        filterUI={filterUI}
+        toggleCheckbox={toggleCheckbox}
+        applyFilters={applyFilters}
+      />
+)}
       
 
       {/* <div className="directory-title">
