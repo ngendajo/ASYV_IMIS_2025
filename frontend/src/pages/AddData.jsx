@@ -6,78 +6,125 @@ import GradeForm from "../components/AddData/addGradeData";
 import GradeList from "../components/AddData/listGradeData";
 import AddStudents from "../components/AddData/addKidData";
 import AddStaff from "../components/AddData/addStaffData";
+import CombinationForm from "../components/AddData/addCombination";
+import LeapForm from "../components/AddData/addLeap";
+
+import useAuth from "../hooks/useAuth";
 
 const AddData = () => {
+  const { auth } = useAuth();
+  const dataSections = [
+    {
+      key: "leap",
+      title: "Add Leaps",
+      FormComponent: LeapForm,
+      apiEndpoint: "/leaps",
+    },
+    {
+      key: "combination",
+      title: "Add Combinations",
+      FormComponent: CombinationForm,
+      apiEndpoint: "/combinations",
+    },
+    {
+      key: "grade",
+      title: "Add Grade & Families",
+      FormComponent: GradeForm,
+      ListComponent: GradeList,
+      apiEndpoint: "/grades",
+      requireSuperuser: true,
+    },
+    {
+      key: "students",
+      title: "Add Students",
+      FormComponent: AddStudents,
+      // You can add ListComponent if you have one
+      apiEndpoint: "/kids",
+      requireSuperuser: true,
+    },
+    {
+      key: "staff",
+      title: "Add Staff Account",
+      FormComponent: AddStaff,
+      apiEndpoint: "/users",
+      requireSuperuser: true,
+    },
+    // Add more sections here as needed
+  ];
   const [expanded, setExpanded] = useState(null);
-  const [showSingleStudentForm, setShowSingleStudentForm] = useState(false);
-  const [isSuperuser, setIsSuperuser] = useState(false);
-  const [positionFlags, setPositionFlags] = useState({
-    is_crc: false,
-    is_teacher: false,
-    is_librarian: false,
-    is_mama: false,
-  });
+  const [dataItems, setDataItems] = useState({}); // e.g. { grade: [], students: [], staff: [] }
+  const [editingItem, setEditingItem] = useState(null);
 
-  const [cityOther, setCityOther] = useState(false);
-  const [countryOther, setCountryOther] = useState(false);
-
-  const toggleSection = (section) => {
-    if (expanded === section) {
+  const toggleSection = (key) => {
+    if (expanded === key) {
       setExpanded(null);
-      if (section === "students") setShowSingleStudentForm(false);
+      setEditingItem(null);
     } else {
-      setExpanded(section);
+      setExpanded(key);
+      fetchDataForSection(key);
     }
   };
-
-  const handlePositionChange = (value) => {
-    setPositionFlags({
-      is_crc: value === "crc",
-      is_teacher: value === "teacher",
-      is_librarian: value === "librarian",
-      is_mama: value === "mother",
-    });
+  
+  const fetchDataForSection = async (key) => {
+    try {
+      const section = dataSections.find((s) => s.key === key);
+      if (!section) return;
+  
+      const response = await axios.get(`${baseUrl}${section.apiEndpoint}/`);
+      setDataItems((prev) => ({
+        ...prev,
+        [key]: response.data,
+      }));
+    } catch (error) {
+      console.error(`Error fetching ${key} data:`, error);
+    }
   };
-
+  
   return (
     <div className="add-data-container">
       <h1 className="page-title">Add Data</h1>
-
-      {/* Add Grade & Families */}
-      <div className="white-card">
-        <div className="section-header" onClick={() => toggleSection("grade")}>
-          <h2>Add Grade & Families</h2>
-          <span>{expanded === "grade" ? "▲" : "▼"}</span>
+  
+      {dataSections
+        .filter(section => !section.requireSuperuser || auth.user?.is_superuser)
+        .map(({ key, title, FormComponent, ListComponent }) => (
+        <div className="white-card" key={key}>
+          <div className="section-header" onClick={() => toggleSection(key)}>
+            <h2>{title}</h2>
+            <span>{expanded === key ? "▲" : "▼"}</span>
+          </div>
+  
+          {expanded === key && (
+            <>
+              <FormComponent
+                item={editingItem && editingItem.section === key ? editingItem.data : null}
+                onSuccess={() => {
+                  fetchDataForSection(key);
+                  setEditingItem(null);
+                }}
+                onCancel={() => setEditingItem(null)}
+              />
+  
+              {ListComponent && (
+                <ListComponent
+                  items={dataItems[key] || []}
+                  onEdit={(item) => setEditingItem({ section: key, data: item })}
+                  onDelete={async (id) => {
+                    try {
+                      await axios.delete(`${baseUrl}${dataSections.find(s => s.key === key).apiEndpoint}/${id}/`);
+                      fetchDataForSection(key);
+                    } catch (error) {
+                      console.error(`Delete error in ${key}:`, error);
+                    }
+                  }}
+                />
+              )}
+            </>
+          )}
         </div>
-        {expanded === "grade" && (
-        <GradeForm /> 
-        )}
-      </div>
-
-      {/* Add Students (Bulk + One) */}
-      <div className="white-card">
-        <div className="section-header" onClick={() => toggleSection("students")}>
-          <h2>Add Students</h2>
-          <span>{expanded === "students" ? "▲" : "▼"}</span>
-        </div>
-        {expanded === "students" && (
-          <AddStudents />
-        )}
-      </div>
-
-      {/* Add Staff */}
-      <div className="white-card">
-        <div className="section-header" onClick={() => toggleSection("staff")}>
-          <h2>Add Staff Account</h2>
-          <span>{expanded === "staff" ? "▲" : "▼"}</span>
-        </div>
-        {expanded === "staff" && (
-          <AddStaff />
-        )}
-      </div>
+      ))}
     </div>
   );
-};
+};  
 
 
 export default AddData;
