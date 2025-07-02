@@ -1,0 +1,44 @@
+
+.attendance-table {
+    width: 100%;
+    margin: 20px auto;
+  }
+  
+  .attendance-table h2 {
+    text-align: left;
+    font-size: 1.2em;
+    margin-bottom: 10px;
+  }
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  thead th {
+    background-color: #2f7d32;
+    color: white;
+    padding: 8px;
+    font-weight: bold;
+  }
+  
+  tbody td, thead th {
+    border: 1px solid #ddd;
+    text-align: center;
+    padding: 8px;
+  }
+  
+  .percentage {
+    background-color: #f9f9f9;
+  }
+  
+  .section-header td {
+    background-color: #4caf50;
+    color: white;
+    font-weight: bold;
+  }
+  
+  tbody tr:nth-child(even) {
+    background-color: #f2f2f2;
+  }
+  

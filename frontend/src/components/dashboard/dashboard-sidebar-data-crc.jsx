@@ -27,7 +27,7 @@ export const SidebarDataCrc = [
 
     {
     title: 'Add Data',
-    path: '/add_data', // This route can be updated later
+    path: '/add_data', 
     cName: 'nav-text'
   }
 ];
