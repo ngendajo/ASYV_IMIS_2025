@@ -74,6 +74,7 @@ class FamilySerializer(serializers.ModelSerializer):
 
 class GradeSerializer(serializers.ModelSerializer):
     families = FamilySerializer(many=True, write_only=True)
+    non_graduated_kids_count = serializers.ReadOnlyField()
 
     class Meta:
         model = Grade
@@ -82,7 +83,8 @@ class GradeSerializer(serializers.ModelSerializer):
             'grade_name',
             'admission_year_to_asyv',
             'graduation_year_to_asyv',
-            'families'
+            'families', 
+            'non_graduated_kids_count',
         ]
 
     def create(self, validated_data):
