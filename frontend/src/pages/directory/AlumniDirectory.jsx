@@ -283,11 +283,6 @@ useEffect(() => {
 
   return (
     <div className="DirectoryWrapper">
-        {auth.user?.is_superuser && (
-            <div className = "ChartWrapper">
-            <OutcomePieChart summary={outcomeSummary} />
-        </div>
-        )}
       <div className="DirectorySearchWrapper">
         <SearchBar value={searchTerm} onChange={handleSearchChange} placeholder="Search alumni..." per="100" />
       </div>

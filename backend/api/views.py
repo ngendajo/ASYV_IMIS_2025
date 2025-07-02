@@ -1,3 +1,4 @@
+from django.forms import BooleanField
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from django.db.models import Q
@@ -67,16 +68,19 @@ class UserViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_201_CREATED
             )
         except ValidationError as e:
+            print(serializer.errors) 
             return Response(
                 {"status": "error", "message": str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
         except IntegrityError as e:
+            print(serializer.errors) 
             return Response(
                 {"status": "error", "message": "A user with these details already exists"},
                 status=status.HTTP_400_BAD_REQUEST
             )
         except Exception as e:
+            print(serializer.errors) 
             return Response(
                 {"status": "error", "message": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -442,7 +446,12 @@ class ResetPassword(generics.GenericAPIView):
     #Grades and Families
     
 class GradeViewSet(viewsets.ModelViewSet):
-    queryset = Grade.objects.all()
+    queryset = Grade.objects.all().annotate(
+        non_graduated_kids_count=Count(
+            'families__kids',
+            filter=~Q(families__kids__graduation_status='graduated')
+        )
+    ).order_by('-graduation_year_to_asyv') 
     serializer_class = GradeSerializer
 
     def create(self, request, *args, **kwargs):
@@ -5216,4 +5225,15 @@ def library_book_export_view(request):
             'message': str(e),
             'traceback': error_traceback
         }, status=500)
+
+# Automatically update graduation status
+@api_view(['POST'])
+def graduate_kids_by_grade(request, grade_id):
+    try:
+        grade = Grade.objects.get(id=grade_id)
+        kids = Kid.objects.filter(family__grade=grade)
+        updated = kids.update(graduation_status='graduated')
+        return Response({'updated_count': updated}, status=status.HTTP_200_OK)
+    except Grade.DoesNotExist:
+        return Response({'error': 'Grade not found'}, status=status.HTTP_404_NOT_FOUND)
 
