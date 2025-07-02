@@ -3347,15 +3347,45 @@ class AlumniOutcomeTrends(APIView):
             alumn_id__in=filtered_alumni_ids
         ).select_related('alumn__family__grade')
 
-        further_edu_ids = set(
-            FurtherEducation.objects.filter(
-                status__in=['O', 'G'],
-                alumn_id__in=filtered_alumni_ids
-            ).values_list('alumn_id', flat=True)
-        )
+        further_edu_qs = FurtherEducation.objects.filter(
+            status__in=['O', 'G'],
+            alumn_id__in=filtered_alumni_ids
+        ).select_related('alumn')
+
+        further_edu_ids = set(further_edu_qs.values_list('alumn_id', flat=True))
 
         employed_ids = set(employments_qs.values_list('alumn_id', flat=True))
 
+         # Degree level distribution per year
+        degree_level_distribution_qs = (
+            further_edu_qs
+            .values('alumn__family__grade__graduation_year_to_asyv', 'level')
+            .annotate(count=Count('level'))
+        )
+
+        # Area of study distribution per year
+        areas_of_study_distribution_qs = (
+            further_edu_qs
+            .values('alumn__family__grade__graduation_year_to_asyv', 'degree')
+            .annotate(count=Count('degree'))
+        )
+
+        # Prepare mappings for easy lookup per year
+        degree_dist_by_year = {}
+        for item in degree_level_distribution_qs:
+            yr = item['alumn__family__grade__graduation_year_to_asyv']
+            degree = item['level'] or 'Unknown'
+            degree_dist_by_year.setdefault(yr, {})
+            degree_dist_by_year[yr][degree] = degree_dist_by_year[yr].get(degree, 0) + item['count']
+
+        study_dist_by_year = {}
+        for item in areas_of_study_distribution_qs:
+            yr = item['alumn__family__grade__graduation_year_to_asyv']
+            study = item['degree'] or 'Unknown'
+            study_dist_by_year.setdefault(yr, {})
+            study_dist_by_year[yr][study] = study_dist_by_year[yr].get(study, 0) + item['count']
+
+        # College Attendance
         college_attendance_qs = (
             FurtherEducation.objects
             .filter(status__in=['O', 'G'], alumn_id__in=filtered_alumni_ids)
@@ -3391,6 +3421,27 @@ class AlumniOutcomeTrends(APIView):
         industry_map = dict(Employment.INDUSTRY_CHOICES)
 
         grad_years = alumni_qs.values_list('family__grade__graduation_year_to_asyv', flat=True).distinct()
+
+        top_employers_per_year_qs = (
+            employments_qs
+            .values(
+                'alumn__family__grade__graduation_year_to_asyv',
+                'company'
+            )
+            .annotate(alumni_count=Count('alumn_id', distinct=True))
+            .order_by('alumn__family__grade__graduation_year_to_asyv', '-alumni_count')
+        )
+
+        # Group top employers by year
+        top_employers_by_year = {}
+        for item in top_employers_per_year_qs:
+            grad_year = item['alumn__family__grade__graduation_year_to_asyv']
+            if grad_year not in top_employers_by_year:
+                top_employers_by_year[grad_year] = []
+            top_employers_by_year[grad_year].append({
+                'company': item['company'],
+                'alumni_count': item['alumni_count']
+            })
 
         results = {}
         for yr in grad_years:
@@ -3436,6 +3487,20 @@ class AlumniOutcomeTrends(APIView):
             if total == 0:
                 continue
 
+             # Degree level distribution for this year, converted to percents
+            degree_dist_raw = degree_dist_by_year.get(yr, {})
+            degree_dist = {}
+            for degree_level, count in degree_dist_raw.items():
+                pct = round(count / total * 100, 2) if total > 0 else 0
+                degree_dist[degree_level] = {'count': count, 'percent': pct}
+
+            # Areas of study distribution for this year, converted to percents
+            study_dist_raw = study_dist_by_year.get(yr, {})
+            study_dist = {}
+            for study_area, count in study_dist_raw.items():
+                pct = round(count / total * 100, 2) if total > 0 else 0
+                study_dist[study_area] = {'count': count, 'percent': pct}
+
             employment_status_readable = {}
             for key, count in year_data['employment_status_counts'].items():
                 label = status_map.get(key, key)
@@ -3462,6 +3527,9 @@ class AlumniOutcomeTrends(APIView):
                 'employment_status_distribution': employment_status_readable,
                 'industry_distribution': industry_readable,
                 'most_attended_colleges': year_data['most_attended_colleges'],
+                'top_employers': top_employers_by_year.get(yr, []),
+                'degree_level_distribution': degree_dist,
+                'areas_of_study_distribution': study_dist,
             })
 
             # === OVERALL STATS (filtered by selected year if provided) ===

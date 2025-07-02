@@ -5,7 +5,6 @@ import {
 } from 'recharts';
 import axios from 'axios';
 import baseUrl from '../../api/baseUrl';
-import CollegesList from './college-list';
 import EmploymentDistribution from './employment-distribution';
 import DistributionList from './industry-distribution';
 import "./alumni-trends.css";
@@ -13,8 +12,10 @@ import "./alumni-trends.css";
 import OutcomeSummaryGrid from './outcome-summary';
 import AlumniLocationMap from './alumni-location';
 import CollegesByCountry from './college-list';
+import TopEmployers from './employers-list';
+import DegreeLevelPieChart from './degree-level-distribution';
+import AreasOfStudyList from './study-distribution';
 
-// Helper functions (logic unchanged)
 const aggregateDistributions = (dataArray, key) => {
   const agg = {};
   dataArray.forEach(item => {
@@ -65,8 +66,76 @@ const aggregateCollegesByCountry = (dataArray) => {
   return formatted;
 };
 
+const aggregateTopEmployers = (dataArray) => {
+  const agg = {};
+
+  dataArray.forEach(item => {
+    if (item.top_employers) {
+      item.top_employers.forEach(({ company, alumni_count }) => {
+        if (!agg[company]) {
+          agg[company] = 0;
+        }
+        agg[company] += alumni_count;
+      });
+    }
+  });
+
+  // Convert to sorted array descending by count
+  return Object.entries(agg)
+    .map(([company_name, count]) => ({ company_name, count }))
+    .sort((a, b) => b.count - a.count);
+};
+
+const aggregateAreasOfStudy = (dataArray) => {
+  const agg = {};
+
+  dataArray.forEach(item => {
+    if (item.areas_of_study_distribution) {
+      Object.entries(item.areas_of_study_distribution).forEach(([area, stats]) => {
+        if (!agg[area]) {
+          agg[area] = 0;
+        }
+        agg[area] += stats.count || 0;
+      });
+    }
+  });
+
+  // Convert to sorted array descending by count
+  return Object.entries(agg)
+    .map(([area_name, count]) => ({ area_name, count }))
+    .sort((a, b) => b.count - a.count);
+};
+
+const aggregateDegreeLevels = (dataArray) => {
+  const agg = {};
+
+  dataArray.forEach(item => {
+    const dist = item.degree_level_distribution;
+    if (dist) {
+      Object.entries(dist).forEach(([levelCode, { count }]) => {
+        if (!agg[levelCode]) {
+          agg[levelCode] = 0;
+        }
+        agg[levelCode] += count || 0;
+      });
+    }
+  });
+
+  // Convert to sorted array descending by count
+  return Object.entries(agg)
+    .map(([degree_level, count]) => ({ degree_level, count }))
+    .sort((a, b) => b.count - a.count);
+};
+
 const AlumniOutcomesDashboard = () => {
   const [allYears, setAllYears] = useState([]);
+  const genderOptions = [
+    { value: 'all', label: 'All' },
+    { value: 'M', label: 'Male' },
+    { value: 'F', label: 'Female' },
+  ];
+  const [selectedGender, setSelectedGender] = useState(genderOptions[0]);
+  
   const [data, setData] = useState([]);
   const [summaryData, setSummaryData] = useState({
     total_alumni: 0,
@@ -100,9 +169,20 @@ const AlumniOutcomesDashboard = () => {
     const fetchData = async () => {
       try {
         let trendsUrl = `${baseUrl}/alumni-trends/`;
+        
+        const params = [];
+  
         if (hasLoadedInitially && selectedYears.length > 0) {
           const yearParams = selectedYears.map(y => `year=${y.value}`).join('&');
-          trendsUrl += `?${yearParams}`;
+          params.push(yearParams);
+        }
+  
+        if (selectedGender.value !== 'all') {
+          params.push(`gender=${selectedGender.value}`);
+        }
+  
+        if (params.length > 0) {
+          trendsUrl += `?${params.join('&')}`;
         }
   
         const [trendsRes, locationsRes] = await Promise.all([
@@ -120,7 +200,8 @@ const AlumniOutcomesDashboard = () => {
     };
   
     fetchData();
-  }, [selectedYears, hasLoadedInitially]);
+  }, [selectedYears, selectedGender, hasLoadedInitially]);
+  
   
   const yearOptions = allYears.map(year => ({
     value: year,
@@ -132,7 +213,9 @@ const AlumniOutcomesDashboard = () => {
     : data;
 
   const collegeData = aggregateCollegesByCountry(filteredData);
-  console.log(collegeData);
+  const employerData = aggregateTopEmployers(filteredData);
+  const degreeLevelData = aggregateDegreeLevels(filteredData);
+  const degreeNameData = aggregateAreasOfStudy(filteredData);
   const employmentStatusData = aggregateDistributions(filteredData, 'employment_status_distribution');
   const industryData = aggregateDistributions(filteredData, 'industry_distribution');
 
@@ -179,6 +262,19 @@ const AlumniOutcomesDashboard = () => {
           placeholder="Select one or more years..."
           classNamePrefix="react-select"
           noOptionsMessage={() => "No years available"}
+        />
+      </div>
+      <div className="select-container" style={{ marginTop: '1rem' }}>
+        <label htmlFor="gender-select" className="select-label">
+          Filter by Gender
+        </label>
+        <Select
+          inputId="gender-select"
+          options={genderOptions}
+          value={selectedGender}
+          onChange={setSelectedGender}
+          placeholder="Select gender..."
+          classNamePrefix="react-select"
         />
       </div>
 
@@ -282,11 +378,27 @@ const AlumniOutcomesDashboard = () => {
         </div>
 
         <div className="list-card">
+          <h2 className="list-title">Degree Level Distribution</h2>
+          <DegreeLevelPieChart distribution={degreeLevelData} />
+        </div>
+
+        <div className="list-card">
           <h2 className="list-title">Industry Distribution</h2>
           <DistributionList
             title=""
             distribution={industryData}
             showZero={false}
+          />
+        </div>
+        <div className="list-card">
+          <h2 className="list-title">Top Employers</h2>
+          <TopEmployers data={employerData}
+          />
+        </div>
+
+        <div className="list-card">
+          <h2 className="list-title">Areas of Study</h2>
+          <AreasOfStudyList data={degreeNameData}
           />
         </div>
       </section>
