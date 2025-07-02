@@ -1,176 +1,198 @@
-/* --------------------------------------
-  LAYOUT
--------------------------------------- */
-.vertical-cards {
+:root {
+  --green: #498160;
+  --greenopa: #49816030;
+  --brown: #6d5736;
+  --coffee: #957967;
+  --coffeeli: #d6c7bd;
+  --black: #363636;
+  --orange: #f49c46;
+}
+
+/* Container & card */
+.profile-container {
   display: flex;
   flex-direction: column;
-  gap: 40px;
-  max-width: 1000px;
-  width: 100%;
-  margin: 0 auto;
-  padding: 30px 16px;
-  box-sizing: border-box;
+  gap: 32px;
+  max-width: 100%;
 }
 
 .profile-whitecard {
-  background-color: var(--white);
-  border-radius: 12px;
-  box-shadow: 0 2px 10px var(--blackopa);
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
+  background: white;
+  border-radius: 16px;
+  padding: 24px 28px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
 }
 
 .profile-whitecard.edit-mode {
-  background-color: var(--palegrey);
+  border: 2px solid var(--greenopa);
+  box-shadow: 0 0 8px var(--greenopa);
 }
 
+/* Section title */
 .profile-section-title {
-  font-family: Bold;
-  font-size: 22px;
-  color: var(--green);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--black);
   margin-bottom: 16px;
+  padding-left: 8px;
+  border-left: 4px solid var(--green);
 }
 
-.scroll-wrapper {
-  overflow-x: auto;
+/* Table styles */
+.profile-table {
   width: 100%;
-  box-sizing: border-box;
-  padding-bottom: 8px;
+  overflow-x: auto;
+  margin-right: 12px;
 }
 
-/* --------------------------------------
-  TABLE STYLES
--------------------------------------- */
 .fixed-table {
   width: 100%;
   border-collapse: collapse;
-  table-layout: fixed;
 }
 
 .fixed-table th,
 .fixed-table td {
-  padding: 10px;
-  font-family: Regular;
+  padding: 12px 14px;
   text-align: left;
-  white-space: normal;
-  overflow-wrap: break-word;
-  word-break: break-word;
+  font-size: 14px;
+  border-bottom: 1px solid #eaeaea;
 }
 
 .fixed-table th {
-  font-family: Medium;
-  background-color: var(--palegrey);
-  color: var(--green);
+  background-color: var(--coffeeli);
+  color: var(--black);
+  font-weight: 600;
+  text-transform: uppercase;
 }
 
-/* --------------------------------------
-  MOBILE STACKED VIEW
--------------------------------------- */
-.profile-fields {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
+.fixed-table tr:hover {
+  background-color: #fafafa;
 }
 
-.entry-block {
-  margin-bottom: 16px;
-  border-bottom: 1px solid var(--palegrey);
-  padding-bottom: 12px;
+.fixed-table input,
+.fixed-table select {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  width: 100%;
+  background-color: white;
 }
 
-.field {
-  font-size: 16px;
-  font-family: Regular;
-  line-height: 1.6;
-}
-
-.field span {
-  display: block;
-  font-family: Medium;
-  color: var(--green);
-  margin-bottom: 4px;
-}
-
-/* --------------------------------------
-  VISIBILITY BY DEVICE
--------------------------------------- */
-.desktop-only {
-  display: block;
-}
-.mobile-only {
-  display: none;
-}
-
-@media (max-width: 768px) {
-  .desktop-only {
-    display: none;
-  }
-
-  .mobile-only {
-    display: block;
-  }
-
-  .profile-button-group {
-    justify-content: center;
-  }
-}
-
-/* --------------------------------------
-  BUTTONS
--------------------------------------- */
+/* Buttons */
 .profile-button-group {
   display: flex;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-  gap: 10px;
+  gap: 12px;
   margin-top: 16px;
+  flex-wrap: wrap;
 }
 
-/* Common pill button base */
 .profile-button-group button {
-  font-family: Medium;
-  font-size: 16px;
-  text-decoration: none;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
-  padding: 5px 15px;
-  border-radius: 30px;
-  border: 2px solid;
-  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+  transition: background 0.3s ease;
 }
 
-/* Edit / Done button */
-.profile-button-group button.change {
+button.change {
   background-color: var(--green);
-  color: var(--white);
-  border-color: var(--green);
-}
-.profile-button-group button.change:hover {
-  background-color: var(--yellow);
-  border-color: var(--yellow);
-  color: var(--white);
+  color: white;
 }
 
-/* Cancel button */
-.profile-button-group button.cancel {
-  background-color: var(--white);
+button.change:hover {
+  background-color: #37694d;
+}
+
+button.cancel {
+  background-color: #fbeaea;
+  color: #c0392b;
+}
+
+button.cancel:hover {
+  background-color: #c0392b;
+  color: white;
+}
+
+button.addStudy,
+button.addJob {
+  background-color: var(--orange);
+  color: white;
+}
+
+button.addStudy:hover,
+button.addJob:hover {
+  background-color: #e0842f;
+}
+
+/* Mobile view: stacked field list */
+.profile-fields {
+  display: none;
+  width: 100%;
+  font-size: 14px;
+}
+
+.profile-fields .entry-block {
+  background-color: white;
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+}
+
+.profile-fields .field-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.profile-fields .field-row:last-child {
+  border-bottom: none;
+}
+
+.profile-fields .field-label {
+  font-weight: 600;
   color: var(--black);
-  border-color: var(--palegrey);
-}
-.profile-button-group button.cancel:hover {
-  background-color: var(--palegrey);
 }
 
-/* Add buttons */
-.profile-button-group button.addStudy,
-.profile-button-group button.addJob {
-  background-color: var(--yellow);
-  color: var(--white);
-  border-color: var(--yellow);
-}
-.profile-button-group button.addStudy:hover,
-.profile-button-group button.addJob:hover {
-  background-color: var(--white);
-  color: var(--yellow);
+.profile-fields .field-value,
+.profile-fields select,
+.profile-fields input {
+  width: 50%;
+  text-align: right;
+  background-color: white;
+  /* border: 1px solid #ccc; */
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 14px;
 }
 
+/* Responsive: show/hide desktop/mobile views */
+@media (max-width: 768px) {
+  .profile-table {
+    display: none;
+  }
+  .profile-fields {
+    display: block;
+  }
+    .profile-fields .field-row {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    padding: 6px 0;
+  }
+
+  .profile-fields .field-value,
+  .profile-fields select,
+  .profile-fields input {
+    width: 95%;
+    text-align: left;
+    margin-top: 4px;
+    font-size: 16px;
+    padding: 10px 12px;
+  }
+}
