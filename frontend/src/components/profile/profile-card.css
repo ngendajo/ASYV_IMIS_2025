@@ -179,4 +179,20 @@ button.addJob:hover {
   .profile-fields {
     display: block;
   }
+    .profile-fields .field-row {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    padding: 6px 0;
+  }
+
+  .profile-fields .field-value,
+  .profile-fields select,
+  .profile-fields input {
+    width: 95%;
+    text-align: left;
+    margin-top: 4px;
+    font-size: 16px;
+    padding: 10px 12px;
+  }
 }
