@@ -8,7 +8,8 @@ import AddStudents from "../components/AddData/addKidData";
 import AddStaff from "../components/AddData/addStaffData";
 import CombinationForm from "../components/AddData/addCombination";
 import LeapForm from "../components/AddData/addLeap";
-
+import LeapList from "../components/AddData/listLeap";
+import CombinationList from "../components/AddData/listCombination";
 import useAuth from "../hooks/useAuth";
 
 const AddData = () => {
@@ -18,12 +19,14 @@ const AddData = () => {
       key: "leap",
       title: "Add Leaps",
       FormComponent: LeapForm,
+      ListComponent: LeapList,
       apiEndpoint: "/leaps",
     },
     {
       key: "combination",
       title: "Add Combinations",
       FormComponent: CombinationForm,
+      ListComponent: CombinationList,
       apiEndpoint: "/combinations",
     },
     {
