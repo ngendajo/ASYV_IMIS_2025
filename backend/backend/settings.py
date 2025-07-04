@@ -19,7 +19,7 @@ DEBUG = False #for server
 
 #ALLOWED_HOSTS = ['127.0.0.1','localhost'] #for local host
 #ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.6.175']
-ALLOWED_HOSTS = ['10.10.88.228','backend.asyv.ac.rw'] #for server
+ALLOWED_HOSTS = ['10.10.87.44','backend.asyv.ac.rw'] #for server
 
 
 # Application definition
