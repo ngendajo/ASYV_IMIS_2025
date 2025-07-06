@@ -1,5 +1,5 @@
 import React from 'react';
-import './PersonalProfile.css';
+// import './PersonalProfile.css';
 import ProfileCard from '../../components/profile/profile-card';
 import { Link, useLocation } from 'react-router-dom';
 import '../../App.css';

@@ -418,107 +418,90 @@ const ProfileCard = ({ propId }) => {
         </table>
       </div>
   
-      <div className="profile-fields mobile-only">
-        <thead>
-          <tr>{fields.map((f, i) => <th key={i}>{f.label}</th>)}</tr>
-        </thead>
+      <div className="profile-fields">
         {data.map((item, i) => (
           <div key={i} className="entry-block">
             {fields.map((f, j) => {
               const val = f.path
                 ? getNestedValue(item, f.path)
                 : typeof f.value === 'function'
-                ? f.value(item)
-                : item[f.value];
-  
-              if (editing && f.dropdownKey && dropdownOptions[f.dropdownKey]) {
-                return (
-                  <div key={j}>
-                    <select
-                      value={val ?? ""}
-                      onChange={(e) => {
-                        const updated = [...data];
-                        const itemCopy = { ...updated[i] };
-                        const newValue = e.target.value;
-
-                        if (f.path) {
-                          setNestedValue(itemCopy, f.path, newValue);
-                        } else {
-                          itemCopy[f.value] = newValue;
-                        }
-
-                        // Special handling: update location when college changes
-                        if (isAcademicSection && f.value === 'college') {
-                          const locationInfo = collegeLookup[newValue];
-                          setNestedValue(itemCopy, 'location', locationInfo?.location || "");
-                        }
-
-                        updated[i] = itemCopy;
-                        setData(updated);
-                      }}
-                      style={{ width: "100%" }}
-                    >
-                      <option value="" disabled>Select...</option>
-                      {dropdownOptions[f.dropdownKey].map(opt => (
-                        <option key={opt.value} value={opt.value}>{opt.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                );
-              }
-  
-              if (isAcademicSection && f.value === 'country') {
-                return <div key={j}>{val || '-'}</div>;
-              }
-  
-              if (editing) {
-                return (
-                  <td key={j}>
-                    <input
-                      type={f.type || "text"}
-                      value={val ?? ""}
-                      onChange={(e) => {
-                        const updated = [...data];
-                        const itemCopy = { ...updated[i] };
-                        const newValue = e.target.value;
-
-                        if (f.path) {
-                          setNestedValue(itemCopy, f.path, newValue);
-                        } else {
-                          itemCopy[f.value] = newValue;
-                        }
-
-                        updated[i] = itemCopy;
-                        setData(updated);
-                      }}
-                      style={{ width: "100%" }}
-                      disabled={isAcademicSection && f.value === 'country'}
-                    />
-                  </td>
-                );
-              }
+                  ? f.value(item)
+                  : item[f.value];
 
               return (
-                <td key={j}>
-                  {isEmploymentSection && f.value === 'status' ? (
-                    getEmploymentStatusLabel(val)
-                  ) : isAcademicSection && f.value === 'college' ? (
-                    dropdownOptions.colleges.find(opt => String(opt.value) === String(val))?.label ?? val
-                  ) : isAcademicSection && f.value === 'level' ? (
-                    getLevelLabel(val)
-                  ) : isAcademicSection && f.value === 'status' ? (
-                    getStudyStatusLabel(val)
-                  ) : isAcademicSection && f.value === 'scholarship' ? (
-                    getScholarshipLabel(val)
-                  ) : (
-                    safeValue(val)
-                  )}
-                </td>
+                <div key={j} className="field-row">
+                  <div className="field-label">{f.label}</div>
+                  <div className="field-value">
+                    {editing && f.dropdownKey && dropdownOptions[f.dropdownKey] ? (
+                      <select
+                        value={val ?? ""}
+                        onChange={(e) => {
+                          const updated = [...data];
+                          const itemCopy = { ...updated[i] };
+                          const newValue = e.target.value;
+
+                          if (f.path) {
+                            setNestedValue(itemCopy, f.path, newValue);
+                          } else {
+                            itemCopy[f.value] = newValue;
+                          }
+
+                          if (isAcademicSection && f.value === 'college') {
+                            const locationInfo = collegeLookup[newValue];
+                            setNestedValue(itemCopy, 'location', locationInfo?.location || "");
+                          }
+
+                          updated[i] = itemCopy;
+                          setData(updated);
+                        }}
+                      >
+                        <option value="" disabled>Select...</option>
+                        {dropdownOptions[f.dropdownKey].map(opt => (
+                          <option key={opt.value} value={opt.value}>{opt.label}</option>
+                        ))}
+                      </select>
+                    ) : editing && !(isAcademicSection && f.value === 'country') ? (
+                      <input
+                        type={f.type || "text"}
+                        value={val ?? ""}
+                        onChange={(e) => {
+                          const updated = [...data];
+                          const itemCopy = { ...updated[i] };
+                          const newValue = e.target.value;
+
+                          if (f.path) {
+                            setNestedValue(itemCopy, f.path, newValue);
+                          } else {
+                            itemCopy[f.value] = newValue;
+                          }
+
+                          updated[i] = itemCopy;
+                          setData(updated);
+                        }}
+                      />
+                    ) : (
+                      isEmploymentSection && f.value === 'status' ? (
+                        getEmploymentStatusLabel(val)
+                      ) : isAcademicSection && f.value === 'college' ? (
+                        dropdownOptions.colleges.find(opt => String(opt.value) === String(val))?.label ?? val
+                      ) : isAcademicSection && f.value === 'level' ? (
+                        getLevelLabel(val)
+                      ) : isAcademicSection && f.value === 'status' ? (
+                        getStudyStatusLabel(val)
+                      ) : isAcademicSection && f.value === 'scholarship' ? (
+                        getScholarshipLabel(val)
+                      ) : (
+                        safeValue(val)
+                      )
+                    )}
+                  </div>
+                </div>
               );
             })}
           </div>
         ))}
       </div>
+
     </>
   );
   
