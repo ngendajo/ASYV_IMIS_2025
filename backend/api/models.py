@@ -3,6 +3,8 @@ from django.db import models
 from django.core.validators import RegexValidator
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ValidationError
+from django.utils import timezone
+
 
 #General User model
 class CustomUserManager(BaseUserManager):
@@ -463,3 +465,16 @@ class Issue_Book(models.Model):
 
     def __str__(self):
         return str(self.term_name)
+    
+
+    # Event model
+class Event(models.Model):
+    title = models.CharField(max_length=5000)
+    description = models.CharField(max_length=20000)
+    e_datetime = models.DateTimeField(default=timezone.now)
+    location = models.CharField(max_length=5000 , default='NMS')
+    user = models.ForeignKey(User, on_delete=models.PROTECT, related_name="events")
+    image_url = models.ImageField(upload_to='events', default='events/default.jpg')
+
+    def __str__(self):
+        return str(self.title)
