@@ -28,7 +28,7 @@ const AlumniList = ({ alumni, onSelect }) => {
            
             >
               <td>
-                <img src={alum.profilePic} alt="Profile" className="alumni-pic-table" />
+                <img src={alum.profilePic} alt={alum.profilePic} className="alumni-pic-table" />
               </td>
               <td>{alum.firstName}</td>
               <td>{alum.lastName}</td>
