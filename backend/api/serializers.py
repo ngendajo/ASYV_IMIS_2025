@@ -484,3 +484,10 @@ class AllBorrowersDisplaySerializer(serializers.Serializer):
     is_student=serializers.BooleanField()
     is_alumni=serializers.BooleanField()
     is_staff=serializers.BooleanField()
+
+
+#Event seralizers
+class EventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Event
+        fields = '__all__'
