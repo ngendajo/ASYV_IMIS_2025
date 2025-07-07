@@ -9,6 +9,7 @@ const CombinationForm = ({ item, onSuccess, onCancel }) => {
   });
 
   const [submitting, setSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   const [error, setError] = useState('');
 
   // Populate form if editing
@@ -27,23 +28,32 @@ const CombinationForm = ({ item, onSuccess, onCancel }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitting(true);
     setError('');
-
+    setSuccessMessage('');
+  
+    if (!item?.id) {
+      const confirmed = window.confirm("Are you sure you want to create this combination?");
+      if (!confirmed) return;
+    }
+  
+    setSubmitting(true);
+  
     try {
       if (item?.id) {
-        // Update existing combination
         await axios.put(`${baseUrl}/combinations/${item.id}/`, formData);
+        setSuccessMessage("Updated successfully.");
       } else {
-        // Create new combination
         await axios.post(`${baseUrl}/combinations/`, formData);
+        setSuccessMessage("Created successfully.");
       }
-
-      if (onSuccess) {
-        onSuccess();
-      }
-
+  
+      if (onSuccess) onSuccess();
+  
+      // Clear form after creation
       setFormData({ combination_name: '', abbreviation: '' });
+  
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err) {
       console.error('Error submitting combination:', err);
       setError('Error creating/updating combination. Check fields and try again.');
@@ -51,6 +61,7 @@ const CombinationForm = ({ item, onSuccess, onCancel }) => {
       setSubmitting(false);
     }
   };
+  
 
   return (
     <form onSubmit={handleSubmit} className="data-form">
@@ -84,6 +95,8 @@ const CombinationForm = ({ item, onSuccess, onCancel }) => {
       </div>
 
       {error && <p className="error-msg">{error}</p>}
+      {successMessage && <p className="success-msg">{successMessage}</p>}
+
     </form>
   );
 };

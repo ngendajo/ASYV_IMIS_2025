@@ -14,6 +14,8 @@ const LeapForm = ({ item, onSuccess, onCancel }) => {
 
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+
 
   const categories = [
     { value: 'science_center', label: 'Science Center' },
@@ -41,19 +43,33 @@ const LeapForm = ({ item, onSuccess, onCancel }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitting(true);
     setError('');
-
+    setSuccessMessage('');
+  
+    // Confirm only on creation
+    if (!item?.id) {
+      const confirmed = window.confirm("Are you sure you want to create this item?");
+      if (!confirmed) {
+        return;
+      }
+    }
+  
+    setSubmitting(true);
+  
     try {
       if (item?.id) {
-        // Edit mode
         await axios.put(`${baseUrl}/leaps/${item.id}/`, formData);
+        setSuccessMessage("Updated successfully.");
       } else {
-        // Create mode
         await axios.post(`${baseUrl}/leaps/`, formData);
+        setSuccessMessage("Created successfully.");
       }
-      onSuccess();  // refresh list
+  
+      onSuccess();
       setFormData({ ep: '', leap_category: 'club', recorded_by: auth?.user?.id });
+  
+      // Optionally clear message after 3 seconds
+      setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err) {
       console.error('Leap submission error:', err);
       setError('Something went wrong. Please check inputs.');
@@ -61,6 +77,7 @@ const LeapForm = ({ item, onSuccess, onCancel }) => {
       setSubmitting(false);
     }
   };
+  
 
   return (
     <form onSubmit={handleSubmit} className="data-form">
@@ -99,6 +116,8 @@ const LeapForm = ({ item, onSuccess, onCancel }) => {
       </div>
 
       {error && <p className="error-msg">{error}</p>}
+      {successMessage && <p className="success-msg">{successMessage}</p>}
+
     </form>
   );
 };
