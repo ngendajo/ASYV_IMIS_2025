@@ -3,6 +3,7 @@ import baseUrl from "../../api/baseUrl";
 import axios from "axios";
 import useAuth from "../../hooks/useAuth";
 import './profile-card.css';
+import ChangePasswordModal from '../home/change_password';
 
 
 const safeValue = (val) => {
