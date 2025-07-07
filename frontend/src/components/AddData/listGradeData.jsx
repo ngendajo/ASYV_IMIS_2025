@@ -58,24 +58,34 @@ const GradeList = () => {
         {grades.map(grade => (
           <li key={grade.id} className="data-list-item">
             {editingGradeId === grade.id ? (
-              <div>
-                <input
-                  value={editedGrade.grade_name}
-                  onChange={e => handleChange('grade_name', e.target.value)}
-                />
-                <input
-                  type="number"
-                  value={editedGrade.admission_year_to_asyv}
-                  onChange={e => handleChange('admission_year_to_asyv', e.target.value)}
-                />
-                <input
-                  type="number"
-                  value={editedGrade.graduation_year_to_asyv}
-                  onChange={e => handleChange('graduation_year_to_asyv', e.target.value)}
-                />
+              <div className="data-form" style={{ gap: "10px" }}>
+                <div className="form-group">
+                  <label>Grade Name</label>
+                  <input
+                    value={editedGrade.grade_name}
+                    onChange={e => handleChange('grade_name', e.target.value)}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Admission Year</label>
+                  <input
+                    type="number"
+                    value={editedGrade.admission_year_to_asyv}
+                    onChange={e => handleChange('admission_year_to_asyv', e.target.value)}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Graduation Year</label>
+                  <input
+                    type="number"
+                    value={editedGrade.graduation_year_to_asyv}
+                    onChange={e => handleChange('graduation_year_to_asyv', e.target.value)}
+                  />
+                </div>
+
                 <div className="form-actions">
-                  <button onClick={handleSave}>Save</button>
-                  <button onClick={handleCancel}>Cancel</button>
+                  <button type="button" onClick={handleSave}>Save</button>
+                  <button type="button" onClick={handleCancel}>Cancel</button>
                 </div>
               </div>
             ) : (
@@ -86,10 +96,12 @@ const GradeList = () => {
                 <div className="data-list-actions">
                   <button onClick={() => handleEditClick(grade)}>Edit</button>
                   {grade.non_graduated_kids_count > 0 && (
-                    <button onClick={() => {
-                      const confirmed = window.confirm("Are you sure you want to graduate all kids in this grade?");
-                      if (confirmed) graduateKids(grade.id);
-                    }}>
+                    <button
+                      onClick={() => {
+                        const confirmed = window.confirm("Are you sure you want to graduate all kids in this grade?");
+                        if (confirmed) graduateKids(grade.id);
+                      }}
+                    >
                       Mark All Kids as Graduated
                     </button>
                   )}
