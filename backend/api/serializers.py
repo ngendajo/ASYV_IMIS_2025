@@ -486,8 +486,49 @@ class AllBorrowersDisplaySerializer(serializers.Serializer):
     is_staff=serializers.BooleanField()
 
 
-#Event seralizers
+#Event serializers
 class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         fields = '__all__'
+
+#Opportunity serializers
+class OpportunitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Opportunity
+        fields = '__all__'
+
+    def create(self, validated_data):
+        # obtain data from validated_data
+        user = validated_data.get('user')
+        title = validated_data.get('title')
+        op_type = validated_data.get('op_type')
+        description = validated_data.get('description')
+        deadline = validated_data.get('deadline')
+        link = validated_data.get('link')
+        post_time = validated_data.get('post_time')
+
+        # create opportunity object
+        opportunity = Opportunity.objects.create(
+            user=user,
+            title=title,
+            op_type=op_type,
+            description=description,
+            deadline=deadline,
+            link=link,
+            post_time=post_time
+        )
+
+        return opportunity
+
+
+class UpdateOpportunitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Opportunity
+        fields = ['title','op_type', 'description','deadline','link']
+ 
+
+class ApproveOpportunitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Opportunity
+        fields = ['approved']

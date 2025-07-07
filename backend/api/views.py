@@ -5299,3 +5299,62 @@ class EventViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+# Opportunity model
+@api_view(['GET'])
+#@permission_classes([IsAuthenticated])
+def read_opportunity(request):
+    try:
+        opportunities = Opportunity.objects.all()
+        serializer = OpportunitySerializer(opportunities, many=True)
+        return Response(serializer.data)
+    except Exception as e:
+        return Response(e)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_opportunity(request):
+    serializer = OpportunitySerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=201)
+    return Response(serializer.errors, status=400)
+
+
+class DeleteOpportunityView(APIView):
+    @permission_classes([IsAuthenticated])
+    def delete(self, request, pk):
+        try:
+            opportunity = Opportunity.objects.get(pk=pk)
+        except Opportunity.DoesNotExist:
+            return Response({'msg': 'Opportunity not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        opportunity.delete()
+        return Response({'msg': 'Opportunity deleted successfully'}, status=status.HTTP_200_OK)
+
+
+# class UpdateOpportunityView(RetrieveUpdateAPIView):
+#     queryset = Opportunity.objects.all()
+#     serializer_class = UpdateOpportunitySerializer
+#     lookup_field = 'pk'
+
+#     def update(self, request, *args, **kwargs):
+#         instance = self.get_object()
+
+#         # check is user is alumni
+#         if request.user.is_authenticated and request.user.is_alumni:
+#             raise PermissionDenied("Opportunity has been approved so cannot modify.")
+
+#         # update
+#         partial = kwargs.pop('partial', False)
+#         serializer = self.get_serializer(instance, data=request.data, partial=partial)
+#         serializer.is_valid(raise_exception=True)
+#         self.perform_update(serializer)
+
+#         return Response(serializer.data)
+
+
+# class ApproveOpportunityView(RetrieveUpdateAPIView):
+#     queryset = Opportunity.objects.all()
+#     serializer_class = ApproveOpportunitySerializer
+#     lookup_field = 'pk'
