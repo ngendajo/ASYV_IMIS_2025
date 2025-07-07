@@ -25,9 +25,15 @@ export const SidebarDataCrc = [
     cName: 'nav-text'
   },
 
-    {
+  {
     title: 'Add Data',
     path: '/add_data', 
+    cName: 'nav-text'
+  },
+
+  {
+    title: 'FAQs',
+    path: '/frequent_inquiries', 
     cName: 'nav-text'
   }
 ];
