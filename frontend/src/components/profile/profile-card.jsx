@@ -4,6 +4,7 @@ import axios from "axios";
 import useAuth from "../../hooks/useAuth";
 import './profile-card.css';
 import ChangePasswordModal from '../home/change_password';
+import VerifyCurrentPasswordModal from './verify-password';
 
 
 const safeValue = (val) => {
@@ -110,8 +111,47 @@ const ProfileCard = ({ propId }) => {
   const [employment, setEmployment] = useState([]);
   const [kid_id, setKid_id] = useState();
   const [editState, setEditState] = useState({ current: false, academic: false, employment: false });
- 
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [verifiedCurrentPassword, setVerifiedCurrentPassword] = useState('');
 
+  const handleVerifyPassword = async (password) => {
+    try {
+      // Try logging in with the current password to verify
+      await axios.post(`${baseUrl}/token/`, {
+        username: user?.basic_information?.email,
+        password: password,
+      });
+  
+      setVerifiedCurrentPassword(password);
+      setShowVerifyModal(false);
+      setShowPasswordModal(true);
+    } catch (error) {
+      alert("Verification failed: Incorrect password.");
+    }
+  };
+  
+  const handlePasswordChange = async (currentPassword, newPassword) => {
+    try {
+      await axios.post(`${baseUrl}/changepassword/`, {
+        current_password: currentPassword,
+        new_password: newPassword,
+      }, {
+        headers: {
+          Authorization: 'Bearer ' + auth.accessToken,
+          'Content-Type': 'application/json',
+        },
+        withCredentials: true
+      });
+  
+      alert("Password changed successfully!");
+      setShowPasswordModal(false);
+    } catch (err) {
+      console.error("Password change failed", err);
+      alert("Failed to change password.");
+    }
+  };
+  
   console.log(userId)
 
   useEffect(() => {
@@ -566,6 +606,7 @@ const ProfileCard = ({ propId }) => {
         onCancelEdit={() => setEditState(prev => ({ ...prev, info: false }))}>
         {renderSection([user], (newArr) => setUser(newArr[0]), personalFields, editState.info)}
       </ProfileCardSection>
+      <button onClick={() => setShowVerifyModal(true)}>Change Password</button>
       <ProfileCardSection
         title="Current Info"
         isEditing={editState.current}
@@ -620,6 +661,20 @@ const ProfileCard = ({ propId }) => {
       >
         {renderSection(employment, setEmployment, employmentFields, editState.employment, true, false)}
       </ProfileCardSection>
+      {showVerifyModal && (
+        <VerifyCurrentPasswordModal
+          onVerify={handleVerifyPassword}
+          onCancel={() => setShowVerifyModal(false)}
+        />
+      )}
+
+      {showPasswordModal && (
+        <ChangePasswordModal
+          onSubmit={(newPassword) => handlePasswordChange(verifiedCurrentPassword, newPassword)}
+          onSkip={() => setShowPasswordModal(false)}
+        />
+      )}
+
     </div>
   );
 };

@@ -2891,6 +2891,7 @@ def get_student_information(request, user_id):
                     'middle_name': user.middle_name,
                     'gender': 'Female' if user.gender == 'F' else 'Male' if user.gender == 'M' else 'Not Specified',
                     'date_of_birth': user.dob,
+                    'email': user.email,
                 }
                 
                 # Place of Birth
