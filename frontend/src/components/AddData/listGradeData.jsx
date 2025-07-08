@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import baseUrl from '../../api/baseUrl'; // adjust as needed
+import baseUrl from '../../api/baseUrl';
 
 const GradeList = () => {
   const [grades, setGrades] = useState([]);
@@ -40,12 +40,11 @@ const GradeList = () => {
     setEditedGrade(prev => ({ ...prev, [field]: value }));
   };
 
-  // New function to graduate all kids of a grade
   const graduateKids = async (gradeId) => {
     try {
       const res = await axios.post(`${baseUrl}/grades/${gradeId}/graduate-kids/`);
       alert(res.data.message);
-      fetchGrades();  // Refresh the list if needed
+      fetchGrades();
     } catch (err) {
       console.error(err);
       alert("Failed to graduate kids.");
@@ -53,45 +52,61 @@ const GradeList = () => {
   };
 
   return (
-    <div>
+    <div className="section-content">
       <h2>All Grades</h2>
-      <ul>
+      <ul className="data-list">
         {grades.map(grade => (
-          <li key={grade.id} style={{ marginBottom: '1rem' }}>
+          <li key={grade.id} className="data-list-item">
             {editingGradeId === grade.id ? (
-              <div>
-                <input
-                  value={editedGrade.grade_name}
-                  onChange={e => handleChange('grade_name', e.target.value)}
-                />
-                <input
-                  type="number"
-                  value={editedGrade.admission_year_to_asyv}
-                  onChange={e => handleChange('admission_year_to_asyv', e.target.value)}
-                />
-                <input
-                  type="number"
-                  value={editedGrade.graduation_year_to_asyv}
-                  onChange={e => handleChange('graduation_year_to_asyv', e.target.value)}
-                />
-                <button onClick={handleSave}>Save</button>
-                <button onClick={handleCancel}>Cancel</button>
+              <div className="data-form" style={{ gap: "10px" }}>
+                <div className="form-group">
+                  <label>Grade Name</label>
+                  <input
+                    value={editedGrade.grade_name}
+                    onChange={e => handleChange('grade_name', e.target.value)}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Admission Year</label>
+                  <input
+                    type="number"
+                    value={editedGrade.admission_year_to_asyv}
+                    onChange={e => handleChange('admission_year_to_asyv', e.target.value)}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Graduation Year</label>
+                  <input
+                    type="number"
+                    value={editedGrade.graduation_year_to_asyv}
+                    onChange={e => handleChange('graduation_year_to_asyv', e.target.value)}
+                  />
+                </div>
+
+                <div className="form-actions">
+                  <button type="button" onClick={handleSave}>Save</button>
+                  <button type="button" onClick={handleCancel}>Cancel</button>
+                </div>
               </div>
             ) : (
-              <div>
-                <strong>{grade.grade_name}</strong> — {grade.admission_year_to_asyv} to {grade.graduation_year_to_asyv}
-                <button onClick={() => handleEditClick(grade)} style={{ marginLeft: 10 }}>
-                  Edit
-                </button>
-                {grade.non_graduated_kids_count > 0 && (
-                  <button
-                    onClick={() => graduateKids(grade.id)}
-                    style={{ marginLeft: 10, backgroundColor: '#4caf50', color: 'white' }}
-                  >
-                    Mark All Kids as Graduated
-                  </button>
-                )}
-              </div>
+              <>
+                <div>
+                  <strong>{grade.grade_name}</strong> — {grade.admission_year_to_asyv} to {grade.graduation_year_to_asyv}
+                </div>
+                <div className="data-list-actions">
+                  <button onClick={() => handleEditClick(grade)}>Edit</button>
+                  {grade.non_graduated_kids_count > 0 && (
+                    <button
+                      onClick={() => {
+                        const confirmed = window.confirm("Are you sure you want to graduate all kids in this grade?");
+                        if (confirmed) graduateKids(grade.id);
+                      }}
+                    >
+                      Mark All Kids as Graduated
+                    </button>
+                  )}
+                </div>
+              </>
             )}
           </li>
         ))}

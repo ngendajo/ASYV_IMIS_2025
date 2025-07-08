@@ -57,7 +57,7 @@ export default function Home() {
               // since it includes: first_name, rwandan_name, email, phone, is_superuser, etc.
               //console.log(accessToken);
               //console.log(user)
-              const roles = user.is_superuser ? "superuser" : user.is_crc ? "crc": user.is_teacher ? "teacher" : user.is_student ? "student"  : user.is_alumni ? "alumni": "visitor"
+              const roles = user.is_superuser ? "superuser" : user.is_crc ? "crc": user.is_teacher ? "teacher": user.is_librarian ? "librarian" : user.is_student ? "student"  : user.is_alumni ? "alumni": "visitor";
               setAuth({ user,roles, accessToken, refresh });
               setEmail('');
               setPwd('');

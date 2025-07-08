@@ -1,7 +1,6 @@
 .add-data-container {
-    width: 95%;
+    width: 90%;
     margin: auto;
-    padding: 40px 0;
   }
   
   .page-title {
@@ -130,4 +129,197 @@
     gap: 10px;
     margin-top: 15px;
   }
+
+.section-controls {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.section-controls button {
+  background-color: var(--green);
+  color: var(--white);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-family: Medium;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.section-controls button:hover {
+  background-color: var(--yellow);
+  color: var(--black);
+}
+
+.section-content {
+  margin-top: 20px;
+}
+
+.view-bottom-button {
+  margin-top: 20px;
+  align-self: flex-end;
+  font-size: 14px;
+  font-family: Regular;
+  color: var(--green);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.section-header.with-controls {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.section-header.with-controls h2 {
+  font-family: Medium;
+  font-size: 20px; /* slightly bigger */
+  color: var(--brown);
+  margin: 0;
+}
+
+
+.section-controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.section-controls button {
+  background-color: var(--green);
+  color: var(--white);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-family: Medium;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.section-controls button:hover {
+  background-color: var(--yellow);
+  color: var(--black);
+}
+
+
+.data-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.data-form .form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.data-form .form-group label {
+  font-family: Medium;
+  font-size: 14px;
+  margin-bottom: 5px;
+  color: var(--brown);
+}
+
+.data-form .form-group input,
+.data-form .form-group select {
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid var(--grey);
+  border-radius: 6px;
+  font-family: Regular;
+  background-color: #fdfdfd;
+}
+
+
+.data-form .form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.data-form .form-actions button {
+  background-color: var(--green);
+  color: var(--white);
+  font-family: Medium;
+  font-size: 14px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
+
+.data-form .form-actions button:hover {
+  background-color: var(--yellow);
+  color: var(--black);
+}
+
+.error-msg {
+  color: red;
+  font-family: Regular;
+  font-size: 13px;
+}
+
+
+.data-list {
+  list-style: none;
+  padding-left: 0;
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.data-list-item {
+  background-color: #f9f9f9;
+  border: 1px solid var(--greenopa);
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: Regular;
+}
+
+.data-list-item strong {
+  font-family: Medium;
+  color: var(--brown);
+}
+
+.data-list-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.data-list-actions button {
+  background-color: var(--green);
+  color: white;
+  font-size: 13px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.data-list-actions button:hover {
+  background-color: var(--yellow);
+  color: var(--black);
+}
+
+.data-list-actions .delete-btn {
+  background: none;
+  border: none;
+  color: #aa544a;
+  font-family: Regular;
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
 

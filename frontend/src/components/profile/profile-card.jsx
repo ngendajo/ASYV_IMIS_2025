@@ -111,9 +111,15 @@ const ProfileCard = ({ propId }) => {
   const [employment, setEmployment] = useState([]);
   const [kid_id, setKid_id] = useState();
   const [editState, setEditState] = useState({ current: false, academic: false, employment: false });
+
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [verifiedCurrentPassword, setVerifiedCurrentPassword] = useState('');
+ 
+  const [originalUser, setOriginalUser] = useState(null);
+  const [originalStudy, setOriginalStudy] = useState([]);
+  const [originalEmployment, setOriginalEmployment] = useState([]);
+
 
   const handleVerifyPassword = async (password) => {
     try {
@@ -172,6 +178,7 @@ const ProfileCard = ({ propId }) => {
   
         //setUser_id(auth.user.id);
         setUser(userRes.data);
+        setOriginalUser(userRes.data);
         setKid_id(userRes.data.basic_information?.kid_id);
         setDropdownOptions(dropdownRes.data); 
   
@@ -210,6 +217,7 @@ const ProfileCard = ({ propId }) => {
       }));
       console.log("studies", studies)
       setStudy(sortStudyLevel(studies));
+      setOriginalStudy(sortStudyLevel(studies)); 
     } catch (err) {
       console.log(err);
     }
@@ -248,6 +256,7 @@ const ProfileCard = ({ propId }) => {
         on_going: element.end_date === ""
       }));
       setEmployment(sortJobDate(jobs));
+      setOriginalEmployment(sortJobDate(jobs));
     } catch (err) {
       console.log(err);
     }
@@ -277,6 +286,7 @@ const ProfileCard = ({ propId }) => {
         withCredentials: true
       });
       alert('Employment data saved!');
+      setOriginalEmployment(employment);
       getEmployment();
     } catch (error) {
       console.error(error);
@@ -300,6 +310,7 @@ const ProfileCard = ({ propId }) => {
         withCredentials: true
       });
       alert('Academic data saved!');
+      setOriginalStudy(study);
       getStudy();
     } catch (error) {
       console.error(error);
@@ -318,6 +329,7 @@ const ProfileCard = ({ propId }) => {
         withCredentials: true
       });
       alert('Kid info saved!');
+      setOriginalUser(user);
     } catch (err) {
       console.error(err);
       alert('Failed to save Kid info.');
@@ -603,7 +615,10 @@ const ProfileCard = ({ propId }) => {
           }
           setEditState(prev => ({ ...prev, info: !prev.info }));
         }}
-        onCancelEdit={() => setEditState(prev => ({ ...prev, info: false }))}>
+        onCancelEdit={() => {
+          setUser(originalUser);
+          setEditState(prev => ({ ...prev, info: false }));
+        }}>
         {renderSection([user], (newArr) => setUser(newArr[0]), personalFields, editState.info)}
       </ProfileCardSection>
       <button onClick={() => setShowVerifyModal(true)}>Change Password</button>
@@ -616,7 +631,10 @@ const ProfileCard = ({ propId }) => {
           }
           setEditState(prev => ({ ...prev, current: !prev.current }));
         }}
-        onCancelEdit={() => setEditState(prev => ({ ...prev, current: false }))}
+        onCancelEdit={() => {
+          setUser(originalUser);
+          setEditState(prev => ({ ...prev, current: false }));
+        }}
       >
         {renderSection([user], (newArr) => setUser(newArr[0]), currentInfoFields, editState.current)}
       </ProfileCardSection>
@@ -628,7 +646,11 @@ const ProfileCard = ({ propId }) => {
           }
           setEditState(prev => ({ ...prev, asyv: !prev.asyv }));
         }}
-        onCancelEdit={() => setEditState(prev => ({ ...prev, asyv: false }))}>
+        onCancelEdit={() => {
+          setUser(originalUser);
+          setEditState(prev => ({ ...prev, asyv: false }));
+        }}
+        >
         {renderSection([user], (newArr) => setUser(newArr[0]), asyvIdentityFields, editState.asyv)}
         {renderSection([user], (newArr) => setUser(newArr[0]), asyvAcademicFields, editState.asyv)}
         {renderSection([user], (newArr) => setUser(newArr[0]), leapProgramFields, editState.asyv)}
@@ -642,7 +664,11 @@ const ProfileCard = ({ propId }) => {
           }
           setEditState(prev => ({ ...prev, academic: !prev.academic }));
         }}
-        onCancelEdit={() => setEditState(prev => ({ ...prev, academic: false }))}
+        onCancelEdit={() => {
+          setStudy(originalStudy);
+          setEditState(prev => ({ ...prev, academic: false }));
+        }}
+
         onAddRow={() => setStudy(prev => [...prev, {}])}
       >
         {renderSection(study, setStudy, academicFields, editState.academic, false, true)}
@@ -656,7 +682,11 @@ const ProfileCard = ({ propId }) => {
           }
           setEditState(prev => ({ ...prev, employment: !prev.employment }));
         }}
-        onCancelEdit={() => setEditState(prev => ({ ...prev, employment: false }))}
+        onCancelEdit={() => {
+          setEmployment(originalEmployment);
+          setEditState(prev => ({ ...prev, employment: false }));
+        }}
+
         onAddRow={() => setEmployment(prev => [...prev, {}])}
       >
         {renderSection(employment, setEmployment, employmentFields, editState.employment, true, false)}
