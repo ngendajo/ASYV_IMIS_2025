@@ -14,12 +14,12 @@ MEDIA_ROOT = os.path.join(os.path.dirname(BASE_DIR), 'media')
 SECRET_KEY = "django-insecure-ku9yvru**wfd1vus*#p_#-(mg2$jf4$y6fss-8f*jn1qzyj9_^"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-#DEBUG = True #for local host
-DEBUG = False #for server
+DEBUG = True #for local host
+#DEBUG = False #for server
 
-#ALLOWED_HOSTS = ['127.0.0.1','localhost'] #for local host
+ALLOWED_HOSTS = ['127.0.0.1','localhost'] #for local host
 #ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.6.175']
-ALLOWED_HOSTS = ['10.10.87.44','backend.asyv.ac.rw'] #for server
+#ALLOWED_HOSTS = ['10.10.87.44','backend.asyv.ac.rw'] #for server
 
 
 # Application definition
@@ -78,8 +78,8 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'asyvimis',
         'USER': 'postgres',
-        'PASSWORD': 'amafaranga',#for server
-        #'PASSWORD': 'asyvams',#for local host
+        #'PASSWORD': 'amafaranga',#for server
+        'PASSWORD': 'asyvams',#for local host
         'HOST': 'localhost',
         'PORT': '5432',
     }
@@ -93,6 +93,10 @@ REST_FRAMEWORK = {
         'rest_framework.filters.SearchFilter',
         'rest_framework.filters.OrderingFilter',
     ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10, # For infinite scroll, this will be adjusted
+    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
+    'EXCEPTION_HANDLER': 'api.exceptions.custom_exception_handler', # Custom error handling
 }
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),

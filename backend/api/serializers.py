@@ -548,3 +548,58 @@ class AllBorrowersDisplaySerializer(serializers.Serializer):
     is_student=serializers.BooleanField()
     is_alumni=serializers.BooleanField()
     is_staff=serializers.BooleanField()
+    
+#NewsAnnouncement
+class MediaFileSerializer(serializers.ModelSerializer):
+    # Add news_announcement to fields and specify it as a PrimaryKeyRelatedField.
+    # This allows the serializer to accept the primary key (ID) of a NewsAnnouncement
+    # when creating or updating a MediaFile.
+    news_announcement = serializers.PrimaryKeyRelatedField(queryset=NewsAnnouncement.objects.all())
+
+    class Meta:
+        model = MediaFile
+        # Ensure 'news_announcement' is included in the fields
+        fields = ['id', 'news_announcement', 'file', 'is_image', 'is_video', 'caption']
+
+class NewsAnnouncementListSerializer(serializers.ModelSerializer):
+    # This serializer is for the "in short" list view
+    media_files = MediaFileSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = NewsAnnouncement
+        fields = ['id', 'title', 'in_short', 'type', 'published_date', 'media_files']
+
+class NewsAnnouncementDetailSerializer(serializers.ModelSerializer):
+    # This serializer is for the detailed view
+    media_files = MediaFileSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = NewsAnnouncement
+        fields = ['id', 'title', 'content', 'in_short', 'type', 'published_date', 'updated_date', 'media_files']
+        read_only_fields = ['published_date', 'updated_date']
+
+    def create(self, validated_data):
+        media_files_data = self.context['request'].FILES.getlist('media_files') # Get files from request
+        news_announcement = NewsAnnouncement.objects.create(**validated_data)
+        for media_file in media_files_data:
+            MediaFile.objects.create(news_announcement=news_announcement, file=media_file)
+        return news_announcement
+
+    def update(self, instance, validated_data):
+        instance.title = validated_data.get('title', instance.title)
+        instance.content = validated_data.get('content', instance.content)
+        instance.in_short = validated_data.get('in_short', instance.in_short)
+        instance.type = validated_data.get('type', instance.type)
+        instance.save()
+
+        # Handle updating media files (e.g., adding new, deleting old)
+        # This can be more complex, you might need specific endpoints for media management
+        # For simplicity, here we'll assume a complete replacement or addition
+        # If you're allowing individual media file updates/deletions, you'll need more logic here
+        
+        # Example for adding new files:
+        new_media_files_data = self.context['request'].FILES.getlist('new_media_files')
+        for media_file in new_media_files_data:
+            MediaFile.objects.create(news_announcement=instance, file=media_file)
+        
+        return instance
