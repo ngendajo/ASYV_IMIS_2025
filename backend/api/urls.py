@@ -18,10 +18,10 @@ router.register(r'kid-academics', views.KidAcademicsViewSet) #KidAcademics crud
 router.register(r'employments', views.EmploymentViewSet, basename='employment') #Employment crud
 router.register(r'further-education', views.FurtherEducationViewSet, basename='furthereducation') #Further Education crud
 router.register(r'colleges', views.CollegeViewSet, basename='colleges') #College crud 
-router.register(r'events', views.EventViewSet)
 router.register(r'news', views.NewsAnnouncementViewSet, basename='news')
 router.register(r'media', views.MediaFileViewSet, basename='media') # Optional: if you want separate media management
 
+router.register(r'events', views.EventViewSet)
 
 urlpatterns = [
     # user paths
@@ -103,7 +103,8 @@ urlpatterns = [
 
     path('alumni-directory/', views.AlumniDirectoryView.as_view(), name='alumni directory'), 
     path('alumni-map/', views.AlumniCountryMap.as_view(), name="alumni-country-map"), 
-    path('alumni-trends/', views.AlumniOutcomeTrends.as_view(), name="alumni-outcome-trends"),  
+    path('alumni-trends/', views.AlumniOutcomeTrends.as_view(), name="alumni-outcome-trends"), 
+    path('alumni-years/', views.AlumniYearsView.as_view(), name = "grad years"),
     
     #profile 
     path('kid/<int:user_id>/', views.get_student_information, name='kid-info'),
@@ -112,6 +113,16 @@ urlpatterns = [
     path('alumni-currentinfo/<int:kid_id>/', views.CurrentInfoUpdateView.as_view(), name ='alumni-currentinfo'),
     #selection options
     path('options/all-dropdowns/', views.DropdownOptionsAPIView.as_view(), name='profile-dropdowns'),
-    path('options/mamas/', views.get_mamas, name='mamas-info')
+    path('options/mamas/', views.get_mamas, name='mamas-info'),
+
+    #Updating Data
+     path('grades/<int:grade_id>/graduate-kids/', views.graduate_kids_by_grade, name='graduate_kids_by_grade'),
+
+    # opportunity paths
+    path('opportunity/create/', views.create_opportunity, name='create-opportunity'),
+    path('opportunity/', views.read_opportunity, name='read-opportunity'),
+    path('opportunity/<int:pk>/delete/', views.DeleteOpportunityView.as_view(), name='delete-opportunity'),
+    # path('opportunity/<int:pk>/update/', views.UpdateOpportunityView.as_view(), name='update-opportunity'),
+    # path('opportunity/<int:pk>/approve', views.ApproveOpportunityView.as_view(), name='approve-opportunity'),
 
 ]
