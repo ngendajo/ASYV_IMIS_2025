@@ -86,7 +86,8 @@ class GradeSerializer(serializers.ModelSerializer):
             'grade_name',
             'admission_year_to_asyv',
             'graduation_year_to_asyv',
-            'families'
+            'families', 
+            'non_graduated_kids_count',
         ]
 
     def create(self, validated_data):
@@ -124,6 +125,17 @@ class KidSerializer(serializers.ModelSerializer):
         model = Kid
         fields = '__all__'
 
+class FurtherEducationSerializer(serializers.ModelSerializer): 
+    college = serializers.PrimaryKeyRelatedField(queryset=College.objects.all())
+    location = serializers.SerializerMethodField(read_only=True)
+
+
+    class Meta:
+        model = FurtherEducation
+        fields = ['id', 'alumn', 'college', 'level', 'degree', 'status', 'location', 'scholarship', 'scholarship_details']
+
+    def get_location(self, obj):
+        return f"{obj.college.city}, {obj.college.country}"
 
 class AlumniListSerializer(serializers.ModelSerializer):
     family = FamilySerializer()
@@ -143,7 +155,7 @@ class AlumniListSerializer(serializers.ModelSerializer):
         model = Kid
         fields = ['id', 'user_id', 'first_name', 'rwandan_name', 
                   'gender', 'email', 'phone', 'image_url', 'family', 
-                  'employment', 'combination']
+                  'employment', 'combination', 'further_education']
     def get_gender(self, obj): 
         return obj.user.gender if obj.user else None
     
@@ -267,18 +279,6 @@ class CollegeSerializer(serializers.ModelSerializer):
         model = College
         fields = '__all__'
 
-
-class FurtherEducationSerializer(serializers.ModelSerializer): 
-    college = serializers.PrimaryKeyRelatedField(queryset=College.objects.all())
-    location = serializers.SerializerMethodField(read_only=True)
-
-
-    class Meta:
-        model = FurtherEducation
-        fields = ['id', 'alumn', 'college', 'level', 'degree', 'status', 'location', 'scholarship', 'scholarship_details']
-
-    def get_location(self, obj):
-        return f"{obj.college.city}, {obj.college.country}"
     
 class BasicInformationSerializer(serializers.Serializer):
     user_id = serializers.IntegerField(required=False)
@@ -679,5 +679,10 @@ class ApproveOpportunitySerializer(serializers.ModelSerializer):
         fields = ['approved']
 
 
+#Event seralizers
 
+class EventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Event
+        fields = ('__all__')
 
