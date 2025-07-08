@@ -6,6 +6,8 @@ import { jwtDecode } from 'jwt-decode';
 import Logo from '../../static/images/logo.png';
 
 import axios from "../../api/axios";
+import baseUrl from "../../api/baseUrl";
+import ChangePasswordModal from "./change_password";
 
 const LOGIN_URL = '/token/';
 
@@ -20,6 +22,10 @@ export default function LoginPopUp({showLogin, toggleLoginPopup}) {
     const [email, setEmail] = useState('');
     const [pwd, setPwd] = useState('');
     const [errMsg, setErrMsg] = useState('');
+    const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+    const [accessToken, setAccessToken] = useState('');
+
+
 
     useEffect(() => {
         setErrMsg('');
@@ -40,19 +46,26 @@ export default function LoginPopUp({showLogin, toggleLoginPopup}) {
                     }
                 );
 
-                const accessToken = response?.data.access;
+                const access = response?.data.access;
                 const refresh = response?.data.refresh;
                 const token = response?.data.token;
                 const user = jwtDecode(token); // Using the token field which contains user data
+                console.log("Decoded JWT user object:", user);
+                setAccessToken(access);
 
                 // You can now access user data directly from the decoded token
-                // since it includes: first_name, rwandan_name, email, phone, is_superuser, etc.
-                console.log(user);
+                // since it includes: first_name, rwandan_name, email, phone, is_superuser, etc
 
-                setAuth({ user, accessToken, refresh });
+                setAuth({ user, accessToken: access, refresh });
+                const currentPwd = pwd;
                 setEmail('');
                 setPwd('');
-                navigate(from, { replace: true });
+                if (currentPwd === "Amahoro@1") {
+                    setShowChangePasswordModal(true);
+                  } else {
+                    navigate(from, { replace: true });
+                  }
+
             } catch (err) {
                 if (!err?.response) {
                     setErrMsg("No response from server. Please check your internet connection.");
@@ -68,6 +81,31 @@ export default function LoginPopUp({showLogin, toggleLoginPopup}) {
                     setErrMsg('Login Failed: ' + err.message);
                 }
             }}
+
+    const handlePasswordChange = async (newPassword) => {
+        //console.log("new password", newPassword)
+        try {
+            //console.log("request send")
+            //console.log("Sending POST request to /changepassword/ with data:", { current_password: pwd, newPassword });
+
+            await axios.post(baseUrl +
+            "/changepassword/",
+            { current_password: "Amahoro@1",
+              new_password: newPassword },
+            {
+                headers: {
+                Authorization: `Bearer ${accessToken}`,
+                },
+            }
+            );
+            alert("Password changed successfully.");
+            setShowChangePasswordModal(false);
+            navigate(from, { replace: true });
+        } catch (err) {
+            alert("Failed to change password. Try again.", err);
+        }
+        };
+              
 
     return (
         <div>
@@ -111,8 +149,17 @@ export default function LoginPopUp({showLogin, toggleLoginPopup}) {
                             </div>
                             <Link to="/home" className="ForgetPassword">Forgot Password?</Link>
                         </form>
-                    </div>
+                        </div>
                 </div>
             )}
+            {showChangePasswordModal && (
+            <ChangePasswordModal
+                onSubmit={handlePasswordChange}
+                onSkip={() => {
+                setShowChangePasswordModal(false);
+                navigate(from, { replace: true });
+                }}
+            />
+            )}       
         </div>
     )}

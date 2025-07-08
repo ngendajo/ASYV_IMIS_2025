@@ -22,6 +22,7 @@ import PersonalProfile from './pages/profile/PersonalProfile';
 import AddData from './pages/AddData';
 
 import AlumniDirectory from './pages/directory/AlumniDirectory';
+import StudentDirectory from './pages/directory/StudentDirectory.jsx';
 import CareerOpportunity from './pages/career/CareerOpportunity';
 import CareerOpportunityStaff from "./pages/career/CareerOpportunityStaff";
 
@@ -30,6 +31,8 @@ import FurtherEducationStaff from './pages/education/FurtherEducationStaff';
 // support and giving
 import DonationOptions from './pages/support/DonationOptions.jsx';
 import MentoringPrograms from './pages/support/MentoringPrograms.jsx';
+
+import GivingBack from './pages/support/GivingBack.jsx';
 // social and networking
 import Events from './pages/social/Events';
 import EventsDetail from './pages/social/EventsDetail';
@@ -89,10 +92,13 @@ function App() {
                     <Route path="/personal_profile" element={<PersonalProfile />} />
                     <Route path="/add_data" element={<AddData />} />
                     <Route path="/alumni_directory" element={<AlumniDirectory />} />
+                    <Route path="/student_directory" element={<StudentDirectory />} />
                     <Route path="/career_opportunity" element={<CareerOpportunity />} />
 
                     <Route path="/career_opportunity_staff" element={<CareerOpportunityStaff />}/>
                     <Route path="/add_data" element={<AddData />} />
+
+                    <Route path="/giving_back" element={<GivingBack />} />
 
                     <Route path="/further_education" element={<FurtherEducation />} />
                     <Route path="/further_education_staff" element={<FurtherEducationStaff />} />

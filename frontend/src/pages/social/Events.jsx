@@ -6,8 +6,8 @@ import './Events.css';
 import axios from "axios";
 import useAuth from "../../hooks/useAuth";
 
-// import baseUrl from "../../api/baseUrl";
-const  baseUrl='https://backend.asyv.ac.rw/api';
+import baseUrl from "../../api/baseUrl";
+//const  baseUrl='https://backend.asyv.ac.rw/api';
 
 const Events = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -42,7 +42,7 @@ const Events = () => {
 
   useEffect(() =>{
     fetchEvents();
-  });
+  }, [auth]);
 
   const eventsData = event;
 

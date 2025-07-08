@@ -5,144 +5,172 @@ import axios from "../api/axios";
 import GradeForm from "../components/AddData/addGradeData";
 import GradeList from "../components/AddData/listGradeData";
 import AddStudents from "../components/AddData/addKidData";
+import AddStaff from "../components/AddData/addStaffData";
+import CombinationForm from "../components/AddData/addCombination";
+import LeapForm from "../components/AddData/addLeap";
+import LeapList from "../components/AddData/listLeap";
+import CombinationList from "../components/AddData/listCombination";
+import useAuth from "../hooks/useAuth";
+import CollegeForm from "../components/AddData/addCollege";
+import CollegeList from "../components/AddData/listCollege";
 
 const AddData = () => {
-  const [expanded, setExpanded] = useState(null);
-  const [showSingleStudentForm, setShowSingleStudentForm] = useState(false);
-  const [isSuperuser, setIsSuperuser] = useState(false);
-  const [positionFlags, setPositionFlags] = useState({
-    is_crc: false,
-    is_teacher: false,
-    is_librarian: false,
-    is_mama: false,
-  });
+  const { auth } = useAuth();
 
-  const [cityOther, setCityOther] = useState(false);
-  const [countryOther, setCountryOther] = useState(false);
+  const dataSections = [
+    {
+      key: "college",
+      title: "Colleges",
+      FormComponent: CollegeForm,
+      ListComponent: CollegeList,
+      apiEndpoint: "/colleges",
+    },
+    {
+      key: "leap",
+      title: "Leaps",
+      FormComponent: LeapForm,
+      ListComponent: LeapList,
+      apiEndpoint: "/leaps",
+    },
+    {
+      key: "combination",
+      title: "Combinations",
+      FormComponent: CombinationForm,
+      ListComponent: CombinationList,
+      apiEndpoint: "/combinations",
+    },
+    {
+      key: "grade",
+      title: "Grade & Families",
+      FormComponent: GradeForm,
+      ListComponent: GradeList,
+      apiEndpoint: "/grades",
+      requireSuperuser: true,
+    },
+    {
+      key: "students",
+      title: "Students",
+      FormComponent: AddStudents,
+      apiEndpoint: "/kids",
+      requireSuperuser: true,
+    },
+    {
+      key: "staff",
+      title: "Staff Account",
+      FormComponent: AddStaff,
+      apiEndpoint: "/users",
+      requireSuperuser: true,
+    },
+  ];
 
-  const toggleSection = (section) => {
-    if (expanded === section) {
-      setExpanded(null);
-      if (section === "students") setShowSingleStudentForm(false);
+  const [activeSection, setActiveSection] = useState(null); // which key is expanded
+  const [viewMode, setViewMode] = useState(null); // 'form' or 'list'
+  const [dataItems, setDataItems] = useState({});
+  const [editingItem, setEditingItem] = useState(null);
+
+  const openSection = (key, mode) => {
+    if (activeSection === key && viewMode === mode) {
+      setActiveSection(null);
+      setViewMode(null);
+      setEditingItem(null);
     } else {
-      setExpanded(section);
+      setActiveSection(key);
+      setViewMode(mode);
+      if (mode === "list") fetchDataForSection(key);
     }
   };
 
-  const handlePositionChange = (value) => {
-    setPositionFlags({
-      is_crc: value === "crc",
-      is_teacher: value === "teacher",
-      is_librarian: value === "librarian",
-      is_mama: value === "mother",
-    });
+  const fetchDataForSection = async (key) => {
+    try {
+      const section = dataSections.find((s) => s.key === key);
+      if (!section) return;
+
+      const response = await axios.get(`${baseUrl}${section.apiEndpoint}/`);
+      setDataItems((prev) => ({
+        ...prev,
+        [key]: response.data,
+      }));
+    } catch (error) {
+      console.error(`Error fetching ${key} data:`, error);
+    }
   };
 
   return (
     <div className="add-data-container">
       <h1 className="page-title">Add Data</h1>
 
-      {/* Add Grade & Families */}
-      <div className="white-card">
-        <div className="section-header" onClick={() => toggleSection("grade")}>
-          <h2>Add Grade & Families</h2>
-          <span>{expanded === "grade" ? "▲" : "▼"}</span>
-        </div>
-        {expanded === "grade" && (
-        <GradeForm /> 
-        )}
-      </div>
-
-      {/* Add Students (Bulk + One) */}
-      <div className="white-card">
-        <div className="section-header" onClick={() => toggleSection("students")}>
-          <h2>Add Students</h2>
-          <span>{expanded === "students" ? "▲" : "▼"}</span>
-        </div>
-        {expanded === "students" && (
-          <AddStudents />
-        )}
-      </div>
-
-      {/* Add Staff */}
-      <div className="white-card">
-        <div className="section-header" onClick={() => toggleSection("staff")}>
-          <h2>Add Staff Account</h2>
-          <span>{expanded === "staff" ? "▲" : "▼"}</span>
-        </div>
-        {expanded === "staff" && (
-          <div className="form-section">
-            <label className="required">Username</label>
-            <input type="text" />
-
-            <label className="required">Registration Number</label>
-            <input type="text" />
-
-            <label className="required">First Name</label>
-            <input type="text" />
-
-            <label>Middle Name</label>
-            <input type="text" />
-
-            <label className="required">Rwandan Name</label>
-            <input type="text" />
-
-            <label className="required">Gender</label>
-            <select>
-              <option value="">Select</option>
-              <option value="M">Male</option>
-              <option value="F">Female</option>
-            </select>
-
-            <label>Date of Birth</label>
-            <input type="date" />
-
-            <label>Phone</label>
-            <input type="tel" />
-
-            <label>Alternate Phone</label>
-            <input type="tel" />
-
-            <label>Email</label>
-            <input type="email" />
-
-            <label>Alternate Email</label>
-            <input type="email" />
-
-            <label className="required">Password</label>
-            <input type="password" />
-
-            <label className="required">Confirm Password</label>
-            <input type="password" />
-
-            <label className="required">Position</label>
-            <select onChange={(e) => handlePositionChange(e.target.value)}>
-              <option value="">Select position</option>
-              <option value="crc">CRC</option>
-              <option value="teacher">Teacher</option>
-              <option value="librarian">Librarian</option>
-              <option value="mother">Mother</option>
-            </select>
-
-            <div className="checkbox-inline">
-              <label htmlFor="superuser">Superuser</label>
-              <input
-                id="superuser"
-                type="checkbox"
-                checked={isSuperuser}
-                onChange={(e) => setIsSuperuser(e.target.checked)}
-              />
+      {dataSections
+        .filter((section) => !section.requireSuperuser || auth.user?.is_superuser)
+        .map(({ key, title, FormComponent, ListComponent }) => (
+          <div className="white-card" key={key}>
+            <div className="section-header with-controls">
+              <h2>{title}</h2>
+              <div className="section-controls">
+                <button onClick={() => openSection(key, "form")}>
+                  {activeSection === key && viewMode === "form" ? "Close Form" : "Add"}
+                </button>
+                {ListComponent && (
+                  <button onClick={() => openSection(key, "list")}>
+                    {activeSection === key && viewMode === "list" ? "Close List" : "View"}
+                  </button>
+                )}
+              </div>
             </div>
 
+            {activeSection === key && (
+              <div className="section-content">
+                {viewMode === "form" && (
+                  <>
+                    <FormComponent
+                      item={editingItem?.section === key ? editingItem.data : null}
+                      onSuccess={() => {
+                        fetchDataForSection(key);
+                        setEditingItem(null);
+                      }}
+                      onCancel={() => setEditingItem(null)}
+                    />
+                    {ListComponent && (
+                      <button
+                        className="view-bottom-button"
+                        onClick={() => openSection(key, "list")}
+                      >
+                        View Existing Entries →
+                      </button>
+                    )}
+                  </>
+                )}
 
-            <button>Add Staff</button>
+                {viewMode === "list" && ListComponent && (
+                  <>
+                    <ListComponent
+                      items={dataItems[key] || []}
+                      onEdit={(item) => {
+                        setEditingItem({ section: key, data: item });
+                        setViewMode("form");
+                      }}
+                      onDelete={async (id) => {
+                        try {
+                          await axios.delete(`${baseUrl}${dataSections.find((s) => s.key === key).apiEndpoint}/${id}/`);
+                          fetchDataForSection(key);
+                        } catch (error) {
+                          console.error(`Delete error in ${key}:`, error);
+                        }
+                      }}
+                    />
+                    <button
+                      className="view-bottom-button"
+                      onClick={() => openSection(key, "form")}
+                    >
+                      Add New Entry →
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        ))}
     </div>
   );
 };
 
-
 export default AddData;
-

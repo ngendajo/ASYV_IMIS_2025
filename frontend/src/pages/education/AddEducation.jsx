@@ -24,7 +24,7 @@ const AddEducationForm = () => {
             setTitle(jobToEdit.title);
             setType(jobToEdit.op_type);
             setDescription(jobToEdit.description);
-            setDate(jobToEdit.diedline);
+            setDate(jobToEdit.deadline);
             setLink(jobToEdit.link);
         }
     }, [jobToEdit]);
@@ -42,7 +42,7 @@ const AddEducationForm = () => {
             user: auth.user.id,
             description: description,
             post_time: currentDate,
-            diedline: date,
+            deadline: date,
             link: link
         };
 
