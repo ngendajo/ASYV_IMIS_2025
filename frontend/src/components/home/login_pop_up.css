@@ -1,0 +1,79 @@
+:root {
+  --green: #498160;
+  --green-dark: #3a684d;
+  --black: #363636;
+  --orange: #f49c46;
+}
+
+/* Error message */
+.errmsg {
+  color: red;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Button container */
+.ConfirmButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+/* Primary button (e.g., Login, Update Password) */
+.ConfirmButton button {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  background-color: var(--green);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.ConfirmButton button:hover {
+  background-color: var(--green-dark);
+}
+
+/* "Skip for now" styled as a clean link */
+.ConfirmButton button:nth-child(2) {
+  background: none;
+  border: none;
+  box-shadow: none;
+  color: var(--green);
+  font-weight: normal;
+  text-decoration: underline;
+  padding: 0.3rem;
+  cursor: pointer;
+}
+
+.ConfirmButton button:nth-child(2):hover {
+  color: var(--green-dark);
+  background: none;
+}
+
+/* Forgot Password link-style button */
+.ForgotPasswordLink {
+  background: none;
+  border: none;
+  color: var(--green);
+  font-size: 0.9rem;
+  text-decoration: underline;
+  margin-top: 0.75rem;
+  cursor: pointer;
+}
+
+.ForgotPasswordLink:hover {
+  color: var(--green-dark);
+}
+
+/* CRC Help Message */
+.ForgotMessage {
+  margin-top: 0.75rem;
+  font-size: 0.95rem;
+  color: var(--black);
+  text-align: center;
+}
