@@ -124,6 +124,17 @@ class KidSerializer(serializers.ModelSerializer):
         model = Kid
         fields = '__all__'
 
+class FurtherEducationSerializer(serializers.ModelSerializer): 
+    college = serializers.PrimaryKeyRelatedField(queryset=College.objects.all())
+    location = serializers.SerializerMethodField(read_only=True)
+
+
+    class Meta:
+        model = FurtherEducation
+        fields = ['id', 'alumn', 'college', 'level', 'degree', 'status', 'location', 'scholarship', 'scholarship_details']
+
+    def get_location(self, obj):
+        return f"{obj.college.city}, {obj.college.country}"
 
 class AlumniListSerializer(serializers.ModelSerializer):
     family = FamilySerializer()
@@ -267,18 +278,6 @@ class CollegeSerializer(serializers.ModelSerializer):
         model = College
         fields = '__all__'
 
-
-class FurtherEducationSerializer(serializers.ModelSerializer): 
-    college = serializers.PrimaryKeyRelatedField(queryset=College.objects.all())
-    location = serializers.SerializerMethodField(read_only=True)
-
-
-    class Meta:
-        model = FurtherEducation
-        fields = ['id', 'alumn', 'college', 'level', 'degree', 'status', 'location', 'scholarship', 'scholarship_details']
-
-    def get_location(self, obj):
-        return f"{obj.college.city}, {obj.college.country}"
     
 class BasicInformationSerializer(serializers.Serializer):
     user_id = serializers.IntegerField(required=False)
@@ -679,5 +678,10 @@ class ApproveOpportunitySerializer(serializers.ModelSerializer):
         fields = ['approved']
 
 
+#Event seralizers
 
+class EventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Event
+        fields = ('__all__')
 
