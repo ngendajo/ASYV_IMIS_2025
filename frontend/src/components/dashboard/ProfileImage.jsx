@@ -1,83 +1,112 @@
 import React, { useState } from 'react';
-import styled from 'styled-components';
-import baseUrlforImg from '../../api/baseUrlforImg';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit } from '@fortawesome/free-solid-svg-icons';
-import Dropzone from 'react-dropzone';
+import axios from 'axios';
+import baseUrl from '../../api/baseUrl';
 import useAuth from '../../hooks/useAuth';
 
-const EditIcon = styled(FontAwesomeIcon)`
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  color: var(--orange);
-  cursor: pointer;
-`;
+const defaultImage = '/default-profile-picture.jpg';
 
-const SubmitButton = styled.button`
-  margin-top: 10px;
-  padding: 8px 16px;
-  font-size: 16px;
-  background-color: var(--orange);
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  &:disabled {
-    background-color: gray;
-    cursor: not-allowed;
-  }
-`;
-
-const ProfileImage = ({ user, onEdit }) => {
-  const [isDropzoneOpen, setIsDropzoneOpen] = useState(false);
-  const current = new Date();
+const ProfileImage = ({ user, canEdit = false, size = 120 }) => {
   const { auth } = useAuth();
+  const [imgSrc, setImgSrc] = useState(user?.image_url || defaultImage);
+  const [msg, setMsg] = useState('');
 
-  const onDrop = (files) => {
-    const fileSize = files[0].size; // size in bytes
-    const maxSize = 1024 * 200; // 200 in bytes
+  const handleChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-    if (fileSize > maxSize) {
-      alert("File size exceeds 200k. Please choose a smaller file.");
-      return;
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      await axios.post(`${baseUrl}/updateuserimage/${user.id}`, formData, {
+        headers: {
+          Authorization: `Bearer ${auth.accessToken}`,
+          'Content-Type': 'multipart/form-data',
+        },
+        withCredentials: true,
+      });
+      setMsg('Image updated successfully');
+
+      // Refresh user image
+      const updated = await axios.get(`${baseUrl}/users/?id=${user.id}`, {
+        headers: { Authorization: `Bearer ${auth.accessToken}` },
+        withCredentials: true,
+      });
+      setImgSrc(updated.data.image_url || defaultImage);
+    } catch (err) {
+      setMsg('Image update failed');
+      console.error(err);
     }
-    if (files.length > 0) {
-      const imgname = `${auth.user.id}_${current.getTime()}.${files[0].name.split('.').pop()}`;
-
-      const formData = new FormData();
-      formData.append("image_url", files[0], imgname);;
-        // Call the parent component's onEdit function to handle the upload
-        onEdit(formData);
-        setIsDropzoneOpen(!isDropzoneOpen);
-      }
   };
 
-  const handleEditClick = () => {
-    setIsDropzoneOpen(!isDropzoneOpen);
-  }; 
-//console.log("imeage", auth.user)
+  const handleError = () => {
+    setImgSrc(defaultImage);
+  };
+
   return (
-    <div className="profile-container" style={{ position: 'relative' }}>
+    <div
+      className="ProfileImageWrapper"
+      style={{
+        position: 'relative',
+        width: size,
+        height: size,
+        minWidth: size,
+        minHeight: size,
+        padding: 6,
+        boxSizing: 'border-box',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+      }}
+    >
       <img
-        src={baseUrlforImg + user[0]?.image_url}
-        //alt={`${user[0].first_name} ${user[0].last_name}`}
-        className="profile-image"
+        src={imgSrc}
+        alt="Profile"
+        onError={handleError}
+        style={{
+          width: '100%',
+          height: '100%',
+          borderRadius: '50%',
+          objectFit: 'cover',
+        }}
       />
-      <EditIcon icon={faEdit} onClick={handleEditClick} />
-      {isDropzoneOpen && (
-        <div>
-          <Dropzone onDrop={onDrop} multiple={false}>
-            {({ getRootProps, getInputProps }) => (
-              <section>
-                <div {...getRootProps({ className: "dropzone" })}>
-                  <input {...getInputProps()} />
-                    "Drag and drop an image here, or click to select it"
-                </div>
-              </section>
-            )}
-          </Dropzone>
-        </div>
+
+      {canEdit && (
+        <label
+          htmlFor={`imageUpload-${user.id}`}
+          style={{
+            position: 'absolute',
+            bottom: 2,
+            right: 2,
+            backgroundColor: 'transparent',
+            color: 'var(--orange)',
+            borderRadius: '50%',
+            width: 18,
+            height: 18,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            cursor: 'pointer',
+            fontSize: 12,
+          }}
+          title="Change photo"
+        >
+          ✎
+          <input
+            id={`imageUpload-${user.id}`}
+            type="file"
+            accept="image/*"
+            onChange={handleChange}
+            style={{ display: 'none' }}
+          />
+        </label>
+      )}
+
+
+      {msg && (
+        <span style={{ color: 'var(--green)', fontFamily: 'Medium', marginTop: 4 }}>
+          {msg}
+        </span>
       )}
     </div>
   );

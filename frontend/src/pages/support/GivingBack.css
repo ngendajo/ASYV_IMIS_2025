@@ -1,0 +1,84 @@
+.giving-back-page {
+  color: var(--black);
+  font-family: Regular;
+  line-height: 1.7;
+}
+
+.giving-photo {
+  width: 100%;
+  max-height: 400px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+}
+
+.giving-title {
+  font-family: Bold;
+  font-size: 35px;
+  color: var(--green);
+  margin-bottom: 1rem;
+}
+
+.giving-subtitle {
+  font-family: Medium;
+  font-size: 18px;
+  color: var(--brown);
+  margin-bottom: 2rem;
+}
+
+.giving-back-page h3 {
+  font-family: Medium;
+  font-size: 20px;
+  color: var(--orange);
+  margin-top: 2rem;
+}
+
+.giving-back-page ul {
+  padding-left: 1.5rem;
+  margin-top: 1rem;
+}
+
+.giving-back-page li {
+  margin-bottom: 0.5rem;
+}
+
+.cta-section {
+  background-color: var(--palegreen);
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin: 2rem 0;
+}
+
+.cta-text {
+  font-size: 18px;
+  font-family: Medium;
+  color: var(--green);
+  margin-bottom: 1rem;
+}
+
+.donate-button {
+  background-color: var(--orange);
+  border: none;
+  padding: 0.75rem 1.5rem;
+  color: white;
+  font-family: Medium;
+  font-size: 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.donate-button:hover {
+  background-color: var(--brown);
+}
+
+.contact-info {
+  margin-top: 1rem;
+  font-size: 16px;
+}
+
+.team-section {
+  margin-top: 3rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--greyopa);
+}

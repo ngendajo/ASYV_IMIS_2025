@@ -1,27 +1,69 @@
-import React from 'react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import React, { useState, useMemo } from 'react';
+import './college-list.css';
 
-const CollegesList = ({ data }) => {
-  if (!data || data.length === 0) {
-    return <p>No colleges data available.</p>;
+const CollegesByCountry = ({ collegesByCountry }) => {
+  const [selectedCountry, setSelectedCountry] = useState(null);
+
+  const countriesSorted = useMemo(() => {
+    if (!collegesByCountry || Object.keys(collegesByCountry).length === 0) return [];
+    return Object.entries(collegesByCountry)
+      .map(([country, colleges]) => ({
+        country,
+        totalAttendance: colleges.reduce((sum, c) => sum + c.attendance_count, 0),
+        colleges: colleges.slice().sort((a, b) => b.attendance_count - a.attendance_count),
+      }))
+      .sort((a, b) => b.totalAttendance - a.totalAttendance);
+  }, [collegesByCountry]);
+
+  if (countriesSorted.length === 0) {
+    return <p className="no-data">No college attendance data available.</p>;
   }
 
-  // Sort descending by attendance_count
-  const sortedData = [...data].sort((a, b) => b.attendance_count - a.attendance_count);
-
   return (
-    <div>
-      <h3>Colleges Attended (Most to Least)</h3>
-
-      <ul>
-        {sortedData.map(({ college, attendance_count }) => (
-          <li key={college}>
-            {college}: {attendance_count} attendees
-          </li>
-        ))}
-      </ul>
+    <div className="cbc-wrapper">
+      {selectedCountry ? (
+        <div className="cbc-table-view">
+          <button className="cbc-back-button" onClick={() => setSelectedCountry(null)}>
+            ← Back to countries
+          </button>
+          <h4>{selectedCountry}</h4>
+          <div className="cbc-table-scroll">
+            <table className="cbc-table">
+              <thead>
+                <tr>
+                  <th>College</th>
+                  <th>Attendance Count</th>
+                </tr>
+              </thead>
+              <tbody>
+                {collegesByCountry[selectedCountry]
+                  .slice()
+                  .sort((a, b) => b.attendance_count - a.attendance_count)
+                  .map(({ college, attendance_count }) => (
+                    <tr key={college}>
+                      <td>{college}</td>
+                      <td>{attendance_count}</td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : (
+        <div className="cbc-country-list">
+          {countriesSorted.map(({ country, totalAttendance }) => (
+            <button
+              key={country}
+              className="cbc-country-button"
+              onClick={() => setSelectedCountry(country)}
+            >
+              {country} ({totalAttendance})
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
 
-export default CollegesList;
+export default CollegesByCountry;

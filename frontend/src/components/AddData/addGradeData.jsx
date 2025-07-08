@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import baseUrl from '../../api/baseUrl'; // adjust as needed
+import axios from '../../api/axios';
+import baseUrl from '../../api/baseUrl';
 
-const GradeForm = () => {
+const GradeForm = ({ item, onSuccess, onCancel }) => {
   const [gradeName, setGradeName] = useState('');
   const [admissionYear, setAdmissionYear] = useState('');
   const [graduationYear, setGraduationYear] = useState('');
@@ -10,12 +10,22 @@ const GradeForm = () => {
     { family_name: '', family_number: '', mother: '' },
   ]);
   const [mamas, setMamas] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     axios.get(baseUrl + '/options/mamas/')
       .then(res => setMamas(res.data))
       .catch(err => console.error('Failed to fetch mamas:', err));
   }, []);
+
+  useEffect(() => {
+    if (item) {
+      setGradeName(item.grade_name || '');
+      setAdmissionYear(item.admission_year_to_asyv || '');
+      setGraduationYear(item.graduation_year_to_asyv || '');
+      setFamilies(item.families || [{ family_name: '', family_number: '', mother: '' }]);
+    }
+  }, [item]);
 
   const handleFamilyChange = (index, field, value) => {
     const updated = [...families];
@@ -27,13 +37,11 @@ const GradeForm = () => {
     setFamilies([...families, { family_name: '', family_number: '', mother: '' }]);
   };
 
-  // Delete family at index
   const deleteFamily = (index) => {
     setFamilies(families.filter((_, i) => i !== index));
   };
 
-  // Reset entire form
-  const cancelForm = () => {
+  const resetForm = () => {
     setGradeName('');
     setAdmissionYear('');
     setGraduationYear('');
@@ -41,95 +49,130 @@ const GradeForm = () => {
   };
 
   const handleSubmit = async () => {
+    setSubmitting(true);
+    const payload = {
+      grade_name: gradeName,
+      admission_year_to_asyv: parseInt(admissionYear),
+      graduation_year_to_asyv: parseInt(graduationYear),
+      families: families.map(f => ({
+        ...f,
+        mother: parseInt(f.mother),
+      })),
+    };
+
     try {
-      const payload = {
-        grade_name: gradeName,
-        admission_year_to_asyv: parseInt(admissionYear),
-        graduation_year_to_asyv: parseInt(graduationYear),
-        families: families.map(f => ({
-          ...f,
-          mother: parseInt(f.mother),
-        })),
-      };
-
-      console.log(payload)
-
-      const res = await axios.post(baseUrl + '/grades/', payload);
-      alert('Grade created successfully!');
-      console.log(res.data);
-      cancelForm(); // optionally reset form after submit
+      if (item?.id) {
+        await axios.put(`${baseUrl}/grades/${item.id}/`, payload);
+      } else {
+        await axios.post(baseUrl + '/grades/', payload);
+      }
+      if (onSuccess) onSuccess();
+      resetForm();
     } catch (err) {
-      console.error('Failed to create grade:', err.response?.data || err.message);
-      alert('Failed to create grade. Check console for details.');
+      console.error('Failed to submit grade:', err.response?.data || err.message);
+      alert('Submission failed. Check the console for details.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
-    <div>
-      <h2>Create Grade</h2>
+    <form className="data-form" onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+      <h2>{item ? 'Edit Grade' : 'Create Grade'}</h2>
 
-      <input
-        placeholder="Grade Name"
-        value={gradeName}
-        onChange={e => setGradeName(e.target.value)}
-      />
-      <input
-        placeholder="Admission Year"
-        value={admissionYear}
-        onChange={e => setAdmissionYear(e.target.value)}
-        type="number"
-      />
-      <input
-        placeholder="Graduation Year"
-        value={graduationYear}
-        onChange={e => setGraduationYear(e.target.value)}
-        type="number"
-      />
+      <div className="form-group">
+        <label>Grade Name</label>
+        <input
+          value={gradeName}
+          onChange={e => setGradeName(e.target.value)}
+          required
+        />
+      </div>
+
+      <div className="form-group">
+        <label>Admission Year</label>
+        <input
+          type="number"
+          value={admissionYear}
+          onChange={e => setAdmissionYear(e.target.value)}
+          required
+        />
+      </div>
+
+      <div className="form-group">
+        <label>Graduation Year</label>
+        <input
+          type="number"
+          value={graduationYear}
+          onChange={e => setGraduationYear(e.target.value)}
+          required
+        />
+      </div>
 
       <h3>Families</h3>
       {families.map((family, i) => (
-        <div key={i} style={{ marginBottom: 10 }}>
-          <input
-            placeholder="Family Name"
-            value={family.family_name}
-            onChange={e => handleFamilyChange(i, 'family_name', e.target.value)}
-          />
-          <input
-            placeholder="Family Number"
-            value={family.family_number}
-            onChange={e => handleFamilyChange(i, 'family_number', e.target.value)}
-          />
-          <select
-            value={family.mother}
-            onChange={e => handleFamilyChange(i, 'mother', e.target.value)}
-          >
-            <option value="">Select Mama</option>
-            {mamas.map(mama => (
-              <option key={mama.id} value={mama.id}>
-                {`${mama.first_name} ${mama.rwandan_name}`}
-              </option>
-            ))}
-          </select>
+        <div key={i} className="nested-section">
+          <div className="form-group">
+            <label>Family Name</label>
+            <input
+              value={family.family_name}
+              onChange={e => handleFamilyChange(i, 'family_name', e.target.value)}
+              required
+            />
+          </div>
 
-          <button type="button" onClick={() => deleteFamily(i)} style={{ marginLeft: 8 }}>
+          <div className="form-group">
+            <label>Family Number</label>
+            <input
+              value={family.family_number}
+              onChange={e => handleFamilyChange(i, 'family_number', e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Mama</label>
+            <select
+              value={family.mother}
+              onChange={e => handleFamilyChange(i, 'mother', e.target.value)}
+              required
+            >
+              <option value="">Select Mama</option>
+              {mamas.map(mama => (
+                <option key={mama.id} value={mama.id}>
+                  {`${mama.first_name} ${mama.rwandan_name}`}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <button type="button" className="delete-link" onClick={() => deleteFamily(i)}>
             Delete Family
           </button>
         </div>
       ))}
 
-      <button type="button" onClick={addFamily}>Add Another Family</button>
+      <button type="button" onClick={addFamily}>
+        Add Another Family
+      </button>
 
-      <div style={{ marginTop: 20 }}>
-        <button type="button" onClick={handleSubmit}>Submit Grade & Families</button>
-        <button
-          type="button"
-          onClick={cancelForm}
-          style={{ marginLeft: 12, backgroundColor: 'lightgray' }}
-        >
-          Cancel
+      <div className="form-actions">
+        <button type="submit" disabled={submitting}>
+          {item ? 'Update Grade' : 'Submit Grade & Families'}
         </button>
+        {item && (
+          <button
+            type="button"
+            onClick={() => {
+              resetForm();
+              if (onCancel) onCancel();
+            }}
+          >
+            Cancel
+          </button>
+        )}
       </div>
-    </div>
+    </form>
   );
 };
 
