@@ -10,6 +10,11 @@ export const SidebarDataCrc = [
     cName: 'nav-text'
   },
   {
+    title: 'Current Student Directory',
+    path: '/student_directory',
+    cName: 'nav-text'
+  },
+  {
     title: 'Events',
     path: '/events',
     cName: 'nav-text'
@@ -25,9 +30,15 @@ export const SidebarDataCrc = [
     cName: 'nav-text'
   },
 
-    {
+  {
     title: 'Add Data',
-    path: '/add_data', // This route can be updated later
+    path: '/add_data', 
+    cName: 'nav-text'
+  },
+
+  {
+    title: 'FAQs',
+    path: '/frequent_inquiries', 
     cName: 'nav-text'
   }
 ];

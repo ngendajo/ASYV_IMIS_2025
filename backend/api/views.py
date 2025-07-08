@@ -1,3 +1,4 @@
+from django.forms import BooleanField
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
@@ -42,6 +43,8 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 import traceback
 from django.core.paginator import Paginator
 from rest_framework.generics import RetrieveAPIView
+from rest_framework.generics import RetrieveUpdateAPIView
+
 
 logger = logging.getLogger(__name__)
 from .models import *
@@ -70,16 +73,19 @@ class UserViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_201_CREATED
             )
         except ValidationError as e:
+            print(serializer.errors) 
             return Response(
                 {"status": "error", "message": str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
         except IntegrityError as e:
+            print(serializer.errors) 
             return Response(
                 {"status": "error", "message": "A user with these details already exists"},
                 status=status.HTTP_400_BAD_REQUEST
             )
         except Exception as e:
+            print(serializer.errors) 
             return Response(
                 {"status": "error", "message": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -317,6 +323,7 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['is_librarian'] = self.user.is_librarian
         token['is_student'] = self.user.is_student
         token['is_teacher'] = self.user.is_teacher
+        token['is_crc'] = self.user.is_crc
         token['username'] = self.user.username
         token['reg_number'] = self.user.reg_number
         token['middle_name'] = self.user.middle_name
@@ -444,7 +451,12 @@ class ResetPassword(generics.GenericAPIView):
     #Grades and Families
     
 class GradeViewSet(viewsets.ModelViewSet):
-    queryset = Grade.objects.all()
+    queryset = Grade.objects.all().annotate(
+        non_graduated_kids_count=Count(
+            'families__kids',
+            filter=~Q(families__kids__graduation_status='graduated')
+        )
+    ).order_by('-graduation_year_to_asyv') 
     serializer_class = GradeSerializer
 
     def create(self, request, *args, **kwargs):
@@ -483,6 +495,16 @@ class GradeViewSet(viewsets.ModelViewSet):
                 {"error": "Failed to delete grade."},
                 status=status.HTTP_400_BAD_REQUEST
             )
+        
+    @action(detail=True, methods=['get'])
+    def families(self, request, pk=None):
+        try:
+            grade = self.get_object()
+            families = grade.families.all()  # uses related_name
+            serializer = FamilySerializer(families, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Grade.DoesNotExist:
+            return Response({"error": "Grade not found"}, status=status.HTTP_404_NOT_FOUND)
 
 class FamilyViewSet(viewsets.ModelViewSet):
     queryset = Family.objects.all()
@@ -2733,64 +2755,87 @@ class FurtherEducationViewSet(viewsets.ModelViewSet):
             )
 
 #CRUD for College 
-class CollegeViewSet(viewsets.ModelViewSet): 
+class CollegeViewSet(viewsets.ModelViewSet):
     queryset = College.objects.all()
     serializer_class = CollegeSerializer
 
     def create(self, request, *args, **kwargs):
         try:
             with transaction.atomic():
-                serializer = self.get_serializer(data=request.data)
-                serializer.is_valid(raise_exception=True)
-                self.perform_create(serializer)
-                return Response({'success': True, 'message': 'College created', 'data': serializer.data}, status=status.HTTP_201_CREATED)
+                return super().create(request, *args, **kwargs)
+        except ValidationError as e:
+            logger.warning(f"Validation error on college create: {e}")
+            return Response(
+                {'error': 'Validation error', 'details': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         except Exception as e:
             logger.error(f"Error creating college: {e}")
-            return Response({'success': False, 'message': 'Error creating college'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                {'error': 'Failed to create college', 'details': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     def list(self, request, *args, **kwargs):
         try:
-            queryset = self.filter_queryset(self.get_queryset())
-            page = self.paginate_queryset(queryset)
-            if page is not None:
-                serializer = self.get_serializer(page, many=True)
-                return self.get_paginated_response({'success': True, 'data': serializer.data})
-            serializer = self.get_serializer(queryset, many=True)
-            return Response({'success': True, 'data': serializer.data})
+            return super().list(request, *args, **kwargs)
         except Exception as e:
             logger.error(f"Error listing colleges: {e}")
-            return Response({'success': False, 'message': 'Error retrieving college list'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                {'error': 'Failed to retrieve college list', 'details': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     def retrieve(self, request, *args, **kwargs):
         try:
-            instance = self.get_object()
-            serializer = self.get_serializer(instance)
-            return Response({'success': True, 'data': serializer.data})
+            return super().retrieve(request, *args, **kwargs)
+        except ObjectDoesNotExist:
+            return Response(
+                {'error': 'College not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
         except Exception as e:
             logger.error(f"Error retrieving college: {e}")
-            return Response({'success': False, 'message': 'College not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {'error': 'Failed to retrieve college', 'details': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     def update(self, request, *args, **kwargs):
         try:
             with transaction.atomic():
-                partial = kwargs.pop('partial', False)
-                instance = self.get_object()
-                serializer = self.get_serializer(instance, data=request.data, partial=partial)
-                serializer.is_valid(raise_exception=True)
-                self.perform_update(serializer)
-                return Response({'success': True, 'message': 'College updated', 'data': serializer.data})
+                return super().update(request, *args, **kwargs)
+        except ValidationError as e:
+            return Response(
+                {'error': 'Validation error', 'details': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except ObjectDoesNotExist:
+            return Response(
+                {'error': 'College not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
         except Exception as e:
             logger.error(f"Error updating college: {e}")
-            return Response({'success': False, 'message': 'Error updating college'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                {'error': 'Failed to update college', 'details': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     def destroy(self, request, *args, **kwargs):
         try:
-            instance = self.get_object()
-            self.perform_destroy(instance)
-            return Response({'success': True, 'message': 'College deleted'}, status=status.HTTP_204_NO_CONTENT)
+            return super().destroy(request, *args, **kwargs)
+        except ObjectDoesNotExist:
+            return Response(
+                {'error': 'College not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
         except Exception as e:
             logger.error(f"Error deleting college: {e}")
-            return Response({'success': False, 'message': 'Error deleting college'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'error': 'Failed to delete college', 'details': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 #Alumni outcomes view 
 @api_view(['GET'])
@@ -2884,6 +2929,7 @@ def get_student_information(request, user_id):
                     'middle_name': user.middle_name,
                     'gender': 'Female' if user.gender == 'F' else 'Male' if user.gender == 'M' else 'Not Specified',
                     'date_of_birth': user.dob,
+                    'email': user.email,
                 }
                 
                 # Place of Birth
@@ -3175,8 +3221,160 @@ class AlumniAcademicView(APIView):
         
         return Response({'message': 'FurtherEducation record created/updated', 'updated_ids': updated_ids}, status=200)
 
+#current student directory api 
+class CurrentStudentDirectoryView(APIView):
+    def get_all_filter_options(self):
+        genders_available = User.objects.values_list('gender', flat=True).distinct()
+   
+        graduation_years_available = []
+        for grade in Grade.objects.all().order_by('-graduation_year_to_asyv'):
+            non_graduated_count = Kid.objects.filter(
+                family__grade=grade,
+                graduation_status='studying'
+            ).count()
+
+            if non_graduated_count != 0:
+                graduation_years_available.append({
+                    'graduation_year_to_asyv': grade.graduation_year_to_asyv,
+                    'grade_name': grade.grade_name
+                })
+   
+        non_graduated_grades = Grade.objects.annotate(
+            non_graduated_count=Count(
+                'families__kids',
+                filter=Q(families__kids__graduation_status='studying')
+            )
+        ).filter(non_graduated_count__gt=0)
+
+        families_available = Family.objects.filter(
+            grade__in=non_graduated_grades
+        ).values(
+            'id', 'family_name'
+        ).distinct().order_by('family_name')
+   
+        combinations_available = KidAcademics.objects.filter(
+            level='S6'
+        ).values(
+            'combination_id', 'combination__abbreviation', 'combination__combination_name'
+        ).distinct()
+
+        return {
+            'gender': list(genders_available),
+            'graduation_year': list(graduation_years_available),
+            'family': list(families_available),
+            'combination': list(combinations_available),
+        } 
+    def get(self, request): 
+        page = int(request.GET.get('page', 1))
+        page_size = int(request.GET.get('page_size', 10))
+        gender = request.GET.get('gender')
+        family = request.GET.get('family')
+        combination = request.GET.get('combination')
+        graduation_year = request.GET.get('year')
+
+        student = Kid.objects.filter(graduation_status='studying'
+                                    ).select_related('user', 'family__grade')
+                                                     
+          # 🎯 Handle multiple genders (e.g. gender=M,F)
+        if gender:
+            gender_list = gender.split(',')
+            student = student.filter(user__gender__in=gender_list)
+
+        # 🎯 Handle multiple family IDs
+        if family:
+            family_ids = family.split(',')
+            student = student.filter(family__id__in=family_ids)
+
+        # 🎯 Handle multiple combinations
+        if combination:
+            combination_ids = combination.split(',')
+            student = student.filter(
+                academics__combination__id__in=combination_ids
+            )
+        # 🎯 Graduation year (usually single)
+        if graduation_year:
+            student = student.filter(family__grade__graduation_year_to_asyv=graduation_year)
+        
+        student = student.distinct()
+        print("Filtered current student count:", student.count())
+           # Return filter options
+        filters = self.get_all_filter_options()
+       
+      
+        try:
+            student = student.distinct().order_by('id')
+            paginator = Paginator(student, page_size)
+            page_obj = paginator.get_page(page)
+            student_page = page_obj.object_list
+
+            serialized_student = AlumniListSerializer(student_page, many=True).data
+        
+        except Exception as e:
+            print("Error during pagination or serialization:", e)
+            return Response({"success": False, "error": str(e)}, status=500)
+        
+        return Response({
+        "success": True,
+        "filters": filters,
+        "data": serialized_student,
+        "pagination": {
+            "current_page": page,
+            "page_size": page_size,
+            "total": paginator.count,
+            "has_next": page_obj.has_next(),
+            "has_previous": page_obj.has_previous()
+        }
+    })
+
 #alumni directory api
 class AlumniDirectoryView(APIView):
+    def get_all_filter_options(self):
+        genders_available = User.objects.values_list('gender', flat=True).distinct()
+        graduation_years_available = []
+        for grade in Grade.objects.all().order_by('-graduation_year_to_asyv'):
+            non_graduated_count = Kid.objects.filter(
+                family__grade=grade,
+                graduation_status='studying'
+            ).count()
+
+            if non_graduated_count == 0:
+                graduation_years_available.append({
+                    'graduation_year_to_asyv': grade.graduation_year_to_asyv,
+                    'grade_name': grade.grade_name
+                })
+        
+        graduated_grades = Grade.objects.annotate(
+            non_graduated_count=Count(
+                'families__kids',
+                filter=Q(families__kids__graduation_status='studying')
+            )
+        ).filter(non_graduated_count=0)
+
+        families_available = Family.objects.filter(
+            grade__in=graduated_grades
+        ).values(
+            'id', 'family_name'
+        ).distinct().order_by('family_name')
+
+        combinations_available = KidAcademics.objects.filter(
+            level='S6'
+        ).values(
+            'combination_id', 'combination__abbreviation', 'combination__combination_name'
+        ).distinct()
+        industries_available = Employment.objects.values_list('industry', flat=True).distinct().order_by('industry')
+        colleges_available = FurtherEducation.objects.values(
+            'college__college_name'
+        ).distinct().order_by('college__college_name')
+
+        return {
+            'gender': list(genders_available),
+            'graduation_year': list(graduation_years_available),
+            'family': list(families_available),
+            'combination': list(combinations_available),
+            'industry': list(industries_available),
+            'college': list(colleges_available),
+        }
+    
     def get(self, request):
         page = int(request.GET.get('page', 1))
         page_size = int(request.GET.get('page_size', 10))
@@ -3193,34 +3391,49 @@ class AlumniDirectoryView(APIView):
                                     ).select_related('user', 'family__grade'
                                                      ).prefetch_related('employment', 'furthereducation')
 
+          # 🎯 Handle multiple genders (e.g. gender=M,F)
         if gender:
-            alumni = alumni.filter(user__gender=gender) #M or F
+            gender_list = gender.split(',')
+            alumni = alumni.filter(user__gender__in=gender_list)
+
+        # 🎯 Handle multiple family IDs
         if family:
-            alumni = alumni.filter(family__id=family) #by family Id
+            family_ids = family.split(',')
+            alumni = alumni.filter(family__id__in=family_ids)
+
+        # 🎯 Handle multiple combinations
         if combination:
+            combination_ids = combination.split(',')
             alumni = alumni.filter(
-                academics__combination__id=combination,
+                academics__combination__id__in=combination_ids,
                 academics__level='S6'
-            ) #by combination id
+            )
+
+        # 🎯 Handle multiple industries
         if industry:
-            alumni = alumni.filter(employment__industry=industry) #by string industry
-        if graduation_year: #by year 
-            print("graduation_year param:", graduation_year)
+            industry_list = industry.split(',')
+            alumni = alumni.filter(employment__industry__in=industry_list)
+
+        # 🎯 Graduation year (usually single)
+        if graduation_year:
             alumni = alumni.filter(family__grade__graduation_year_to_asyv=graduation_year)
+
+        # 🎯 College filter with education status
+        if college:
+            alumni = alumni.filter(
+                furthereducation__college__college_name__in=college.split(','),
+                furthereducation__status__in=['G', 'O']
+            )
+
+        # 🎯 Search by name
         if search_term:
             alumni = alumni.filter(
                 Q(user__first_name__icontains=search_term) |
                 Q(user__rwandan_name__icontains=search_term)
             ).distinct()
-        if college: 
-            alumni = alumni.filter(furthereducation__college__college_name=college,
-                                   furthereducation__status__in=['G', 'O'])
 
         alumni = alumni.distinct()
         print("Filtered alumni count:", alumni.count())
-
-        #employment_count = alumni.filter(employ__isnull=False).distinct().count()
-        #education_count = alumni.filter(alumn__isnull=False).distinct().count()
 
         employed_ids = set(
             Employment.objects.filter(alumn__in=alumni).values_list('alumn_id', flat=True)
@@ -3247,16 +3460,7 @@ class AlumniDirectoryView(APIView):
         }
 
           # Return filter options
-        genders_available = alumni.values_list('user__gender', flat=True).distinct()
-        graduation_years_available = alumni.values('family__grade__graduation_year_to_asyv',
-                                                    'family__grade__grade_name').distinct().order_by('-family__grade__graduation_year_to_asyv')
-        families_available = alumni.values('family__id', 'family__family_name').distinct().order_by('family__family_name')
-        combinations_available = KidAcademics.objects.filter(
-            kid__in=alumni, level='S6'
-        ).values('combination_id', 'combination__abbreviation', 'combination__combination_name').distinct()
-        industries_available = Employment.objects.filter(alumn__in=alumni).values_list('industry', flat=True).distinct().order_by('industry')
-        colleges_available = FurtherEducation.objects.filter(alumn__in=alumni).values('college__college_name').distinct().order_by('college__college_name')
-        
+        filters = self.get_all_filter_options()
       
         paginator = Paginator(alumni, page_size)
         page_obj = paginator.get_page(page)
@@ -3267,14 +3471,7 @@ class AlumniDirectoryView(APIView):
 
         return Response({
         "success": True,
-        "filters": {
-            "gender": list(genders_available),
-            "graduation_year": list(graduation_years_available),
-            "family": list(families_available),
-            "combination": list(combinations_available),
-            "industry": list(industries_available),
-            "college": list(colleges_available),
-        },
+        "filters": filters,
         "data": serialized_alumni,
         "outcome_summary": outcome_data,
         "pagination": {
@@ -3315,15 +3512,20 @@ class EmploymentBulkCreateUpdateView(APIView):
         
 from django.db.models import Count
 
+class AlumniYearsView(APIView):
+    def get(self, request):
+        years = Grade.objects.order_by('graduation_year_to_asyv').values_list('graduation_year_to_asyv', flat=True).distinct()
+        return Response({'years': list(years)})
+
 class AlumniOutcomeTrends(APIView):
     def get(self, request):
-        year = request.query_params.get('year')
+        year = request.query_params.getlist('year')
         gender = request.query_params.get('gender')
 
         alumni_qs = Kid.objects.filter(graduation_status='graduated').select_related('family__grade')
 
         if year:
-            alumni_qs = alumni_qs.filter(family__grade__graduation_year_to_asyv=year)
+            alumni_qs = alumni_qs.filter(family__grade__graduation_year_to_asyv__in=year)
         if gender:
             alumni_qs = alumni_qs.filter(user__gender=gender)
 
@@ -3333,20 +3535,51 @@ class AlumniOutcomeTrends(APIView):
             alumn_id__in=filtered_alumni_ids
         ).select_related('alumn__family__grade')
 
-        further_edu_ids = set(
-            FurtherEducation.objects.filter(
-                status__in=['O', 'G'],
-                alumn_id__in=filtered_alumni_ids
-            ).values_list('alumn_id', flat=True)
-        )
+        further_edu_qs = FurtherEducation.objects.filter(
+            status__in=['O', 'G'],
+            alumn_id__in=filtered_alumni_ids
+        ).select_related('alumn')
+
+        further_edu_ids = set(further_edu_qs.values_list('alumn_id', flat=True))
 
         employed_ids = set(employments_qs.values_list('alumn_id', flat=True))
 
+         # Degree level distribution per year
+        degree_level_distribution_qs = (
+            further_edu_qs
+            .values('alumn__family__grade__graduation_year_to_asyv', 'level')
+            .annotate(count=Count('level'))
+        )
+
+        # Area of study distribution per year
+        areas_of_study_distribution_qs = (
+            further_edu_qs
+            .values('alumn__family__grade__graduation_year_to_asyv', 'degree')
+            .annotate(count=Count('degree'))
+        )
+
+        # Prepare mappings for easy lookup per year
+        degree_dist_by_year = {}
+        for item in degree_level_distribution_qs:
+            yr = item['alumn__family__grade__graduation_year_to_asyv']
+            degree = item['level'] or 'Unknown'
+            degree_dist_by_year.setdefault(yr, {})
+            degree_dist_by_year[yr][degree] = degree_dist_by_year[yr].get(degree, 0) + item['count']
+
+        study_dist_by_year = {}
+        for item in areas_of_study_distribution_qs:
+            yr = item['alumn__family__grade__graduation_year_to_asyv']
+            study = item['degree'] or 'Unknown'
+            study_dist_by_year.setdefault(yr, {})
+            study_dist_by_year[yr][study] = study_dist_by_year[yr].get(study, 0) + item['count']
+
+        # College Attendance
         college_attendance_qs = (
             FurtherEducation.objects
             .filter(status__in=['O', 'G'], alumn_id__in=filtered_alumni_ids)
             .values(
                 'college__college_name',
+                'college__country',
                 'alumn__family__grade__graduation_year_to_asyv'  # graduation year
             )
             .annotate(attendance_count=Count('college'))
@@ -3355,19 +3588,48 @@ class AlumniOutcomeTrends(APIView):
 
         # Map colleges per year
         colleges_by_year = {}
+        
         for item in college_attendance_qs:
             yr = item['alumn__family__grade__graduation_year_to_asyv']
-            colleges_by_year.setdefault(yr, [])
-            colleges_by_year[yr].append({
+            country = item['college__country'] or 'Unknown'
+
+            if yr not in colleges_by_year:
+                colleges_by_year[yr] = {}
+
+            if country not in colleges_by_year[yr]:
+                colleges_by_year[yr][country] = []
+
+            colleges_by_year[yr][country].append({
                 'college': item['college__college_name'],
                 'attendance_count': item['attendance_count'],
             })
-
+            
         status_keys = [key for key, _ in Employment.EMPLOYMENT_CHOICES]
         status_map = dict(Employment.EMPLOYMENT_CHOICES)
         industry_map = dict(Employment.INDUSTRY_CHOICES)
 
         grad_years = alumni_qs.values_list('family__grade__graduation_year_to_asyv', flat=True).distinct()
+
+        top_employers_per_year_qs = (
+            employments_qs
+            .values(
+                'alumn__family__grade__graduation_year_to_asyv',
+                'company'
+            )
+            .annotate(alumni_count=Count('alumn_id', distinct=True))
+            .order_by('alumn__family__grade__graduation_year_to_asyv', '-alumni_count')
+        )
+
+        # Group top employers by year
+        top_employers_by_year = {}
+        for item in top_employers_per_year_qs:
+            grad_year = item['alumn__family__grade__graduation_year_to_asyv']
+            if grad_year not in top_employers_by_year:
+                top_employers_by_year[grad_year] = []
+            top_employers_by_year[grad_year].append({
+                'company': item['company'],
+                'alumni_count': item['alumni_count']
+            })
 
         results = {}
         for yr in grad_years:
@@ -3379,7 +3641,7 @@ class AlumniOutcomeTrends(APIView):
                 'neither': 0,
                 'employment_status_counts': {key: 0 for key in status_keys},
                 'industry_counts': {key: 0 for key in industry_map.keys()},
-                'most_attended_colleges': colleges_by_year.get(yr, [])
+                'most_attended_colleges': colleges_by_year.get(yr, {})
             }
 
         for emp in employments_qs:
@@ -3404,11 +3666,28 @@ class AlumniOutcomeTrends(APIView):
                 results[grad_year]['neither'] += 1
 
         data = []
-        for yr in sorted(results):
+        selected_years = list(map(int, year)) if year else sorted(results.keys())
+
+
+        for yr in selected_years:
             year_data = results[yr]
             total = year_data['total']
             if total == 0:
                 continue
+
+             # Degree level distribution for this year, converted to percents
+            degree_dist_raw = degree_dist_by_year.get(yr, {})
+            degree_dist = {}
+            for degree_level, count in degree_dist_raw.items():
+                pct = round(count / total * 100, 2) if total > 0 else 0
+                degree_dist[degree_level] = {'count': count, 'percent': pct}
+
+            # Areas of study distribution for this year, converted to percents
+            study_dist_raw = study_dist_by_year.get(yr, {})
+            study_dist = {}
+            for study_area, count in study_dist_raw.items():
+                pct = round(count / total * 100, 2) if total > 0 else 0
+                study_dist[study_area] = {'count': count, 'percent': pct}
 
             employment_status_readable = {}
             for key, count in year_data['employment_status_counts'].items():
@@ -3435,12 +3714,35 @@ class AlumniOutcomeTrends(APIView):
                 'neither_percent': round(year_data['neither'] / total * 100, 2),
                 'employment_status_distribution': employment_status_readable,
                 'industry_distribution': industry_readable,
-                'most_attended_colleges': year_data['most_attended_colleges'], 
+                'most_attended_colleges': year_data['most_attended_colleges'],
+                'top_employers': top_employers_by_year.get(yr, []),
+                'degree_level_distribution': degree_dist,
+                'areas_of_study_distribution': study_dist,
             })
+
+            # === OVERALL STATS (filtered by selected year if provided) ===
+            filtered_results = {yr: results[yr] for yr in selected_years}
+
+            overall_total = sum(year['total'] for year in filtered_results.values())
+            overall_employment = sum(
+                year['employment_only'] + year['both'] for year in filtered_results.values()
+            )
+            overall_further_edu = sum(
+                year['further_edu_only'] + year['both'] for year in filtered_results.values()
+            )
+
+            overall_summary = {
+                'total_alumni': overall_total,
+                'employment_total': overall_employment,
+                'employment_percent': round(overall_employment / overall_total * 100, 2) if overall_total else 0,
+                'further_education_total': overall_further_edu,
+                'further_education_percent': round(overall_further_edu / overall_total * 100, 2) if overall_total else 0,
+            }
 
         # Return per-year data + overall most attended colleges
         return Response({
             'yearly_outcomes': data,
+            'overall_summary': overall_summary,
         })
 
 
@@ -5257,3 +5559,142 @@ class MediaFileViewSet(viewsets.ModelViewSet):
         except Exception as e:
             raise APIExceptionWithDetail(f"Error uploading media file: {str(e)}", code='media_upload_error', status_code=status.HTTP_400_BAD_REQUEST)
 
+# Automatically update graduation status
+@api_view(['POST'])
+def graduate_kids_by_grade(request, grade_id):
+    try:
+        grade = Grade.objects.get(id=grade_id)
+        kids = Kid.objects.filter(family__grade=grade)
+        updated = kids.update(graduation_status='graduated')
+        return Response({'updated_count': updated}, status=status.HTTP_200_OK)
+    except Grade.DoesNotExist:
+        return Response({'error': 'Grade not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class EventViewSet(viewsets.ModelViewSet):
+    queryset = Event.objects.all()
+    serializer_class = EventSerializer
+
+    # def get_permissions(self):
+    #     if self.action in ['list', 'retrieve']:
+    #         self.permission_classes = [AllowAny]
+    #     else:
+    #         self.permission_classes = [IsAuthenticated]
+    #     return super().get_permissions()
+
+    def list(self, request, *args, **kwargs):
+        try:
+            queryset = self.get_queryset()
+            serializer = self.get_serializer(queryset, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def retrieve(self, request, *args, **kwargs):
+        try:
+            instance = self.get_object()
+            serializer = self.get_serializer(instance)
+            return Response(serializer.data)
+        except Event.DoesNotExist:
+            return Response({'error': 'Event not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def create(self, request, *args, **kwargs):
+        try:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def update(self, request, *args, **kwargs):
+        try:
+            partial = kwargs.pop('partial', False)
+            instance = self.get_object()
+            serializer = self.get_serializer(instance, data=request.data, partial=partial)
+            serializer.is_valid(raise_exception=True)
+            self.perform_update(serializer)
+            return Response(serializer.data)
+        except Event.DoesNotExist:
+            return Response({'error': 'Event not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, *args, **kwargs):
+        try:
+            instance = self.get_object()
+            self.perform_destroy(instance)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Event.DoesNotExist:
+            return Response({'error': 'Event not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+# Opportunity model
+@api_view(['GET'])
+#@permission_classes([IsAuthenticated])
+def read_opportunity(request):
+    try:
+        opportunities = Opportunity.objects.all()
+        serializer = OpportunitySerializer(opportunities, many=True)
+        return Response(serializer.data)
+    except Exception as e:
+        return Response(e)
+
+
+@api_view(['POST'])
+#@permission_classes([IsAuthenticated])
+def create_opportunity(request):
+    try:
+        print("Request data:", request.data)
+        print("User:", request.user)
+
+        serializer = OpportunitySerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
+    except Exception as e:
+        traceback.print_exc()  # This will show full traceback in console
+        return Response({"error": str(e)}, status=500)
+
+
+class DeleteOpportunityView(APIView):
+    @permission_classes([IsAuthenticated])
+    def delete(self, request, pk):
+        try:
+            opportunity = Opportunity.objects.get(pk=pk)
+        except Opportunity.DoesNotExist:
+            return Response({'msg': 'Opportunity not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        opportunity.delete()
+        return Response({'msg': 'Opportunity deleted successfully'}, status=status.HTTP_200_OK)
+
+
+# class UpdateOpportunityView(RetrieveUpdateAPIView):
+#     queryset = Opportunity.objects.all()
+#     serializer_class = UpdateOpportunitySerializer
+#     lookup_field = 'pk'
+
+#     def update(self, request, *args, **kwargs):
+#         instance = self.get_object()
+
+#         # check is user is alumni
+#         if request.user.is_authenticated and request.user.is_alumni:
+#             raise PermissionDenied("Opportunity has been approved so cannot modify.")
+
+#         # update
+#         partial = kwargs.pop('partial', False)
+#         serializer = self.get_serializer(instance, data=request.data, partial=partial)
+#         serializer.is_valid(raise_exception=True)
+#         self.perform_update(serializer)
+
+#         return Response(serializer.data)
+
+
+class ApproveOpportunityView(RetrieveUpdateAPIView):
+    queryset = Opportunity.objects.all()
+    serializer_class = ApproveOpportunitySerializer
+    lookup_field = 'pk'

@@ -1,9 +1,15 @@
+from datetime import datetime
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 from django.core.validators import RegexValidator
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ValidationError
+
 import uuid # Import the uuid module
+
+from django.utils import timezone
+
+
 
 #General User model
 class CustomUserManager(BaseUserManager):
@@ -465,6 +471,7 @@ class Issue_Book(models.Model):
     def __str__(self):
         return str(self.term_name)
 
+
 #NewsAnnouncement
 class NewsAnnouncement(models.Model):
     NEWS = 'NW'
@@ -527,3 +534,32 @@ class MediaFile(models.Model):
         # It was causing a syntax error in your provided serializer code.
         # It's good to keep it here for model representation.
         return f"{self.news_announcement.title} - {self.file.name}"
+
+    
+
+    # Event model
+class Event(models.Model):
+    title = models.CharField(max_length=5000)
+    description = models.CharField(max_length=20000)
+    e_datetime = models.DateTimeField(default=timezone.now)
+    location = models.CharField(max_length=5000 , default='NMS')
+    user = models.ForeignKey(User, on_delete=models.PROTECT, related_name="events")
+    image_url = models.ImageField(upload_to='events', default='events/default.jpg')
+
+    def __str__(self):
+        return str(self.title)
+    
+
+    # Opportunity model
+class Opportunity(models.Model):
+    user = models.ForeignKey(User, on_delete=models.PROTECT, related_name='opportunities')
+    title = models.CharField(max_length=5000)
+    op_type = models.CharField(max_length=100, default="Full Time")
+    description = models.CharField(max_length=1000)
+    deadline = models.CharField(max_length=1000, default="2024-08-23")
+    link = models.CharField(max_length=200, default="asyv.ac.rw")
+    approved = models.BooleanField(default=False)
+    post_time = models.CharField(default=timezone.now)
+    def __str__(self):
+        return str(self.title)
+

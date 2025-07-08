@@ -10,8 +10,8 @@ import './EventsCalendar.css';
 import axios from "axios";
 import useAuth from "../../hooks/useAuth";
 
-// import baseUrl from "../../api/baseUrl";
-const  baseUrl='https://backend.asyv.ac.rw/api';
+import baseUrl from "../../api/baseUrl";
+//const  baseUrl='https://backend.asyv.ac.rw/api';
 
 const EventsCalendar = () => {
   const [event, setEvent] = useState([]);

@@ -74,7 +74,8 @@ class FamilySerializer(serializers.ModelSerializer):
         fields = ['id', 'family_name', 'family_number', 'mother', 'grade_info']
 
 class GradeSerializer(serializers.ModelSerializer):
-    families = FamilySerializer(many=True, write_only=True)
+    families = FamilySerializer(many=True)
+    non_graduated_kids_count = serializers.ReadOnlyField()
 
     class Meta:
         model = Grade
@@ -83,7 +84,8 @@ class GradeSerializer(serializers.ModelSerializer):
             'grade_name',
             'admission_year_to_asyv',
             'graduation_year_to_asyv',
-            'families'
+            'families', 
+            'non_graduated_kids_count',
         ]
 
     def create(self, validated_data):
@@ -121,8 +123,25 @@ class KidSerializer(serializers.ModelSerializer):
         model = Kid
         fields = '__all__'
 
+class CollegeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = College
+        fields = '__all__'
 
-class AlumniListSerializer(serializers.Serializer):
+
+class FurtherEducationSerializer(serializers.ModelSerializer): 
+    college = CollegeSerializer(read_only=True)
+    location = serializers.SerializerMethodField(read_only=True)
+
+
+    class Meta:
+        model = FurtherEducation
+        fields = ['id', 'alumn', 'college', 'level', 'degree', 'status', 'location', 'scholarship', 'scholarship_details']
+
+    def get_location(self, obj):
+        return f"{obj.college.city}, {obj.college.country}"
+
+class AlumniListSerializer(serializers.ModelSerializer):
     family = FamilySerializer()
     combination = serializers.SerializerMethodField()
     first_name = serializers.SerializerMethodField()
@@ -130,15 +149,16 @@ class AlumniListSerializer(serializers.Serializer):
     gender = serializers.SerializerMethodField()
     email = serializers.SerializerMethodField()
     phone = serializers.SerializerMethodField()
-    employment = EmploymentSerializer(many=True, read_only=True)
+    employment = EmploymentSerializer(many=True, read_only=True, required=False)
     image_url = serializers.ImageField(source='user.image_url')
     user_id = serializers.SerializerMethodField()
+    further_education = FurtherEducationSerializer(source='furthereducation', many=True, read_only=True, required=False)
 
     class Meta:
         model = Kid
-        fields = ['id', 'first_name', 'rwandan_name', 
+        fields = ['id', 'user_id', 'first_name', 'rwandan_name', 
                   'gender', 'email', 'phone', 'image_url', 'family', 
-                  'employment', 'combination']
+                  'employment', 'further_education', 'combination']
     def get_gender(self, obj): 
         return obj.user.gender if obj.user else None
     
@@ -256,24 +276,6 @@ class AlumniDirectorySerializer(serializers.Serializer):
     alumni = KidSerializer(many=True)
     employment_count = serializers.IntegerField()
     education_count = serializers.IntegerField()
-
-class CollegeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = College
-        fields = '__all__'
-
-
-class FurtherEducationSerializer(serializers.ModelSerializer): 
-    college = serializers.PrimaryKeyRelatedField(queryset=College.objects.all())
-    location = serializers.SerializerMethodField(read_only=True)
-
-
-    class Meta:
-        model = FurtherEducation
-        fields = ['id', 'alumn', 'college', 'level', 'degree', 'status', 'location', 'scholarship', 'scholarship_details']
-
-    def get_location(self, obj):
-        return f"{obj.college.city}, {obj.college.country}"
     
 class BasicInformationSerializer(serializers.Serializer):
     user_id = serializers.IntegerField(required=False)
@@ -548,6 +550,7 @@ class AllBorrowersDisplaySerializer(serializers.Serializer):
     is_student=serializers.BooleanField()
     is_alumni=serializers.BooleanField()
     is_staff=serializers.BooleanField()
+
     
 #NewsAnnouncement
 class MediaFileSerializer(serializers.ModelSerializer):
@@ -603,3 +606,30 @@ class NewsAnnouncementDetailSerializer(serializers.ModelSerializer):
             MediaFile.objects.create(news_announcement=instance, file=media_file)
         
         return instance
+
+
+
+#Event serializers
+class EventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Event
+        fields = '__all__'
+
+#Opportunity serializers
+class OpportunitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Opportunity
+        fields = '__all__'
+        read_only_fields = ['user']
+
+class UpdateOpportunitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Opportunity
+        fields = ['title','op_type', 'description','deadline','link']
+ 
+
+class ApproveOpportunitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Opportunity
+        fields = ['approved']
+
