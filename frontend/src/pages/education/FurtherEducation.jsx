@@ -5,8 +5,8 @@ import SupportRequestTable from '../../components/opportunities/support-request-
 import './FurtherEducation.css';
 import axios from 'axios';
 import useAuth from "../../hooks/useAuth";
-// import baseUrl from '../../api/baseUrl';
-const  baseUrl='https://backend.asyv.ac.rw/api';
+import baseUrl from '../../api/baseUrl';
+//const  baseUrl='https://backend.asyv.ac.rw/api';
 
 const FurtherEducation = () => {
   const { auth } = useAuth();

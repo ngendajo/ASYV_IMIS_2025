@@ -122,6 +122,6 @@ urlpatterns = [
     path('opportunity/', views.read_opportunity, name='read-opportunity'),
     path('opportunity/<int:pk>/delete/', views.DeleteOpportunityView.as_view(), name='delete-opportunity'),
     # path('opportunity/<int:pk>/update/', views.UpdateOpportunityView.as_view(), name='update-opportunity'),
-    # path('opportunity/<int:pk>/approve', views.ApproveOpportunityView.as_view(), name='approve-opportunity'),
+    path('opportunity/<int:pk>/approve', views.ApproveOpportunityView.as_view(), name='approve-opportunity'),
 
 ]

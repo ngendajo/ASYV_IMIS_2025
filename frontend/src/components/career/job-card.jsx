@@ -34,7 +34,7 @@ const JobCard = ({ alumni, title, type, description, date, link, approved, onApp
       user: auth.user.id,
       description: editedDescription,
       post_time: currentDate,
-      diedline: type==="Professional"?currentDate:editedDate,
+      deadline: type==="Professional"?currentDate:editedDate,
       link: editedLink
     };
     if (isNew) {

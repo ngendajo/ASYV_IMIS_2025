@@ -486,13 +486,10 @@ class Opportunity(models.Model):
     user = models.ForeignKey(User, on_delete=models.PROTECT, related_name='opportunities')
     title = models.CharField(max_length=5000)
     op_type = models.CharField(max_length=100, default="Full Time")
-    description = models.CharField(max_length=200)
+    description = models.CharField(max_length=1000)
     deadline = models.CharField(max_length=1000, default="2024-08-23")
-    link = models.CharField(max_length=100, default="asyv.ac.rw")
+    link = models.CharField(max_length=200, default="asyv.ac.rw")
     approved = models.BooleanField(default=False)
-    post_time = models.CharField(
-        max_length=100, 
-        default=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    )
+    post_time = models.CharField(default=timezone.now)
     def __str__(self):
         return str(self.title)

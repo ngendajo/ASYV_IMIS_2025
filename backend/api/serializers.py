@@ -74,7 +74,7 @@ class FamilySerializer(serializers.ModelSerializer):
         fields = ['id', 'family_name', 'family_number', 'mother', 'grade_info']
 
 class GradeSerializer(serializers.ModelSerializer):
-    families = FamilySerializer(many=True, write_only=True)
+    families = FamilySerializer(many=True)
     non_graduated_kids_count = serializers.ReadOnlyField()
 
     class Meta:
@@ -563,30 +563,7 @@ class OpportunitySerializer(serializers.ModelSerializer):
     class Meta:
         model = Opportunity
         fields = '__all__'
-
-    def create(self, validated_data):
-        # obtain data from validated_data
-        user = validated_data.get('user')
-        title = validated_data.get('title')
-        op_type = validated_data.get('op_type')
-        description = validated_data.get('description')
-        deadline = validated_data.get('deadline')
-        link = validated_data.get('link')
-        post_time = validated_data.get('post_time')
-
-        # create opportunity object
-        opportunity = Opportunity.objects.create(
-            user=user,
-            title=title,
-            op_type=op_type,
-            description=description,
-            deadline=deadline,
-            link=link,
-            post_time=post_time
-        )
-
-        return opportunity
-
+        read_only_fields = ['user']
 
 class UpdateOpportunitySerializer(serializers.ModelSerializer):
     class Meta:
