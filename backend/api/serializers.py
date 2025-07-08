@@ -86,7 +86,8 @@ class GradeSerializer(serializers.ModelSerializer):
             'grade_name',
             'admission_year_to_asyv',
             'graduation_year_to_asyv',
-            'families'
+            'families', 
+            'non_graduated_kids_count',
         ]
 
     def create(self, validated_data):
@@ -154,7 +155,7 @@ class AlumniListSerializer(serializers.ModelSerializer):
         model = Kid
         fields = ['id', 'user_id', 'first_name', 'rwandan_name', 
                   'gender', 'email', 'phone', 'image_url', 'family', 
-                  'employment', 'combination']
+                  'employment', 'combination', 'further_education']
     def get_gender(self, obj): 
         return obj.user.gender if obj.user else None
     
