@@ -22,6 +22,7 @@ import PersonalProfile from './pages/profile/PersonalProfile';
 import AddData from './pages/AddData';
 
 import AlumniDirectory from './pages/directory/AlumniDirectory';
+import StudentDirectory from './pages/directory/StudentDirectory.jsx';
 import CareerOpportunity from './pages/career/CareerOpportunity';
 import CareerOpportunityStaff from "./pages/career/CareerOpportunityStaff";
 
@@ -91,6 +92,7 @@ function App() {
                     <Route path="/personal_profile" element={<PersonalProfile />} />
                     <Route path="/add_data" element={<AddData />} />
                     <Route path="/alumni_directory" element={<AlumniDirectory />} />
+                    <Route path="/student_directory" element={<StudentDirectory />} />
                     <Route path="/career_opportunity" element={<CareerOpportunity />} />
 
                     <Route path="/career_opportunity_staff" element={<CareerOpportunityStaff />}/>

@@ -34,7 +34,7 @@ const EduCard = ({ alumni, title, type, description, date, link, approved, onApp
       user: auth.user.id,
       description: editedDescription,
       post_time: currentDate,
-      diedline: editedDate,
+      deadline: editedDate,
       link: editedLink
     };
     if (isNew) {

@@ -18,10 +18,13 @@ router.register(r'kid-academics', views.KidAcademicsViewSet) #KidAcademics crud
 router.register(r'employments', views.EmploymentViewSet, basename='employment') #Employment crud
 router.register(r'further-education', views.FurtherEducationViewSet, basename='furthereducation') #Further Education crud
 router.register(r'colleges', views.CollegeViewSet, basename='colleges') #College crud 
+
+
 router.register(r'news', views.NewsAnnouncementViewSet, basename='news')
 router.register(r'media', views.MediaFileViewSet, basename='media') # Optional: if you want separate media management
 
 router.register(r'events', views.EventViewSet)
+
 
 urlpatterns = [
     # user paths
@@ -101,6 +104,8 @@ urlpatterns = [
     path('combination-counts/', views.combination_counts, name='combination_counts'),
     path('alumni-outcomes-percentage/', views.alumni_outcome_percentages, name='general report'),
 
+    #directory
+    path('student-directory/', views.CurrentStudentDirectoryView.as_view(), name='current student directory'),
     path('alumni-directory/', views.AlumniDirectoryView.as_view(), name='alumni directory'), 
     path('alumni-map/', views.AlumniCountryMap.as_view(), name="alumni-country-map"), 
     path('alumni-trends/', views.AlumniOutcomeTrends.as_view(), name="alumni-outcome-trends"), 
@@ -123,6 +128,6 @@ urlpatterns = [
     path('opportunity/', views.read_opportunity, name='read-opportunity'),
     path('opportunity/<int:pk>/delete/', views.DeleteOpportunityView.as_view(), name='delete-opportunity'),
     # path('opportunity/<int:pk>/update/', views.UpdateOpportunityView.as_view(), name='update-opportunity'),
-    # path('opportunity/<int:pk>/approve', views.ApproveOpportunityView.as_view(), name='approve-opportunity'),
+    path('opportunity/<int:pk>/approve', views.ApproveOpportunityView.as_view(), name='approve-opportunity'),
 
 ]

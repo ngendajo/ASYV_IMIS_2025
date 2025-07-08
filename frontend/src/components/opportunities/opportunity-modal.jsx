@@ -54,7 +54,7 @@ const OpportunityModal = ({
 
             <div className="modal-field-row">
               <label>Deadline:</label>
-              <input name="deadline" value={form.deadline} onChange={handleChange} />
+              <input type="date" name="deadline" value={form.deadline} onChange={handleChange} />
             </div>
 
             <div className="modal-field-row">

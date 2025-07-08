@@ -6,8 +6,8 @@ import useAuth from '../../hooks/useAuth';
 import { Event } from '../social/events-cards';
 import OpportunityCard from '../opportunities/opportunity-card';
 import axios from 'axios';
-// import baseUrl from '../../api/baseUrl';
-const  baseUrl='https://backend.asyv.ac.rw/api';
+import baseUrl from '../../api/baseUrl';
+//const  baseUrl='https://backend.asyv.ac.rw/api';
 
 
 const AlumniDashboard = () => {
