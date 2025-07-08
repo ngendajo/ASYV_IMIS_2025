@@ -10,6 +10,11 @@ export const SidebarDataCrc = [
     cName: 'nav-text'
   },
   {
+    title: 'Current Student Directory',
+    path: '/student_directory',
+    cName: 'nav-text'
+  },
+  {
     title: 'Events',
     path: '/events',
     cName: 'nav-text'

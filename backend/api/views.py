@@ -3184,16 +3184,141 @@ class AlumniAcademicView(APIView):
         
         return Response({'message': 'FurtherEducation record created/updated', 'updated_ids': updated_ids}, status=200)
 
+#current student directory api 
+class CurrentStudentDirectoryView(APIView):
+    def get_all_filter_options(self):
+        genders_available = User.objects.values_list('gender', flat=True).distinct()
+   
+        graduation_years_available = []
+        for grade in Grade.objects.all().order_by('-graduation_year_to_asyv'):
+            non_graduated_count = Kid.objects.filter(
+                family__grade=grade,
+                graduation_status='studying'
+            ).count()
+
+            if non_graduated_count != 0:
+                graduation_years_available.append({
+                    'graduation_year_to_asyv': grade.graduation_year_to_asyv,
+                    'grade_name': grade.grade_name
+                })
+   
+        non_graduated_grades = Grade.objects.annotate(
+            non_graduated_count=Count(
+                'families__kids',
+                filter=Q(families__kids__graduation_status='studying')
+            )
+        ).filter(non_graduated_count__gt=0)
+
+        families_available = Family.objects.filter(
+            grade__in=non_graduated_grades
+        ).values(
+            'id', 'family_name'
+        ).distinct().order_by('family_name')
+   
+        combinations_available = KidAcademics.objects.filter(
+            level='S6'
+        ).values(
+            'combination_id', 'combination__abbreviation', 'combination__combination_name'
+        ).distinct()
+
+        return {
+            'gender': list(genders_available),
+            'graduation_year': list(graduation_years_available),
+            'family': list(families_available),
+            'combination': list(combinations_available),
+        } 
+    def get(self, request): 
+        page = int(request.GET.get('page', 1))
+        page_size = int(request.GET.get('page_size', 10))
+        gender = request.GET.get('gender')
+        family = request.GET.get('family')
+        combination = request.GET.get('combination')
+        graduation_year = request.GET.get('year')
+
+        student = Kid.objects.filter(graduation_status='studying'
+                                    ).select_related('user', 'family__grade')
+                                                     
+          # 🎯 Handle multiple genders (e.g. gender=M,F)
+        if gender:
+            gender_list = gender.split(',')
+            student = student.filter(user__gender__in=gender_list)
+
+        # 🎯 Handle multiple family IDs
+        if family:
+            family_ids = family.split(',')
+            student = student.filter(family__id__in=family_ids)
+
+        # 🎯 Handle multiple combinations
+        if combination:
+            combination_ids = combination.split(',')
+            student = student.filter(
+                academics__combination__id__in=combination_ids
+            )
+        # 🎯 Graduation year (usually single)
+        if graduation_year:
+            student = student.filter(family__grade__graduation_year_to_asyv=graduation_year)
+        
+        student = student.distinct()
+        print("Filtered current student count:", student.count())
+           # Return filter options
+        filters = self.get_all_filter_options()
+       
+      
+        try:
+            student = student.distinct().order_by('id')
+            paginator = Paginator(student, page_size)
+            page_obj = paginator.get_page(page)
+            student_page = page_obj.object_list
+
+            serialized_student = AlumniListSerializer(student_page, many=True).data
+        
+        except Exception as e:
+            print("Error during pagination or serialization:", e)
+            return Response({"success": False, "error": str(e)}, status=500)
+        
+        return Response({
+        "success": True,
+        "filters": filters,
+        "data": serialized_student,
+        "pagination": {
+            "current_page": page,
+            "page_size": page_size,
+            "total": paginator.count,
+            "has_next": page_obj.has_next(),
+            "has_previous": page_obj.has_previous()
+        }
+    })
+
 #alumni directory api
 class AlumniDirectoryView(APIView):
     def get_all_filter_options(self):
         genders_available = User.objects.values_list('gender', flat=True).distinct()
-        graduation_years_available = Grade.objects.values(
-            'graduation_year_to_asyv', 'grade_name'
-        ).distinct().order_by('-graduation_year_to_asyv')
-        families_available = Family.objects.values(
+        graduation_years_available = []
+        for grade in Grade.objects.all().order_by('-graduation_year_to_asyv'):
+            non_graduated_count = Kid.objects.filter(
+                family__grade=grade,
+                graduation_status='studying'
+            ).count()
+
+            if non_graduated_count == 0:
+                graduation_years_available.append({
+                    'graduation_year_to_asyv': grade.graduation_year_to_asyv,
+                    'grade_name': grade.grade_name
+                })
+        
+        graduated_grades = Grade.objects.annotate(
+            non_graduated_count=Count(
+                'families__kids',
+                filter=Q(families__kids__graduation_status='studying')
+            )
+        ).filter(non_graduated_count=0)
+
+        families_available = Family.objects.filter(
+            grade__in=graduated_grades
+        ).values(
             'id', 'family_name'
         ).distinct().order_by('family_name')
+
         combinations_available = KidAcademics.objects.filter(
             level='S6'
         ).values(
@@ -3229,34 +3354,49 @@ class AlumniDirectoryView(APIView):
                                     ).select_related('user', 'family__grade'
                                                      ).prefetch_related('employment', 'furthereducation')
 
+          # 🎯 Handle multiple genders (e.g. gender=M,F)
         if gender:
-            alumni = alumni.filter(user__gender=gender) #M or F
+            gender_list = gender.split(',')
+            alumni = alumni.filter(user__gender__in=gender_list)
+
+        # 🎯 Handle multiple family IDs
         if family:
-            alumni = alumni.filter(family__id=family) #by family Id
+            family_ids = family.split(',')
+            alumni = alumni.filter(family__id__in=family_ids)
+
+        # 🎯 Handle multiple combinations
         if combination:
+            combination_ids = combination.split(',')
             alumni = alumni.filter(
-                academics__combination__id=combination,
+                academics__combination__id__in=combination_ids,
                 academics__level='S6'
-            ) #by combination id
+            )
+
+        # 🎯 Handle multiple industries
         if industry:
-            alumni = alumni.filter(employment__industry=industry) #by string industry
-        if graduation_year: #by year 
-            print("graduation_year param:", graduation_year)
+            industry_list = industry.split(',')
+            alumni = alumni.filter(employment__industry__in=industry_list)
+
+        # 🎯 Graduation year (usually single)
+        if graduation_year:
             alumni = alumni.filter(family__grade__graduation_year_to_asyv=graduation_year)
+
+        # 🎯 College filter with education status
+        if college:
+            alumni = alumni.filter(
+                furthereducation__college__college_name__in=college.split(','),
+                furthereducation__status__in=['G', 'O']
+            )
+
+        # 🎯 Search by name
         if search_term:
             alumni = alumni.filter(
                 Q(user__first_name__icontains=search_term) |
                 Q(user__rwandan_name__icontains=search_term)
             ).distinct()
-        if college: 
-            alumni = alumni.filter(furthereducation__college__college_name=college,
-                                   furthereducation__status__in=['G', 'O'])
 
         alumni = alumni.distinct()
         print("Filtered alumni count:", alumni.count())
-
-        #employment_count = alumni.filter(employ__isnull=False).distinct().count()
-        #education_count = alumni.filter(alumn__isnull=False).distinct().count()
 
         employed_ids = set(
             Employment.objects.filter(alumn__in=alumni).values_list('alumn_id', flat=True)

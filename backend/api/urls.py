@@ -98,6 +98,8 @@ urlpatterns = [
     path('combination-counts/', views.combination_counts, name='combination_counts'),
     path('alumni-outcomes-percentage/', views.alumni_outcome_percentages, name='general report'),
 
+    #directory
+    path('student-directory/', views.CurrentStudentDirectoryView.as_view(), name='current student directory'),
     path('alumni-directory/', views.AlumniDirectoryView.as_view(), name='alumni directory'), 
     path('alumni-map/', views.AlumniCountryMap.as_view(), name="alumni-country-map"), 
     path('alumni-trends/', views.AlumniOutcomeTrends.as_view(), name="alumni-outcome-trends"), 

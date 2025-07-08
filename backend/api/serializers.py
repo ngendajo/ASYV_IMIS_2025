@@ -141,7 +141,7 @@ class FurtherEducationSerializer(serializers.ModelSerializer):
     def get_location(self, obj):
         return f"{obj.college.city}, {obj.college.country}"
 
-class AlumniListSerializer(serializers.Serializer):
+class AlumniListSerializer(serializers.ModelSerializer):
     family = FamilySerializer()
     combination = serializers.SerializerMethodField()
     first_name = serializers.SerializerMethodField()
@@ -149,14 +149,14 @@ class AlumniListSerializer(serializers.Serializer):
     gender = serializers.SerializerMethodField()
     email = serializers.SerializerMethodField()
     phone = serializers.SerializerMethodField()
-    employment = EmploymentSerializer(many=True, read_only=True)
+    employment = EmploymentSerializer(many=True, read_only=True, required=False)
     image_url = serializers.ImageField(source='user.image_url')
     user_id = serializers.SerializerMethodField()
-    further_education = FurtherEducationSerializer(source='furthereducation', many=True, read_only=True)
+    further_education = FurtherEducationSerializer(source='furthereducation', many=True, read_only=True, required=False)
 
     class Meta:
         model = Kid
-        fields = ['id', 'first_name', 'rwandan_name', 
+        fields = ['id', 'user_id', 'first_name', 'rwandan_name', 
                   'gender', 'email', 'phone', 'image_url', 'family', 
                   'employment', 'further_education', 'combination']
     def get_gender(self, obj): 

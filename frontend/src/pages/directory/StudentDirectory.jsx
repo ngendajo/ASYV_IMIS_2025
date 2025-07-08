@@ -16,7 +16,7 @@ import qs from 'qs';
 
 import OutcomePieChart from '../../components/directory/outcome-pie-chart.jsx';
 
-const AlumniDirectory = () => {
+const StudentDirectory = () => {
   const [selectedAlumni, setSelectedAlumni] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [alumniData, setAlumniData] = useState([]);
@@ -27,9 +27,7 @@ const AlumniDirectory = () => {
     gender: [],
     graduation_year: [],
     family: [],
-    combination: [],
-    industry: [],
-    college: [],
+    combination: []
   });
 
   // UI filter selections
@@ -37,9 +35,7 @@ const [filterUI, setFilterUI] = useState({
   gender: [],
   graduation_year: [],
   family: [],
-  combination: [],
-  industry: [],
-  college: [],
+  combination: []
 });
 
 // Filters used in the actual request
@@ -47,9 +43,7 @@ const [appliedFilters, setAppliedFilters] = useState({
   gender: [],
   graduation_year: [],
   family: [],
-  combination: [],
-  industry: [],
-  college: [],
+  combination: []
 });
 
   const [pagination, setPagination] = useState({
@@ -65,9 +59,9 @@ const [appliedFilters, setAppliedFilters] = useState({
   const observer = useRef();
   const loader = useRef(null);
 
+
   const handleClear = () => setSelectedAlumni(null);
   useEffect(() => {
-    console.log("Fetching alumni with searchTerm:", searchTerm);
     const fetchAlumni = async () => {
       setLoading(true);
       const params = {
@@ -78,14 +72,12 @@ const [appliedFilters, setAppliedFilters] = useState({
       if (appliedFilters.graduation_year.length > 0) params.year = appliedFilters.graduation_year;
       if (appliedFilters.family.length > 0) params.family = appliedFilters.family;
       if (appliedFilters.combination.length > 0) params.combination = appliedFilters.combination;
-      if (appliedFilters.industry.length > 0) params.industry = appliedFilters.industry;
-      if (appliedFilters.college.length > 0) params.college = appliedFilters.college;
 
       if (searchTerm) params.search = searchTerm;
 
       try {
         console.log("Request params:", params);
-        const response = await axios.get(baseUrl + '/alumni-directory/', {
+        const response = await axios.get(baseUrl + '/student-directory/', {
           params,
           paramsSerializer: params => qs.stringify(params, { arrayFormat: 'repeat' }),
           headers: {
@@ -136,41 +128,42 @@ const [appliedFilters, setAppliedFilters] = useState({
     fetchAlumni();
   }, [auth, pagination.current_page, pagination.page_size, searchTerm, appliedFilters]);
 
-useEffect(() => {
-    const isDesktop = window.innerWidth >= 768; // adjust breakpoint if needed
-  
-    const scrollContainer = isDesktop 
-      ? document.querySelector('.desktop-table-wrapper') 
-      : window;
-  
-    if (!scrollContainer) return;
-  
-    const onScroll = () => {
-      let scrollTop, clientHeight, scrollHeight;
-  
-      if (scrollContainer === window) {
-        scrollTop = window.scrollY || document.documentElement.scrollTop;
-        clientHeight = window.innerHeight;
-        scrollHeight = document.documentElement.scrollHeight;
-      } else {
-        scrollTop = scrollContainer.scrollTop;
-        clientHeight = scrollContainer.clientHeight;
-        scrollHeight = scrollContainer.scrollHeight;
-      }
-  
-      if (scrollTop + clientHeight >= scrollHeight - 20) {
-        if (pagination.has_next && !loading) {
-          setPagination((prev) => ({ ...prev, current_page: prev.current_page + 1 }));
+  useEffect(() => {
+      const isDesktop = window.innerWidth >= 768; // adjust breakpoint if needed
+    
+      const scrollContainer = isDesktop 
+        ? document.querySelector('.desktop-table-wrapper') 
+        : window;
+    
+      if (!scrollContainer) return;
+    
+      const onScroll = () => {
+        let scrollTop, clientHeight, scrollHeight;
+    
+        if (scrollContainer === window) {
+          scrollTop = window.scrollY || document.documentElement.scrollTop;
+          clientHeight = window.innerHeight;
+          scrollHeight = document.documentElement.scrollHeight;
+        } else {
+          scrollTop = scrollContainer.scrollTop;
+          clientHeight = scrollContainer.clientHeight;
+          scrollHeight = scrollContainer.scrollHeight;
         }
-      }
-    };
-  
-    scrollContainer.addEventListener('scroll', onScroll);
-  
-    return () => {
-      scrollContainer.removeEventListener('scroll', onScroll);
-    };
-  }, [pagination.has_next, loading]);
+    
+        if (scrollTop + clientHeight >= scrollHeight - 20) {
+          if (pagination.has_next && !loading) {
+            setPagination((prev) => ({ ...prev, current_page: prev.current_page + 1 }));
+          }
+        }
+      };
+    
+      scrollContainer.addEventListener('scroll', onScroll);
+    
+      return () => {
+        scrollContainer.removeEventListener('scroll', onScroll);
+      };
+    }, [pagination.has_next, loading]);
+    
   
 
 const handleDownload = async () => {
@@ -182,10 +175,8 @@ const handleDownload = async () => {
       if (appliedFilters.graduation_year.length > 0) params.year = appliedFilters.graduation_year;
       if (appliedFilters.family.length > 0) params.family = appliedFilters.family;
       if (appliedFilters.combination.length > 0) params.combination = appliedFilters.combination;
-      if (appliedFilters.industry.length > 0) params.industry = appliedFilters.industry;
-      if (appliedFilters.college.length > 0) params.college = appliedFilters.college;
 
-      const response = await axios.get(baseUrl + '/alumni-directory/', {
+      const response = await axios.get(baseUrl + '/student-directory/', {
         params,
         headers: {
           Authorization: 'Bearer ' + auth.accessToken,
@@ -299,5 +290,5 @@ const handleDownload = async () => {
   );
 };
 
-export default AlumniDirectory;
+export default StudentDirectory;
 
