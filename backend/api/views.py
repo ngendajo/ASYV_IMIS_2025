@@ -458,6 +458,7 @@ class GradeViewSet(viewsets.ModelViewSet):
         )
     ).order_by('-graduation_year_to_asyv') 
     serializer_class = GradeSerializer
+    pagination_class = None
 
     def create(self, request, *args, **kwargs):
         try:
@@ -714,6 +715,7 @@ class FamilyExcelUploadView(APIView):
 class LeapViewSet(viewsets.ModelViewSet):
     queryset = Leap.objects.all()
     serializer_class = LeapSerializer
+    pagination_class = None
 
     def create(self, request, *args, **kwargs):
         try:
@@ -935,6 +937,7 @@ class SubjectViewSet(viewsets.ModelViewSet):
 class CombinationViewSet(viewsets.ModelViewSet):
     queryset = Combination.objects.all()
     serializer_class = CombinationSerializer
+    pagination_class = None
 
     def create(self, request, *args, **kwargs):
         try:
@@ -2758,6 +2761,7 @@ class FurtherEducationViewSet(viewsets.ModelViewSet):
 class CollegeViewSet(viewsets.ModelViewSet):
     queryset = College.objects.all()
     serializer_class = CollegeSerializer
+    pagination_class = None
 
     def create(self, request, *args, **kwargs):
         try:
