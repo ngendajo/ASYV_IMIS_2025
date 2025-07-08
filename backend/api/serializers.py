@@ -126,7 +126,7 @@ class KidSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class FurtherEducationSerializer(serializers.ModelSerializer): 
-    college = serializers.PrimaryKeyRelatedField(queryset=College.objects.all())
+    college = serializers.SerializerMethodField()
     location = serializers.SerializerMethodField(read_only=True)
 
 
@@ -136,6 +136,9 @@ class FurtherEducationSerializer(serializers.ModelSerializer):
 
     def get_location(self, obj):
         return f"{obj.college.city}, {obj.college.country}"
+    
+    def get_college(self, obj):
+        return obj.college.college_name
 
 class AlumniListSerializer(serializers.ModelSerializer):
     family = FamilySerializer()
