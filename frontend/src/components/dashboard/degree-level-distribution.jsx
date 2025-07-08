@@ -10,22 +10,27 @@ import {
 
 const COLORS = ['#4f81bd', '#9bbb59', '#ffbb55', '#e84c3d', '#8064a2'];
 
-const EmploymentDistribution = ({ distribution }) => {
-  if (!distribution || Object.keys(distribution).length === 0) {
+const degreeLevelNames = {
+  A0: "Bachelor",
+  A1: "Advanced Diploma",
+  M: "Master",
+  C: "Certificate",
+  PHD: "PHD",
+};
+
+const DegreeLevelDistribution = ({ distribution }) => {
+  if (!distribution || distribution.length === 0) {
     return <p>No data available.</p>;
   }
 
-  // Convert to array and calculate total count
-  const data = Object.entries(distribution).map(([status, info]) => ({
-    name: status,
-    value: info.count,
-  }));
-  const total = data.reduce((sum, entry) => sum + entry.value, 0);
+  // Calculate total count
+  const total = distribution.reduce((sum, item) => sum + item.count, 0);
 
-  // Add percentage to each entry for use in label and tooltip
-  const dataWithPercent = data.map(entry => ({
-    ...entry,
-    percent: ((entry.value / total) * 100).toFixed(1), // 1 decimal place
+  // Map distribution to chart data with name and percent
+  const dataWithPercent = distribution.map(({ degree_level, count }) => ({
+    name: degreeLevelNames[degree_level] || degree_level,
+    value: count,
+    percent: ((count / total) * 100).toFixed(1), // one decimal place
   }));
 
   return (
@@ -56,4 +61,4 @@ const EmploymentDistribution = ({ distribution }) => {
   );
 };
 
-export default EmploymentDistribution;
+export default DegreeLevelDistribution;

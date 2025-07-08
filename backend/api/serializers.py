@@ -75,6 +75,7 @@ class FamilySerializer(serializers.ModelSerializer):
 
 class GradeSerializer(serializers.ModelSerializer):
     families = FamilySerializer(many=True, write_only=True)
+    non_graduated_kids_count = serializers.ReadOnlyField()
 
     class Meta:
         model = Grade
@@ -83,7 +84,8 @@ class GradeSerializer(serializers.ModelSerializer):
             'grade_name',
             'admission_year_to_asyv',
             'graduation_year_to_asyv',
-            'families'
+            'families', 
+            'non_graduated_kids_count',
         ]
 
     def create(self, validated_data):
@@ -121,6 +123,23 @@ class KidSerializer(serializers.ModelSerializer):
         model = Kid
         fields = '__all__'
 
+class CollegeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = College
+        fields = '__all__'
+
+
+class FurtherEducationSerializer(serializers.ModelSerializer): 
+    college = CollegeSerializer(read_only=True)
+    location = serializers.SerializerMethodField(read_only=True)
+
+
+    class Meta:
+        model = FurtherEducation
+        fields = ['id', 'alumn', 'college', 'level', 'degree', 'status', 'location', 'scholarship', 'scholarship_details']
+
+    def get_location(self, obj):
+        return f"{obj.college.city}, {obj.college.country}"
 
 class AlumniListSerializer(serializers.Serializer):
     family = FamilySerializer()
@@ -133,12 +152,13 @@ class AlumniListSerializer(serializers.Serializer):
     employment = EmploymentSerializer(many=True, read_only=True)
     image_url = serializers.ImageField(source='user.image_url')
     user_id = serializers.SerializerMethodField()
+    further_education = FurtherEducationSerializer(source='furthereducation', many=True, read_only=True)
 
     class Meta:
         model = Kid
         fields = ['id', 'first_name', 'rwandan_name', 
                   'gender', 'email', 'phone', 'image_url', 'family', 
-                  'employment', 'combination']
+                  'employment', 'further_education', 'combination']
     def get_gender(self, obj): 
         return obj.user.gender if obj.user else None
     
@@ -256,24 +276,6 @@ class AlumniDirectorySerializer(serializers.Serializer):
     alumni = KidSerializer(many=True)
     employment_count = serializers.IntegerField()
     education_count = serializers.IntegerField()
-
-class CollegeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = College
-        fields = '__all__'
-
-
-class FurtherEducationSerializer(serializers.ModelSerializer): 
-    college = serializers.PrimaryKeyRelatedField(queryset=College.objects.all())
-    location = serializers.SerializerMethodField(read_only=True)
-
-
-    class Meta:
-        model = FurtherEducation
-        fields = ['id', 'alumn', 'college', 'level', 'degree', 'status', 'location', 'scholarship', 'scholarship_details']
-
-    def get_location(self, obj):
-        return f"{obj.college.city}, {obj.college.country}"
     
 class BasicInformationSerializer(serializers.Serializer):
     user_id = serializers.IntegerField(required=False)
@@ -548,3 +550,51 @@ class AllBorrowersDisplaySerializer(serializers.Serializer):
     is_student=serializers.BooleanField()
     is_alumni=serializers.BooleanField()
     is_staff=serializers.BooleanField()
+
+
+#Event serializers
+class EventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Event
+        fields = '__all__'
+
+#Opportunity serializers
+class OpportunitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Opportunity
+        fields = '__all__'
+
+    def create(self, validated_data):
+        # obtain data from validated_data
+        user = validated_data.get('user')
+        title = validated_data.get('title')
+        op_type = validated_data.get('op_type')
+        description = validated_data.get('description')
+        deadline = validated_data.get('deadline')
+        link = validated_data.get('link')
+        post_time = validated_data.get('post_time')
+
+        # create opportunity object
+        opportunity = Opportunity.objects.create(
+            user=user,
+            title=title,
+            op_type=op_type,
+            description=description,
+            deadline=deadline,
+            link=link,
+            post_time=post_time
+        )
+
+        return opportunity
+
+
+class UpdateOpportunitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Opportunity
+        fields = ['title','op_type', 'description','deadline','link']
+ 
+
+class ApproveOpportunitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Opportunity
+        fields = ['approved']

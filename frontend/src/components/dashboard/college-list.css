@@ -1,0 +1,82 @@
+.cbc-wrapper {
+  padding: 1rem;
+  border: 1px solid var(--coffeeli, #ccc);
+  border-radius: 8px;
+  background-color: white;
+}
+
+.no-data {
+  font-style: italic;
+  color: #777;
+}
+
+.cbc-country-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.cbc-country-button {
+  padding: 0.5rem 1rem;
+  background-color: var(--orangeli, #f4d2b0);
+  border: 1px solid var(--coffee, #957967);
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: Medium;
+  transition: background-color 0.2s;
+}
+
+.cbc-country-button:hover {
+  background-color: var(--orange, #f49c46);
+  color: white;
+}
+
+.cbc-table-view {
+  display: flex;
+  flex-direction: column;
+}
+
+.cbc-back-button {
+  align-self: flex-start;
+  margin-bottom: 1rem;
+  padding: 0.4rem 0.8rem;
+  background-color: transparent;
+  border: 1px solid var(--brown, #6d5736);
+  color: var(--brown, #6d5736);
+  border-radius: 5px;
+  cursor: pointer;
+  font-family: Medium;
+}
+
+.cbc-back-button:hover {
+  background-color: var(--brown, #6d5736);
+  color: white;
+}
+
+.cbc-table-scroll {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.cbc-table {
+  width: 100%;
+  min-width: 400px;
+  border-collapse: collapse;
+}
+
+.cbc-table th,
+.cbc-table td {
+  text-align: left;
+  padding: 0.4rem;
+  border-bottom: 1px solid #eee;
+}
+
+.cbc-table thead th {
+  background-color: #fafafa;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}

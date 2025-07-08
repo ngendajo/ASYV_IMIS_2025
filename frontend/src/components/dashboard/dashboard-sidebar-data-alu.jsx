@@ -28,6 +28,17 @@ export const SidebarDataAlu = [
     title: 'Further Education',
     path: '/further_education',
     cName: 'nav-text'
+  },
+     {
+    title: 'Giving Back',
+    path: '/giving_back', 
+    cName: 'nav-text'
+  },
+
+    {
+    title: 'FAQs',
+    path: '/frequent_inquiries', 
+    cName: 'nav-text'
   }
 
 ];
