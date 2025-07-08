@@ -69,6 +69,9 @@ urlpatterns = [
 
     #Issue_Book paths
     path('issue/', views.Issue_BookRegistrationView.as_view(), name='issue_book_api'),
+    path('issue-book-detail/<int:id>/', views.IssueBookDetailView.as_view(), name='issue-book-detail'),
+    path('kid-books/<str:reg_number>/', views.KidBookProfileView.as_view(), name='kid-books-by-reg-number'),
+    path('library-numbers/<str:isbnumber>/', views.LibraryNumbersByISBNView.as_view(), name='library-numbers-by-isbn'),
     path('issued/', views.IssuedBookDisplayAPIView.as_view(), name='issued_book_api'),
     path('exportissued/', views.Issued_BookReportExportAPIView.as_view(), name='issued_book_api_in_pdf'),
     path('exportoverdue/', views.Overdue_BookReportExportAPIView.as_view(), name='overdue_book_api_in_pdf'),
@@ -95,6 +98,8 @@ urlpatterns = [
     path('combination-counts/', views.combination_counts, name='combination_counts'),
     path('alumni-outcomes-percentage/', views.alumni_outcome_percentages, name='general report'),
 
+    #directory
+    path('student-directory/', views.CurrentStudentDirectoryView.as_view(), name='current student directory'),
     path('alumni-directory/', views.AlumniDirectoryView.as_view(), name='alumni directory'), 
     path('alumni-map/', views.AlumniCountryMap.as_view(), name="alumni-country-map"), 
     path('alumni-trends/', views.AlumniOutcomeTrends.as_view(), name="alumni-outcome-trends"), 

@@ -80,13 +80,26 @@ const FilterPanel = ({ filters, filterUI, toggleCheckbox, applyFilters }) => {
           c => c.combination__combination_name,
           c => c.combination_id)}
 
-        {renderFilterGroup("Industry", filters.industry, "industry",
-          i => i,
-          i => i)}
+        {filters.industry && filters.industry.length > 0 && (
+          renderFilterGroup(
+            "Industry",
+            filters.industry,
+            "industry",
+            i => i,
+            i => i
+          )
+        )}
 
-        {renderFilterGroup("College", filters.college, "college",
-          c => c.college__college_name,
-          c => c.college__college_name)}
+        {filters.college && filters.college.length > 0 && (
+          renderFilterGroup(
+            "College",
+            filters.college,
+            "college",
+            c => c.college__college_name,
+            c => c.college__college_name
+          )
+        )}
+
       </div>
 
       <div className="apply-button-wrapper">
