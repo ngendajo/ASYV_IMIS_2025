@@ -113,7 +113,7 @@ const [appliedFilters, setAppliedFilters] = useState({
           combination: element.combination.combination_name || '',
           employment: element.employment?.[0]?.title || '',
           industry: element.employment?.[0]?.industry || '',
-          further_education: element.further_education?.[0]?.college.college_name || '',
+          further_education: element.further_education?.[0]?.college || '',
         }));
         console.log("sample alumni data", alumnilist);
         setAlumniData((prevData) =>
