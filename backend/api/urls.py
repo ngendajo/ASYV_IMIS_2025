@@ -19,9 +19,9 @@ router.register(r'employments', views.EmploymentViewSet, basename='employment') 
 router.register(r'further-education', views.FurtherEducationViewSet, basename='furthereducation') #Further Education crud
 router.register(r'colleges', views.CollegeViewSet, basename='colleges') #College crud 
 
+
 router.register(r'news', views.NewsAnnouncementViewSet, basename='news')
 router.register(r'media', views.MediaFileViewSet, basename='media') # Optional: if you want separate media management
-
 
 router.register(r'events', views.EventViewSet)
 

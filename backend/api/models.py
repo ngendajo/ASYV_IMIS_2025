@@ -4,7 +4,6 @@ from django.db import models
 from django.core.validators import RegexValidator
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ValidationError
-
 import uuid # Import the uuid module
 
 from django.utils import timezone
@@ -471,7 +470,6 @@ class Issue_Book(models.Model):
     def __str__(self):
         return str(self.term_name)
 
-
 #NewsAnnouncement
 class NewsAnnouncement(models.Model):
     NEWS = 'NW'
@@ -508,13 +506,13 @@ class MediaFile(models.Model):
     def save(self, *args, **kwargs):
         # Determine if the file is an image or video based on its extension
         file_extension = self.file.name.split('.')[-1].lower()
-        
+
         # Generate a unique filename
         # Get the original filename and its extension
         original_filename = self.file.name
         extension = original_filename.split('.')[-1]
         unique_filename = f"{uuid.uuid4().hex}_{original_filename}"
-        
+
         # Update the file name with the unique identifier
         self.file.name = unique_filename
 
@@ -535,7 +533,7 @@ class MediaFile(models.Model):
         # It's good to keep it here for model representation.
         return f"{self.news_announcement.title} - {self.file.name}"
 
-    
+
 
     # Event model
 class Event(models.Model):
@@ -548,7 +546,7 @@ class Event(models.Model):
 
     def __str__(self):
         return str(self.title)
-    
+
 
     # Opportunity model
 class Opportunity(models.Model):
@@ -559,7 +557,9 @@ class Opportunity(models.Model):
     deadline = models.CharField(max_length=1000, default="2024-08-23")
     link = models.CharField(max_length=200, default="asyv.ac.rw")
     approved = models.BooleanField(default=False)
+
     post_time = models.CharField(default=timezone.now)
+
     def __str__(self):
         return str(self.title)
 
