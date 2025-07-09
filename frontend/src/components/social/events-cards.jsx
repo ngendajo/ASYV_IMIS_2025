@@ -85,7 +85,11 @@ export const Event = ({
     <>
       <div
         className={`events-card-container ${alumni === 'true' ? 'alumni' : ''}`}
-        onClick={() => setShowModal(true)}
+        onClick={() => {
+          if (!isEditing && !isNew) {
+            setShowModal(true);
+          }
+        }}
       >
         {isEditing || isNew ? (
           <form onSubmit={handleSave}>

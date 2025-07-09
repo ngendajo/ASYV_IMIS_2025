@@ -4,7 +4,10 @@ from django.db import models
 from django.core.validators import RegexValidator
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ValidationError
+import uuid # Import the uuid module
+
 from django.utils import timezone
+
 
 
 #General User model
@@ -363,6 +366,7 @@ class Employment(models.Model):
     )
     start_date = models.CharField(max_length=100, default="")
     end_date = models.CharField(max_length=100, default="")
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.title
@@ -419,6 +423,7 @@ class FurtherEducation(models.Model):
     )
     status = models.CharField(max_length=3, choices=STATUS_CHOICES)
     crc_support = models.BooleanField(default=False)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return str(self.alumn.user.first_name + ' - ' + self.college.college_name)
@@ -466,7 +471,71 @@ class Issue_Book(models.Model):
 
     def __str__(self):
         return str(self.term_name)
-    
+
+#NewsAnnouncement
+class NewsAnnouncement(models.Model):
+    NEWS = 'NW'
+    ANNOUNCEMENT = 'AN'
+    TYPE_CHOICES = [
+        (NEWS, 'News'),
+        (ANNOUNCEMENT, 'Announcement'),
+    ]
+
+    title = models.CharField(max_length=255)
+    content = models.TextField()
+    in_short = models.CharField(max_length=500, help_text="A brief summary for the list view.")
+    type = models.CharField(max_length=2, choices=TYPE_CHOICES, default=NEWS)
+    published_date = models.DateTimeField(auto_now_add=True)
+    updated_date = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-published_date'] # Latest first
+
+    def __str__(self):
+        return f"{self.get_type_display()}: {self.title}"
+
+class MediaFile(models.Model):
+    news_announcement = models.ForeignKey(
+        NewsAnnouncement,
+        related_name='media_files',
+        on_delete=models.CASCADE
+    )
+    file = models.FileField(upload_to='news_media/') # Stores both images and videos
+    is_image = models.BooleanField(default=False)
+    is_video = models.BooleanField(default=False)
+    caption = models.CharField(max_length=255, blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        # Determine if the file is an image or video based on its extension
+        file_extension = self.file.name.split('.')[-1].lower()
+
+        # Generate a unique filename
+        # Get the original filename and its extension
+        original_filename = self.file.name
+        extension = original_filename.split('.')[-1]
+        unique_filename = f"{uuid.uuid4().hex}_{original_filename}"
+
+        # Update the file name with the unique identifier
+        self.file.name = unique_filename
+
+        if file_extension in ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']:
+            self.is_image = True
+            self.is_video = False
+        elif file_extension in ['mp4', 'webm', 'ogg', 'mov', 'avi']:
+            self.is_image = False
+            self.is_video = True
+        else:
+            self.is_image = False
+            self.is_video = False
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        # This __str__ method belongs in the model, not the serializer.
+        # It was causing a syntax error in your provided serializer code.
+        # It's good to keep it here for model representation.
+        return f"{self.news_announcement.title} - {self.file.name}"
+
+
 
     # Event model
 class Event(models.Model):
@@ -479,20 +548,20 @@ class Event(models.Model):
 
     def __str__(self):
         return str(self.title)
-    
+
 
     # Opportunity model
 class Opportunity(models.Model):
     user = models.ForeignKey(User, on_delete=models.PROTECT, related_name='opportunities')
     title = models.CharField(max_length=5000)
     op_type = models.CharField(max_length=100, default="Full Time")
-    description = models.CharField(max_length=200)
+    description = models.CharField(max_length=1000)
     deadline = models.CharField(max_length=1000, default="2024-08-23")
-    link = models.CharField(max_length=100, default="asyv.ac.rw")
+    link = models.CharField(max_length=200, default="asyv.ac.rw")
     approved = models.BooleanField(default=False)
-    post_time = models.CharField(
-        max_length=100, 
-        default=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    )
+
+    post_time = models.CharField(default=timezone.now)
+
     def __str__(self):
         return str(self.title)
+

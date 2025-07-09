@@ -6,8 +6,8 @@ import SupportRequestTable from '../../components/opportunities/support-request-
 import OpportunityModal from '../../components/opportunities/opportunity-modal';
 import axios from 'axios';
 import useAuth from "../../hooks/useAuth";
-// import baseUrl from '../../api/baseUrl';
-const  baseUrl='https://backend.asyv.ac.rw/api';
+import baseUrl from '../../api/baseUrl';
+//const  baseUrl='https://backend.asyv.ac.rw/api';
 
 const CareerOpportunityStaff = () => {
   const { auth } = useAuth();
@@ -48,6 +48,7 @@ const CareerOpportunityStaff = () => {
   const handleSaveEdit = async (data, isNew) => {
     try {
       if (isNew) {
+        console.log('Posting opportunity:', data);
         await axios.post(`${baseUrl}/opportunity/create/`, data, {
           headers: { Authorization: `Bearer ${auth.accessToken}` }
         });

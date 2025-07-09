@@ -6,6 +6,9 @@ const GradeList = () => {
   const [grades, setGrades] = useState([]);
   const [editingGradeId, setEditingGradeId] = useState(null);
   const [editedGrade, setEditedGrade] = useState({});
+  const [editingFamilyId, setEditingFamilyId] = useState(null);
+  const [editedFamily, setEditedFamily] = useState({});
+
 
   useEffect(() => {
     fetchGrades();
@@ -17,14 +20,66 @@ const GradeList = () => {
       .catch(err => console.error('Error fetching grades:', err));
   };
 
+  const fetchFamiliesForGrade = async (gradeId) => {
+    try {
+      const res = await axios.get(`${baseUrl}/grades/${gradeId}/families/`);
+      setGrades(prev =>
+        prev.map(g =>
+          g.id === gradeId ? { ...g, families: res.data } : g
+        )
+      );
+    } catch (err) {
+      console.error(`Error fetching families for grade ${gradeId}:`, err);
+    }
+  };
+  
+
   const handleEditClick = (grade) => {
     setEditingGradeId(grade.id);
     setEditedGrade({ ...grade });
+    if (!grade.families) {
+      fetchFamiliesForGrade(grade.id);
+    }
   };
 
   const handleCancel = () => {
     setEditingGradeId(null);
     setEditedGrade({});
+  };
+
+  const handleFamilyEditClick = (family) => {
+    setEditingFamilyId(family.id);
+    setEditedFamily({ ...family });
+  };
+  
+  const handleFamilyChange = (field, value) => {
+    setEditedFamily(prev => ({ ...prev, [field]: value }));
+  };
+  
+  const handleFamilyCancel = () => {
+    setEditingFamilyId(null);
+    setEditedFamily({});
+  };
+  
+  const handleFamilySave = async (gradeId) => {
+    try {
+      const res = await axios.put(`${baseUrl}/families/${editingFamilyId}/`, editedFamily);
+      setGrades(prev =>
+        prev.map(g =>
+          g.id === gradeId
+            ? {
+                ...g,
+                families: g.families.map(f =>
+                  f.id === editingFamilyId ? res.data : f
+                ),
+              }
+            : g
+        )
+      );
+      handleFamilyCancel();
+    } catch (err) {
+      console.error("Error updating family:", err);
+    }
   };
 
   const handleSave = () => {
@@ -53,7 +108,6 @@ const GradeList = () => {
 
   return (
     <div className="section-content">
-      <h2>All Grades</h2>
       <ul className="data-list">
         {grades.map(grade => (
           <li key={grade.id} className="data-list-item">
@@ -82,7 +136,7 @@ const GradeList = () => {
                     onChange={e => handleChange('graduation_year_to_asyv', e.target.value)}
                   />
                 </div>
-
+  
                 <div className="form-actions">
                   <button type="button" onClick={handleSave}>Save</button>
                   <button type="button" onClick={handleCancel}>Cancel</button>
@@ -93,6 +147,7 @@ const GradeList = () => {
                 <div>
                   <strong>{grade.grade_name}</strong> — {grade.admission_year_to_asyv} to {grade.graduation_year_to_asyv}
                 </div>
+  
                 <div className="data-list-actions">
                   <button onClick={() => handleEditClick(grade)}>Edit</button>
                   {grade.non_graduated_kids_count > 0 && (
@@ -106,6 +161,31 @@ const GradeList = () => {
                     </button>
                   )}
                 </div>
+  
+                {/* Nested families display with editing */}
+                {grade.families && grade.families.length > 0 && (
+                  <ul className="nested-family-list">
+                    {grade.families.map(family => (
+                      <li key={family.id}>
+                        {editingFamilyId === family.id ? (
+                          <>
+                            <input
+                              value={editedFamily.family_name}
+                              onChange={(e) => handleFamilyChange('family_name', e.target.value)}
+                            />
+                            <button onClick={() => handleFamilySave(grade.id)}>Save</button>
+                            <button onClick={handleFamilyCancel}>Cancel</button>
+                          </>
+                        ) : (
+                          <>
+                            {family.family_name}
+                            <button onClick={() => handleFamilyEditClick(family)}>Edit</button>
+                          </>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </>
             )}
           </li>
@@ -113,6 +193,6 @@ const GradeList = () => {
       </ul>
     </div>
   );
-};
+};  
 
 export default GradeList;

@@ -11,11 +11,20 @@ import LeapForm from "../components/AddData/addLeap";
 import LeapList from "../components/AddData/listLeap";
 import CombinationList from "../components/AddData/listCombination";
 import useAuth from "../hooks/useAuth";
+import CollegeForm from "../components/AddData/addCollege";
+import CollegeList from "../components/AddData/listCollege";
 
 const AddData = () => {
   const { auth } = useAuth();
 
   const dataSections = [
+    {
+      key: "college",
+      title: "Colleges",
+      FormComponent: CollegeForm,
+      ListComponent: CollegeList,
+      apiEndpoint: "/colleges",
+    },
     {
       key: "leap",
       title: "Leaps",

@@ -74,8 +74,10 @@ class FamilySerializer(serializers.ModelSerializer):
         fields = ['id', 'family_name', 'family_number', 'mother', 'grade_info']
 
 class GradeSerializer(serializers.ModelSerializer):
-    families = FamilySerializer(many=True, write_only=True)
+
+    families = FamilySerializer(many=True)
     non_graduated_kids_count = serializers.ReadOnlyField()
+
 
     class Meta:
         model = Grade
@@ -123,14 +125,8 @@ class KidSerializer(serializers.ModelSerializer):
         model = Kid
         fields = '__all__'
 
-class CollegeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = College
-        fields = '__all__'
-
-
 class FurtherEducationSerializer(serializers.ModelSerializer): 
-    college = CollegeSerializer(read_only=True)
+    college = serializers.SerializerMethodField()
     location = serializers.SerializerMethodField(read_only=True)
 
 
@@ -140,6 +136,9 @@ class FurtherEducationSerializer(serializers.ModelSerializer):
 
     def get_location(self, obj):
         return f"{obj.college.city}, {obj.college.country}"
+    
+    def get_college(self, obj):
+        return obj.college.college_name
 
 class AlumniListSerializer(serializers.ModelSerializer):
     family = FamilySerializer()
@@ -154,11 +153,12 @@ class AlumniListSerializer(serializers.ModelSerializer):
     user_id = serializers.SerializerMethodField()
     further_education = FurtherEducationSerializer(source='furthereducation', many=True, read_only=True, required=False)
 
+
     class Meta:
         model = Kid
         fields = ['id', 'user_id', 'first_name', 'rwandan_name', 
                   'gender', 'email', 'phone', 'image_url', 'family', 
-                  'employment', 'further_education', 'combination']
+                  'employment', 'combination', 'further_education']
     def get_gender(self, obj): 
         return obj.user.gender if obj.user else None
     
@@ -276,6 +276,12 @@ class AlumniDirectorySerializer(serializers.Serializer):
     alumni = KidSerializer(many=True)
     employment_count = serializers.IntegerField()
     education_count = serializers.IntegerField()
+
+class CollegeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = College
+        fields = '__all__'
+
     
 class BasicInformationSerializer(serializers.Serializer):
     user_id = serializers.IntegerField(required=False)
@@ -550,43 +556,119 @@ class AllBorrowersDisplaySerializer(serializers.Serializer):
     is_student=serializers.BooleanField()
     is_alumni=serializers.BooleanField()
     is_staff=serializers.BooleanField()
-
-
-#Event serializers
-class EventSerializer(serializers.ModelSerializer):
+    
+#NewsAnnouncement
+class MediaFileSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Event
-        fields = '__all__'
+        model = MediaFile
+        fields = ['id', 'file', 'is_image', 'is_video', 'caption']
+    
+#NewsAnnouncement
+class MediaFileSerializer(serializers.ModelSerializer):
+    # Add news_announcement to fields and specify it as a PrimaryKeyRelatedField.
+    # This allows the serializer to accept the primary key (ID) of a NewsAnnouncement
+    # when creating or updating a MediaFile.
+    news_announcement = serializers.PrimaryKeyRelatedField(queryset=NewsAnnouncement.objects.all())
 
-#Opportunity serializers
-class OpportunitySerializer(serializers.ModelSerializer):
     class Meta:
-        model = Opportunity
-        fields = '__all__'
+        model = MediaFile
+        # Ensure 'news_announcement' is included in the fields
+        fields = ['id', 'news_announcement', 'file', 'is_image', 'is_video', 'caption']
+
+class NewsAnnouncementListSerializer(serializers.ModelSerializer):
+    # This serializer is for the "in short" list view
+    media_files = MediaFileSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = NewsAnnouncement
+        fields = ['id', 'title', 'in_short', 'type', 'published_date', 'media_files']
+
+class NewsAnnouncementDetailSerializer(serializers.ModelSerializer):
+    # This serializer is for the detailed view
+    media_files = MediaFileSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = NewsAnnouncement
+        fields = ['id', 'title', 'content', 'in_short', 'type', 'published_date', 'updated_date', 'media_files']
+        read_only_fields = ['published_date', 'updated_date']
 
     def create(self, validated_data):
-        # obtain data from validated_data
-        user = validated_data.get('user')
-        title = validated_data.get('title')
-        op_type = validated_data.get('op_type')
-        description = validated_data.get('description')
-        deadline = validated_data.get('deadline')
-        link = validated_data.get('link')
-        post_time = validated_data.get('post_time')
+        media_files_data = self.context['request'].FILES.getlist('media_files') # Get files from request
+        news_announcement = NewsAnnouncement.objects.create(**validated_data)
+        for media_file in media_files_data:
+            MediaFile.objects.create(news_announcement=news_announcement, file=media_file)
+        return news_announcement
 
-        # create opportunity object
-        opportunity = Opportunity.objects.create(
-            user=user,
-            title=title,
-            op_type=op_type,
-            description=description,
-            deadline=deadline,
-            link=link,
-            post_time=post_time
-        )
+    def update(self, instance, validated_data):
+        instance.title = validated_data.get('title', instance.title)
+        instance.content = validated_data.get('content', instance.content)
+        instance.in_short = validated_data.get('in_short', instance.in_short)
+        instance.type = validated_data.get('type', instance.type)
+        instance.save()
 
-        return opportunity
+        # Handle updating media files (e.g., adding new, deleting old)
+        # This can be more complex, you might need specific endpoints for media management
+        # For simplicity, here we'll assume a complete replacement or addition
+        # If you're allowing individual media file updates/deletions, you'll need more logic here
+        
+        # Example for adding new files:
+        new_media_files_data = self.context['request'].FILES.getlist('new_media_files')
+        for media_file in new_media_files_data:
+            MediaFile.objects.create(news_announcement=instance, file=media_file)
+        
+        return instance
 
+
+
+class NewsAnnouncementListSerializer(serializers.ModelSerializer):
+    # This serializer is for the "in short" list view
+    media_files = MediaFileSerializer(many=True, read_only=True)
+
+
+    class Meta:
+        model = NewsAnnouncement
+        fields = ['id', 'title', 'in_short', 'type', 'published_date', 'media_files']
+
+class NewsAnnouncementDetailSerializer(serializers.ModelSerializer):
+    # This serializer is for the detailed view
+    media_files = MediaFileSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = NewsAnnouncement
+        fields = ['id', 'title', 'content', 'in_short', 'type', 'published_date', 'updated_date', 'media_files']
+        read_only_fields = ['published_date', 'updated_date']
+
+    def create(self, validated_data):
+        media_files_data = self.context['request'].FILES.getlist('media_files') # Get files from request
+        news_announcement = NewsAnnouncement.objects.create(**validated_data)
+        for media_file in media_files_data:
+            MediaFile.objects.create(news_announcement=news_announcement, file=media_file)
+        return news_announcement
+
+    def update(self, instance, validated_data):
+        instance.title = validated_data.get('title', instance.title)
+        instance.content = validated_data.get('content', instance.content)
+        instance.in_short = validated_data.get('in_short', instance.in_short)
+        instance.type = validated_data.get('type', instance.type)
+        instance.save()
+
+        # Handle updating media files (e.g., adding new, deleting old)
+        # This can be more complex, you might need specific endpoints for media management
+        # For simplicity, here we'll assume a complete replacement or addition
+        # If you're allowing individual media file updates/deletions, you'll need more logic here
+        
+        # Example for adding new files:
+        new_media_files_data = self.context['request'].FILES.getlist('new_media_files')
+        for media_file in new_media_files_data:
+            MediaFile.objects.create(news_announcement=instance, file=media_file)
+        
+        return instance
+
+class OpportunitySerializer(serializers.ModelSerializer): 
+  class Meta:
+        model = Opportunity
+        fields = '__all__'
+        read_only_fields = ['user']
 
 class UpdateOpportunitySerializer(serializers.ModelSerializer):
     class Meta:
@@ -598,3 +680,12 @@ class ApproveOpportunitySerializer(serializers.ModelSerializer):
     class Meta:
         model = Opportunity
         fields = ['approved']
+
+
+#Event seralizers
+
+class EventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Event
+        fields = ('__all__')
+

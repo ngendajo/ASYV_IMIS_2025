@@ -210,7 +210,7 @@ const ProfileCard = ({ propId }) => {
         alumn: element.alumn,
         level: element.level,
         degree: element.degree,
-        college: element.college.college_name,
+        college: element.college,
         country: element.location,
         scholarship: element.scholarship,
         scholarship_details: element.scholarship_details,
