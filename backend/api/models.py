@@ -366,6 +366,7 @@ class Employment(models.Model):
     )
     start_date = models.CharField(max_length=100, default="")
     end_date = models.CharField(max_length=100, default="")
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.title
@@ -422,6 +423,7 @@ class FurtherEducation(models.Model):
     )
     status = models.CharField(max_length=3, choices=STATUS_CHOICES)
     crc_support = models.BooleanField(default=False)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return str(self.alumn.user.first_name + ' - ' + self.college.college_name)

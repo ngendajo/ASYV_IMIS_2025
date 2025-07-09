@@ -185,8 +185,11 @@ const handleDownload = async () => {
       if (appliedFilters.industry.length > 0) params.industry = appliedFilters.industry;
       if (appliedFilters.college.length > 0) params.college = appliedFilters.college;
 
+      console.log("Download Params:", params);
+
       const response = await axios.get(baseUrl + '/alumni-directory/', {
         params,
+        paramsSerializer: params => qs.stringify(params, { arrayFormat: 'repeat' }),
         headers: {
           Authorization: 'Bearer ' + auth.accessToken,
           'Content-Type': 'multipart/form-data',
@@ -194,16 +197,23 @@ const handleDownload = async () => {
         withCredentials: true,
       });
 
+      console.log(response.data.data)
+
       const allAlumni = response.data.data.map((element) => ({
         id: element.id,
         email: element.email,
         firstName: element.first_name,
         lastName: element.rwandan_name,
         phone: element.phone,
+        gradeName: element.family.grade_info.grade_name,
+        familyName: element.family.family_name,
+        combinationName: element.combination.combination_name,
         grade: element.family.grade_info.grade_name || 'none',
         family: element.family.family_name || 'none',
         combination: element.combination.combination_name || '',
-        industry: element.employment.industry || '',
+        employment: element.employment?.[0]?.title || '',
+        industry: element.employment?.[0]?.industry || '',
+        further_education: element.further_education?.[0]?.college || '',
       }));
 
       const worksheet = XLSX.utils.json_to_sheet(allAlumni);
@@ -211,7 +221,17 @@ const handleDownload = async () => {
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Alumni');
       const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
       const data = new Blob([excelBuffer], { type: 'application/octet-stream' });
-      saveAs(data, 'alumni_list.xlsx');
+      const getFilterFilenamePart = (filters) => {
+        return Object.entries(filters)
+          .filter(([_, value]) => value.length > 0)
+          .map(([key, value]) => `${key}-${value.join('-')}`)
+          .join('_');
+      };
+      
+      const filterString = getFilterFilenamePart(appliedFilters);
+      const filename = `alumni_list${filterString ? '_' + filterString : ''}.xlsx`;
+      
+      saveAs(data, filename);
     } catch (err) {
       console.error('Download error:', err);
     }

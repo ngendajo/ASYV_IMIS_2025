@@ -37,6 +37,17 @@ export const SidebarDataCrc = [
   },
 
   {
+    title: 'News',
+    path: '/news_posts', 
+    cName: 'nav-text'
+  },
+  {
+    title: 'Alumni Stories',
+    path: '/alumni_story_posts', 
+    cName: 'nav-text'
+  },
+
+  {
     title: 'FAQs',
     path: '/frequent_inquiries', 
     cName: 'nav-text'

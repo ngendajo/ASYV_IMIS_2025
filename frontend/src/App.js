@@ -116,7 +116,7 @@ function App() {
                     <Route path="/personal_profile_staff" element={<PersonalProfileStaff />} />
                    <Route path="/add-event" element={<AddEventForm />} /> 
           
-                    <Route path="news_posts" element={<NewsForm />} />
+                    <Route path="/news_posts" element={<NewsForm />} />
                     <Route path="/personal_profile-resume" element={<ResumeBuilderPage />} />
                     <Route path="/add_grade" element={<AddGrade />} />
                     <Route path="/add_combination" element={<Addcombination />} />

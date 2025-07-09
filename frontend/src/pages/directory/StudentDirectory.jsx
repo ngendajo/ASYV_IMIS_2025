@@ -14,13 +14,10 @@ import { saveAs } from 'file-saver';
 import * as XLSX from 'xlsx';
 import qs from 'qs';
 
-import OutcomePieChart from '../../components/directory/outcome-pie-chart.jsx';
-
 const StudentDirectory = () => {
   const [selectedAlumni, setSelectedAlumni] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [alumniData, setAlumniData] = useState([]);
-  const [outcomeSummary, setOutcomeSummary] = useState({});
   const [showFilters, setShowFilters] = useState(false);
 
   const [filters, setFilters] = useState({
@@ -99,10 +96,10 @@ const [appliedFilters, setAppliedFilters] = useState({
           phone: element.phone,
           gradeName: element.family.grade_info.grade_name,
           familyName: element.family.family_name,
-          combinationName: element.combination.combination_name,
+          combinationName: element.combination?.combination_name,
           grade: element.family.grade_info.grade_name || 'none',
           family: element.family.family_name || 'none',
-          combination: element.combination.combination_name || '',
+          combination: element.combination?.combination_name || '',
           employment: element.employment?.[0]?.title || '',
           industry: element.employment?.[0]?.industry || '',
           further_education: element.further_education?.[0]?.college.college_name || '',
@@ -112,7 +109,6 @@ const [appliedFilters, setAppliedFilters] = useState({
             pagination.current_page === 1 ? alumnilist : [...prevData, ...alumnilist]
           );
         setFilters(response.data.filters);
-        setOutcomeSummary(response.data.outcome_summary);
         setPagination((prev) => ({
           ...prev,
           total: response.data.pagination.total,
@@ -167,7 +163,6 @@ const [appliedFilters, setAppliedFilters] = useState({
   
 
 const handleDownload = async () => {
-    try {
       const params = {
         page_size: 10000,
       };
@@ -176,14 +171,16 @@ const handleDownload = async () => {
       if (appliedFilters.family.length > 0) params.family = appliedFilters.family;
       if (appliedFilters.combination.length > 0) params.combination = appliedFilters.combination;
 
-      const response = await axios.get(baseUrl + '/student-directory/', {
-        params,
-        headers: {
-          Authorization: 'Bearer ' + auth.accessToken,
-          'Content-Type': 'multipart/form-data',
-        },
-        withCredentials: true,
-      });
+      try {
+        const response = await axios.get(baseUrl + '/student-directory/', {
+          params,
+          paramsSerializer: params => qs.stringify(params, { arrayFormat: 'repeat' }),
+          headers: {
+            Authorization: 'Bearer ' + auth.accessToken,
+            'Content-Type': 'multipart/form-data',
+          },
+          withCredentials: true,
+        });
 
       const allAlumni = response.data.data.map((element) => ({
         id: element.id,
@@ -193,16 +190,25 @@ const handleDownload = async () => {
         phone: element.phone,
         grade: element.family.grade_info.grade_name || 'none',
         family: element.family.family_name || 'none',
-        combination: element.combination.combination_name || '',
-        industry: element.employment.industry || '',
+        combination: element.combination?.combination_name || '',
       }));
 
       const worksheet = XLSX.utils.json_to_sheet(allAlumni);
       const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Alumni');
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Student');
       const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
       const data = new Blob([excelBuffer], { type: 'application/octet-stream' });
-      saveAs(data, 'alumni_list.xlsx');
+      const getFilterFilenamePart = (filters) => {
+              return Object.entries(filters)
+                .filter(([_, value]) => value.length > 0)
+                .map(([key, value]) => `${key}-${value.join('-')}`)
+                .join('_');
+            };
+            
+            const filterString = getFilterFilenamePart(appliedFilters);
+            const filename = `student_list${filterString ? '_' + filterString : ''}.xlsx`;
+            
+            saveAs(data, filename);
     } catch (err) {
       console.error('Download error:', err);
     }

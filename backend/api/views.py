@@ -44,6 +44,8 @@ import traceback
 from django.core.paginator import Paginator
 from rest_framework.generics import RetrieveAPIView
 from rest_framework.generics import RetrieveUpdateAPIView
+from django.db.models import Count
+from django.db.models import Max
 
 
 logger = logging.getLogger(__name__)
@@ -3513,16 +3515,21 @@ class EmploymentBulkCreateUpdateView(APIView):
             return Response({'detail': str(e)}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({'detail': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
-from django.db.models import Count
+    
 
 class AlumniYearsView(APIView):
     def get(self, request):
         years = Grade.objects.order_by('graduation_year_to_asyv').values_list('graduation_year_to_asyv', flat=True).distinct()
         return Response({'years': list(years)})
+    
+def get_last_updated():
+    latest_emp = Employment.objects.aggregate(last=Max('updated_at'))['last']
+    latest_edu = FurtherEducation.objects.aggregate(last=Max('updated_at'))['last']
+    return max(filter(None, [latest_emp, latest_edu]))
 
 class AlumniOutcomeTrends(APIView):
     def get(self, request):
+        last_updated = get_last_updated()
         year = request.query_params.getlist('year')
         gender = request.query_params.get('gender')
 
@@ -3745,6 +3752,7 @@ class AlumniOutcomeTrends(APIView):
 
         # Return per-year data + overall most attended colleges
         return Response({
+            'last_updated': last_updated.isoformat() if last_updated else None,
             'yearly_outcomes': data,
             'overall_summary': overall_summary,
         })
