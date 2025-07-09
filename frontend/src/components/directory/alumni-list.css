@@ -47,7 +47,7 @@
   background-color: var(--white);
   box-shadow: 0 2px 10px var(--blackopa);
   border-radius: 8px;
-  overflow: hidden;
+  /* overflow: hidden; */
   font-family: Regular;
   font-size: 15px;
   margin-bottom: 20px;
@@ -55,6 +55,13 @@
 
 .desktop-table thead {
   background-color: var(--palegrey);
+}
+
+.desktop-table thead th {
+  position: sticky;
+  top: 0;
+  background-color: var(--palegrey); /* test color effect */
+  z-index: 2;
 }
 
 .desktop-table th,
