@@ -1,0 +1,104 @@
+.ContactWrapper {
+  display: flex;              /* Add this */
+  flex-direction: column;     /* Optional: stack vertically */
+  align-items: center;        /* Horizontally center the card */
+  justify-content: center;    /* Vertically center if desired */
+}
+
+.contact-card {
+  display: flex;
+  align-items: center;
+  /* background-color: var(--white); */
+  /* box-shadow: 0 2px 10px var(--blackopa); */
+  padding: 16px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  max-width: 100%;
+}
+
+.contact-pic-wrapper {
+  position: relative;
+  width: 90px;
+  height: 90px;
+  margin-right: 20px;
+  cursor: pointer;
+}
+
+.contact-pic {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid var(--green);
+}
+
+.edit-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: var(--white);
+  font-family: Regular;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.contact-info {
+  flex: 1;
+}
+
+.contact-name {
+  font-family: Bold;
+  font-size: 18px;
+  color: var(--black);
+  margin-bottom: 8px;
+}
+
+.contact-line {
+  font-family: Regular;
+  font-size: 15px;
+  color: var(--black);
+  margin-bottom: 4px;
+}
+
+/* Responsive */
+/* @media (max-width: 768px) {
+  .contact-card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    justify-content: center;
+  }
+
+  .contact-pic-wrapper {
+    margin-right: 0;
+    margin-bottom: 10px;
+  }
+
+  .contact-info {
+    width: 100%;
+  }
+  .ContactWrapper{
+    display: flex;              
+    flex-direction: column;     
+    align-items: center;        
+    justify-content: center;    
+    padding: 20px;
+  }
+  
+.contact-card {
+  width: 100%;
+  max-width: 400px;           
+  background-color: var(--white);
+  box-shadow: 0 2px 10px var(--blackopa);
+  padding: 20px;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+} */

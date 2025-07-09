@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 
+import "./login_pop_up.css";
+
 const ChangePasswordModal = ({ onSubmit, onSkip }) => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');

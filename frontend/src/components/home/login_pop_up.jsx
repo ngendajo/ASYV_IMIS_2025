@@ -9,6 +9,8 @@ import axios from "../../api/axios";
 import baseUrl from "../../api/baseUrl";
 import ChangePasswordModal from "./change_password";
 
+import "./login_pop_up.css";
+
 const LOGIN_URL = '/token/';
 
 export default function LoginPopUp({showLogin, toggleLoginPopup}) {
@@ -24,6 +26,8 @@ export default function LoginPopUp({showLogin, toggleLoginPopup}) {
     const [errMsg, setErrMsg] = useState('');
     const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
     const [accessToken, setAccessToken] = useState('');
+    const [showForgotMessage, setShowForgotMessage] = useState(false);
+
 
 
 
@@ -147,7 +151,19 @@ export default function LoginPopUp({showLogin, toggleLoginPopup}) {
                             <div className="ConfirmButton">
                                 <button type="submit">Login</button>
                             </div>
-                            <Link to="/home" className="ForgetPassword">Forgot Password?</Link>
+                            {showForgotMessage ? (
+                                <p className="ForgotMessage">
+                                    Please contact the CRC if you forgot your password.
+                                </p>
+                                ) : (
+                                <button
+                                    type="button"
+                                    className="ForgotPasswordLink"
+                                    onClick={() => setShowForgotMessage(true)}
+                                >
+                                    Forgot Password?
+                                </button>
+                                )}
                         </form>
                         </div>
                 </div>

@@ -2,24 +2,17 @@
   color: var(--black);
   font-family: Regular;
   line-height: 1.7;
+  padding: 2rem;
 }
 
-.giving-photo {
-  width: 100%;
-  max-height: 400px;
-  object-fit: cover;
-  border-radius: 8px;
-  margin-bottom: 2rem;
-}
-
-.giving-title {
+.giving-back-page h1 {
   font-family: Bold;
   font-size: 35px;
   color: var(--green);
   margin-bottom: 1rem;
 }
 
-.giving-subtitle {
+.giving-back-page h2 {
   font-family: Medium;
   font-size: 18px;
   color: var(--brown);
@@ -30,30 +23,22 @@
   font-family: Medium;
   font-size: 20px;
   color: var(--orange);
-  margin-top: 2rem;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.giving-back-page p {
+  margin: 1rem 0;
 }
 
 .giving-back-page ul {
   padding-left: 1.5rem;
-  margin-top: 1rem;
+  margin-top: 0.5rem;
+  margin-bottom: 1.5rem;
 }
 
 .giving-back-page li {
   margin-bottom: 0.5rem;
-}
-
-.cta-section {
-  background-color: var(--palegreen);
-  padding: 1.5rem;
-  border-radius: 12px;
-  margin: 2rem 0;
-}
-
-.cta-text {
-  font-size: 18px;
-  font-family: Medium;
-  color: var(--green);
-  margin-bottom: 1rem;
 }
 
 .donate-button {
@@ -66,6 +51,7 @@
   border-radius: 8px;
   cursor: pointer;
   transition: background-color 0.3s ease;
+  margin: 1rem 0;
 }
 
 .donate-button:hover {
@@ -81,4 +67,28 @@
   margin-top: 3rem;
   padding-top: 1rem;
   border-top: 1px solid var(--greyopa);
+}
+
+/* Optional image section if uncommented in JSX */
+.giving-photo {
+  width: 100%;
+  max-height: 400px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+}
+
+/* CTA section reused safely */
+.cta-section {
+  background-color: var(--palegreen);
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin: 2rem 0;
+}
+
+.cta-text {
+  font-size: 18px;
+  font-family: Medium;
+  color: var(--green);
+  margin-bottom: 1rem;
 }

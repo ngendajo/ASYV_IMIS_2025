@@ -5,6 +5,7 @@ import useAuth from "../../hooks/useAuth";
 import './profile-card.css';
 import ChangePasswordModal from '../home/change_password';
 import VerifyCurrentPasswordModal from './verify-password';
+import ContactCard from '../../components/profile/contact-card';
 
 
 const safeValue = (val) => {
@@ -606,6 +607,7 @@ const ProfileCard = ({ propId }) => {
   
   return (
     <div className="profile-container vertical-cards">
+          
       <ProfileCardSection 
         title="Personal Info" canEdit={auth.user?.is_superuser}
         isEditing={editState.info}
@@ -621,7 +623,6 @@ const ProfileCard = ({ propId }) => {
         }}>
         {renderSection([user], (newArr) => setUser(newArr[0]), personalFields, editState.info)}
       </ProfileCardSection>
-      <button onClick={() => setShowVerifyModal(true)}>Change Password</button>
       <ProfileCardSection
         title="Current Info"
         isEditing={editState.current}
@@ -691,6 +692,7 @@ const ProfileCard = ({ propId }) => {
       >
         {renderSection(employment, setEmployment, employmentFields, editState.employment, true, false)}
       </ProfileCardSection>
+      <button onClick={() => setShowVerifyModal(true)}>Change Password</button>
       {showVerifyModal && (
         <VerifyCurrentPasswordModal
           onVerify={handleVerifyPassword}
