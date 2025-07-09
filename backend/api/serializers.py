@@ -689,3 +689,12 @@ class EventSerializer(serializers.ModelSerializer):
         model = Event
         fields = ('__all__')
 
+class RSVPSerializer(serializers.ModelSerializer):
+    alumni = UserSerializer(read_only=True)
+    event = EventSerializer(read_only=True)
+    event_id = serializers.PrimaryKeyRelatedField(queryset=Event.objects.all(), source='event', write_only=True)
+
+    class Meta:
+        model = RSVP
+        fields = ['id', 'alumni', 'event', 'event_id', 'response', 'timestamp']
+

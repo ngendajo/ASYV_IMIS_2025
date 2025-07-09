@@ -123,6 +123,9 @@ urlpatterns = [
     #Updating Data
      path('grades/<int:grade_id>/graduate-kids/', views.graduate_kids_by_grade, name='graduate_kids_by_grade'),
 
+    #Events / RSVP 
+    path('rsvps/', views.RSVPListCreateAPIView.as_view(), name='rsvp-list'),
+   
     # opportunity paths
     path('opportunity/create/', views.create_opportunity, name='create-opportunity'),
     path('opportunity/', views.read_opportunity, name='read-opportunity'),

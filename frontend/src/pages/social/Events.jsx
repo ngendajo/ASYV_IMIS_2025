@@ -40,9 +40,33 @@ const Events = () => {
     }
   };
 
+  const [userRsvps, setUserRsvps] = useState({}); // key: event_id, value: true/false
+
+  const fetchUserRsvps = async () => {
+    try {
+      const res = await axios.get(`${baseUrl}/rsvps/?alumni=${auth.user.id}`, {
+        headers: {
+          Authorization: `Bearer ${auth.accessToken}`,
+        },
+      });
+      // Map RSVPs into an object for quick lookup by event_id
+      const rsvpMap = {};
+      res.data.forEach(rsvp => {
+        rsvpMap[rsvp.event.id] = true;  // user has RSVPed this event
+      });
+      setUserRsvps(rsvpMap);
+    } catch (err) {
+      console.error("Failed to fetch user RSVPs:", err);
+    }
+  };
+
   useEffect(() =>{
     fetchEvents();
+    if (auth.user && auth.accessToken) {
+      fetchUserRsvps();
+    }
   }, [auth]);
+
 
   const eventsData = event;
 
@@ -145,6 +169,7 @@ const Events = () => {
             <Event
               key={event.id}
               alumni='true'
+              rsvped={!!userRsvps[event.id]}
               title={event.title}
               e_datetime={event.e_datetime}
               buttonText={event.buttonText}
@@ -157,7 +182,9 @@ const Events = () => {
           filteredEvents.map(event => (
             <Event
               key={event.id}
+              event_id={event.id}
               alumni='false'
+              rsvped={!!userRsvps[event.id]}
               title={event.title}
               e_datetime={event.e_datetime}
               location={event.location}

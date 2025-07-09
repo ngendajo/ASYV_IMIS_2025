@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import useAuth from "../../hooks/useAuth";
 import "./events-cards.css";
 import EventModal from "./event-modal"; // make sure to create and import this
+import baseUrl from '../../api/baseUrl';
+import axios from "axios";
+import RSVPList from './rsvp-list';
 
 export const Event = ({
+  event_id,
   alumni,
   title,
   e_datetime,
@@ -14,10 +18,40 @@ export const Event = ({
   onDelete,
   onSave,
   isNew,
-  timeFunction
+  timeFunction,
+  rsvped: initialRsvped
 }) => {
   const { auth } = useAuth();
 
+  // RSVP status state
+  const [rsvped, setRsvped] = useState(false);
+  useEffect(() => {
+    setRsvped(initialRsvped); // update local state when prop changes
+  }, [initialRsvped]);
+
+  const [showModal, setShowModal] = useState(false);
+
+  // Fetch RSVP status on mount or event_id/auth change
+  useEffect(() => {
+    const fetchRSVPStatus = async () => {
+      try {
+        const res = await axios.get(`${baseUrl}/rsvps/?event=${event_id}`, {
+          headers: {
+            Authorization: `Bearer ${auth.accessToken}`
+          }
+        });
+        if (res.data.length > 0) {
+          setRsvped(true);
+        }
+      } catch (error) {
+        console.error("Error fetching RSVP status:", error.response?.data || error.message);
+      }
+    };
+
+    if (auth.user && event_id) fetchRSVPStatus();
+  }, [auth.user, auth.accessToken, event_id]);
+
+  // Date/time formatter for inputs
   const formatDateTime = (dateTime) => {
     if (!dateTime) return '';
     const date = new Date(dateTime);
@@ -26,15 +60,15 @@ export const Event = ({
     return localDateTime.toISOString().slice(0, 16);
   };
 
+  // Editing states
   const [isEditing, setIsEditing] = useState(false);
   const [newTitle, setNewTitle] = useState(title);
   const [newEDateTime, setNewEDateTime] = useState(formatDateTime(e_datetime));
   const [newLocation, setNewLocation] = useState(location);
   const [newImage, setNewImage] = useState(null);
   const [newDescription, setNewDescription] = useState(description);
-  const [rsvped, setRsvped] = useState(false);
-  const [showModal, setShowModal] = useState(false);
 
+  // Handlers for editing
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     setNewImage(file);
@@ -137,9 +171,24 @@ export const Event = ({
               </div>
             ) : (
               <button
-                onClick={(e) => {
-                  e.stopPropagation(); // prevent opening modal
-                  setRsvped(true);
+                onClick={async (e) => {
+                  e.stopPropagation(); // Prevent opening modal
+                  console.log("RSVP event_id:", event_id);
+                  try {
+                    await axios.post(`${baseUrl}/rsvps/`, {
+                      event_id: event_id,
+                      response: 'yes',
+                    }, {
+                      headers: {
+                        Authorization: `Bearer ${auth.accessToken}`,
+                        'Content-Type': 'application/json',
+                      }
+                    });
+                    setRsvped(true);
+                  } catch (error) {
+                    console.error("RSVP failed:", error.response?.data || error.message);
+                    alert("RSVP failed: " + (error.response?.data?.detail || "Unknown error"));
+                  }
                 }}
                 className="events-card-btn"
               >
@@ -147,10 +196,14 @@ export const Event = ({
               </button>
             )}
             {(auth.user.is_crc || auth.user.is_superuser) && alumni === 'false' && (
-              <div className="event-admin-actions">
-                <button onClick={(e) => { e.stopPropagation(); onDelete(); }} className="eventremove">Delete</button>
-                <button onClick={(e) => { e.stopPropagation(); handleEdit(); }} className="eventedit">Edit</button>
-              </div>
+              <><div className="event-admin-actions">
+                  <button onClick={(e) => { e.stopPropagation(); onDelete(); } } className="eventremove">Delete</button>
+                  <button onClick={(e) => { e.stopPropagation(); handleEdit(); } } className="eventedit">Edit</button>
+                </div>
+                <div>
+                    <RSVPList event_id={event_id} />
+                </div></>
+              
             )}
           </>
         )}

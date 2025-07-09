@@ -549,6 +549,24 @@ class Event(models.Model):
     def __str__(self):
         return str(self.title)
 
+class RSVP(models.Model):
+    ATTENDING_CHOICES = [
+        ('yes', 'Yes'),
+        ('no', 'No'),
+        ('maybe', 'Maybe'),
+    ]
+
+    alumni = models.ForeignKey(User, on_delete=models.CASCADE, related_name='rsvps')
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='rsvps')
+    response = models.CharField(max_length=5, choices=ATTENDING_CHOICES, default='no')
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('alumni', 'event')  # Prevent duplicate RSVPs by same alumni for same event
+
+    def __str__(self):
+        return f"{self.alumni} RSVP’d {self.response} for {self.event}"
+
 
     # Opportunity model
 class Opportunity(models.Model):

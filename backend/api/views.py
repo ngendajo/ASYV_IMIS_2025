@@ -5644,6 +5644,29 @@ class EventViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
+class RSVPListCreateAPIView(generics.ListCreateAPIView):
+    queryset = RSVP.objects.all().order_by('-timestamp')
+    serializer_class = RSVPSerializer
+    pagination_class = None
+    #permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = RSVP.objects.all()
+        event_id = self.request.query_params.get('event', None)
+        if event_id:
+            queryset = queryset.filter(event_id=event_id)
+        # Optional: return only RSVPs by the current user
+        #queryset = queryset.filter(alumni=self.request.user)
+        return queryset
+
+    def perform_create(self, serializer):
+        # Prevent duplicate RSVP
+        event = serializer.validated_data.get("event")
+        if RSVP.objects.filter(alumni=self.request.user, event=event).exists():
+            raise ValidationError("You have already RSVPed for this event.")
+        serializer.save(alumni=self.request.user)
+
 # Opportunity model
 @api_view(['GET'])
 #@permission_classes([IsAuthenticated])

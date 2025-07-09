@@ -77,6 +77,8 @@ const AlumniDashboard = () => {
             {events.map((event) => (
               <div className="card-item" key={event.id}>
                 <Event
+                  key={event.id}
+                  event_id={event.id}
                   alumni="true"
                   title={event.title}
                   e_datetime={event.e_datetime}
