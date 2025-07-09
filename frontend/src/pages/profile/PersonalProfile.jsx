@@ -7,6 +7,7 @@ import ProfileImage from '../../components/dashboard/ProfileImage.jsx';
 import useAuth from '../../hooks/useAuth';
 import baseUrl from '../../api/baseUrl';
 import '../../App.css';
+import ContactCard from '../../components/profile/contact-card';
 
 const Profile = () => {
   const { auth } = useAuth();
@@ -35,10 +36,14 @@ const Profile = () => {
 
   return (
     <div className="ProfileWrapper">
-      {/* {user && (
-        <ProfileImage user={user} size={100} canEdit={auth.user.id === user.id} />
-
-      )} */}
+      
+      {user && (
+        <ContactCard
+          user={user}
+          editable={auth.user?.id === selectedID}
+          onEditPicture={() => alert("Open profile picture edit modal")}
+        />
+      )}
 
       <ProfileCard propId={selectedID} />
       <Link to="/personal_profile-resume" className="toResume">Generate Resume &gt;</Link>
