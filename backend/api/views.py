@@ -3277,6 +3277,7 @@ class CurrentStudentDirectoryView(APIView):
         family = request.GET.get('family')
         combination = request.GET.get('combination')
         graduation_year = request.GET.get('year')
+        search_term = self.request.query_params.get('search')
 
         student = Kid.objects.filter(graduation_status='studying'
                                     ).select_related('user', 'family__grade')
@@ -3301,6 +3302,13 @@ class CurrentStudentDirectoryView(APIView):
         if graduation_year:
             student = student.filter(family__grade__graduation_year_to_asyv=graduation_year)
         
+        # 🎯 Search by name
+        if search_term:
+            student = student.filter(
+                Q(user__first_name__icontains=search_term) |
+                Q(user__rwandan_name__icontains=search_term)
+            ).distinct()
+
         student = student.distinct()
         print("Filtered current student count:", student.count())
            # Return filter options
