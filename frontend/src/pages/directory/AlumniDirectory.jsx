@@ -278,9 +278,11 @@ const handleDownload = async () => {
           {showFilters ? 'Hide Filters' : 'Show Filters'}
         </button>
 
-        <button onClick={handleDownload} className="download-btn">
-          Download Excel
-        </button>
+        {(auth?.user?.is_superuser || auth?.user?.is_crc) && (
+          <button onClick={handleDownload} className="download-btn">
+            Download Excel
+          </button>
+        )}
       </div>
 
       {showFilters && (

@@ -24,7 +24,7 @@ export default function Home() {
     useEffect(() => {
         const fetchCombinationData = async () => {
           try {
-            const response = await fetch(baseUrl+'/alumnitotalbycombination/');
+            const response = await fetch(baseUrl+'/combination-counts/');
             const data = await response.json();
             setCombination(data);
           } catch (error) {
@@ -49,7 +49,7 @@ export default function Home() {
     // total for combination
     const totalC = combination.reduce(
         (acc, item) => {
-            acc[item.combination_name] = item.total;
+            acc[item.combination_abbreviation] = item.alumni_count;
             return acc;
         },
         {}
@@ -96,8 +96,8 @@ export default function Home() {
         {/* 4. gender: */}
         {/* 5. combination: */}
         <div className="charts container flex-col center">
-        <GenderChart females={totalG.female} males={totalG.male} />
-        <CombinationChart data={totalC} />
+        <GenderChart/>
+        <CombinationChart />
         <div className="Mission">
             <p>
             Through healing, education, and love, the Agahozo-Shalom Youth Village empowers orphaned and vulnerable Rwandan youth to build lives of dignity and contribute to a better world.
