@@ -100,6 +100,10 @@ const ProfileCard = ({ propId }) => {
     children_options: [],
     levels: [],
     colleges: [],
+    combiantions: [], 
+    grades: [], 
+    leaps: [], 
+    families: [],
     industries: [],
     status:[],
     employment_status:[], 
@@ -264,7 +268,7 @@ const ProfileCard = ({ propId }) => {
   };
 
   useEffect(() => {
-    console.log("user data", user);
+    console.log("user data updated", user);
   }, [user]);
 
   useEffect(() => {
@@ -341,17 +345,41 @@ const ProfileCard = ({ propId }) => {
     dropdownOptions.colleges.map(c => [c.value, c.location])
   );
   //console.log(collegeLookup);
-
-  const getNestedValue = (obj, path) => {
-    return path.split('.').reduce((o, key) => o?.[key], obj);
-  };
   
-  const setNestedValue = (obj, path, value) => {
-    const keys = path.split('.');
-    const lastKey = keys.pop();
-    const nested = keys.reduce((o, k) => o[k] = o[k] || {}, obj);
-    nested[lastKey] = value;
-  };
+
+  function getNestedValue(obj, path) {
+    if (!obj || !path) return undefined;
+    if (typeof path === 'string') {
+      path = path.split('.');
+    }
+    return path.reduce((acc, key) => acc && acc[key], obj);
+  }
+  
+  function setNestedValueImmutable(obj, path, value) {
+    if (typeof path === 'string') {
+      path = path.split('.');
+    }
+    
+    if (path.length === 0) {
+      console.log('Reached leaf path, setting value:', value);
+      return value;
+    }
+      
+    const [key, ...rest] = path;
+    console.log('Current key:', key, 'Remaining path:', rest, 'Current obj value:', obj[key]);
+
+    const updated = {
+      ...obj,
+      [key]: rest.length === 0 
+        ? value 
+        : setNestedValueImmutable(obj?.[key] ?? {}, rest, value)
+    };
+  
+    console.log('Returning updated object at key:', key, updated);
+  
+    return updated;
+  }
+  
   
   const renderSection = (
     data,
@@ -372,39 +400,53 @@ const ProfileCard = ({ propId }) => {
               <tr key={i}>
                 {fields.map((f, j) => {
                   let val = f.path
-                  ? getNestedValue(item, f.path)
-                  : typeof f.value === 'function'
-                  ? f.value(item)
-                  : item[f.value];
-                
-                if (typeof val === 'boolean') {
-                  val = val ? 'Yes' : 'No';
-                }
-                  
+                    ? getNestedValue(item, f.path)
+                    : typeof f.value === 'function'
+                      ? f.value(item)
+                      : item[f.value];
+  
+                  if (typeof val === 'boolean') {
+                    val = val ? 'Yes' : 'No';
+                  }
+  
                   if (editing && f.dropdownKey && dropdownOptions[f.dropdownKey]) {
                     return (
                       <td key={j}>
                         <select
-                          value={val ?? ""}
+                          value={String(val ?? "")}
                           onChange={(e) => {
-                            const updated = [...data];
-                            const itemCopy = { ...updated[i] };
                             const newValue = e.target.value;
-  
-                            if (f.path) {
-                              setNestedValue(itemCopy, f.path, newValue);
-                            } else {
-                              itemCopy[f.value] = newValue;
-                            }
-  
+                            console.log('New value from input:', newValue);
+                            console.log('Original item:', item);
+                            let updatedItem = f.path
+                              ? setNestedValueImmutable(item, f.path, newValue)
+                              : { ...item, [f.value]: newValue };
+                              console.log('Updated item after setNestedValueImmutable:', updatedItem);
                             // Special handling: update location when college changes
                             if (isAcademicSection && f.value === 'college') {
+                              console.log(dropdownOptions.colleges)
                               const locationInfo = collegeLookup[newValue];
-                              setNestedValue(itemCopy, 'location', locationInfo?.location || "");
+                              updatedItem = { ...updatedItem, location: locationInfo || "" };
                             }
+
+                            // if (f.path === 'affiliation.grade_info.grade_id') {
+                            //   const selectedOption = dropdownOptions.grades.find(opt => String(opt.value) === String(newValue));
+                            //   const newGradeName = selectedOption?.label || '';
+                            
+                            //   updatedItem = setNestedValueImmutable(updatedItem, 'affiliation.grade_info.grade_name', newGradeName);
+                            // }
+
+                            // if (f.path === 'affiliation.family_id') {
+                            //   const selectedOption = dropdownOptions.families.find(opt => String(opt.value) === String(newValue));
+                            //   const newFamilyName = selectedOption?.label || '';
+                            
+                            //   updatedItem = setNestedValueImmutable(updatedItem, 'affiliation.family_name', newFamilyName);
+                            // }
   
-                            updated[i] = itemCopy;
-                            setData(updated);
+                            const updatedData = [...data];
+                            updatedData[i] = updatedItem;
+                            console.log('Updated data array:', updatedData);
+                            setData(updatedData);
                           }}
                           style={{ width: "100%" }}
                         >
@@ -428,18 +470,14 @@ const ProfileCard = ({ propId }) => {
                           type={f.type || "text"}
                           value={val ?? ""}
                           onChange={(e) => {
-                            const updated = [...data];
-                            const itemCopy = { ...updated[i] };
                             const newValue = e.target.value;
+                            const updatedItem = f.path
+                              ? setNestedValueImmutable(item, f.path, newValue)
+                              : { ...item, [f.value]: newValue };
   
-                            if (f.path) {
-                              setNestedValue(itemCopy, f.path, newValue);
-                            } else {
-                              itemCopy[f.value] = newValue;
-                            }
-  
-                            updated[i] = itemCopy;
-                            setData(updated);
+                            const updatedData = [...data];
+                            updatedData[i] = updatedItem;
+                            setData(updatedData);
                           }}
                           style={{ width: "100%" }}
                           disabled={isAcademicSection && f.value === 'country'}
@@ -461,7 +499,9 @@ const ProfileCard = ({ propId }) => {
                       ) : isAcademicSection && f.value === 'scholarship' ? (
                         getScholarshipLabel(val)
                       ) : (
-                        safeValue(val)
+                        f.dropdownKey && dropdownOptions[f.dropdownKey]
+                          ? dropdownOptions[f.dropdownKey].find(opt => String(opt.value) === String(val))?.label ?? safeValue(val)
+                          : safeValue(val)
                       )}
                     </td>
                   );
@@ -481,7 +521,7 @@ const ProfileCard = ({ propId }) => {
                 : typeof f.value === 'function'
                   ? f.value(item)
                   : item[f.value];
-
+  
               return (
                 <div key={j} className="field-row">
                   <div className="field-label">{f.label}</div>
@@ -490,23 +530,19 @@ const ProfileCard = ({ propId }) => {
                       <select
                         value={val ?? ""}
                         onChange={(e) => {
-                          const updated = [...data];
-                          const itemCopy = { ...updated[i] };
                           const newValue = e.target.value;
-
-                          if (f.path) {
-                            setNestedValue(itemCopy, f.path, newValue);
-                          } else {
-                            itemCopy[f.value] = newValue;
-                          }
-
+                          let updatedItem = f.path
+                            ? setNestedValueImmutable(item, f.path, newValue)
+                            : { ...item, [f.value]: newValue };
+  
                           if (isAcademicSection && f.value === 'college') {
                             const locationInfo = collegeLookup[newValue];
-                            setNestedValue(itemCopy, 'location', locationInfo?.location || "");
+                            updatedItem = { ...updatedItem, location: locationInfo?.location || "" };
                           }
-
-                          updated[i] = itemCopy;
-                          setData(updated);
+  
+                          const updatedData = [...data];
+                          updatedData[i] = updatedItem;
+                          setData(updatedData);
                         }}
                       >
                         <option value="" disabled>Select...</option>
@@ -519,18 +555,14 @@ const ProfileCard = ({ propId }) => {
                         type={f.type || "text"}
                         value={val ?? ""}
                         onChange={(e) => {
-                          const updated = [...data];
-                          const itemCopy = { ...updated[i] };
                           const newValue = e.target.value;
-
-                          if (f.path) {
-                            setNestedValue(itemCopy, f.path, newValue);
-                          } else {
-                            itemCopy[f.value] = newValue;
-                          }
-
-                          updated[i] = itemCopy;
-                          setData(updated);
+                          const updatedItem = f.path
+                            ? setNestedValueImmutable(item, f.path, newValue)
+                            : { ...item, [f.value]: newValue };
+  
+                          const updatedData = [...data];
+                          updatedData[i] = updatedItem;
+                          setData(updatedData);
                         }}
                       />
                     ) : (
@@ -545,7 +577,9 @@ const ProfileCard = ({ propId }) => {
                       ) : isAcademicSection && f.value === 'scholarship' ? (
                         getScholarshipLabel(val)
                       ) : (
-                        safeValue(val)
+                        f.dropdownKey && dropdownOptions[f.dropdownKey]
+                          ? dropdownOptions[f.dropdownKey].find(opt => String(opt.value) === String(val))?.label ?? safeValue(val)
+                          : safeValue(val)
                       )
                     )}
                   </div>
@@ -555,7 +589,6 @@ const ProfileCard = ({ propId }) => {
           </div>
         ))}
       </div>
-
     </>
   );
   
@@ -574,9 +607,9 @@ const ProfileCard = ({ propId }) => {
     { label: 'Country', path: 'current_address.current_county' }
   ] : [];
   const asyvIdentityFields =  user ? [
-    { label: 'Grade', value: u => u.affiliation?.grade_info?.grade_name },
-    { label: 'Family', value: u => u.affiliation?.family_name },
-    { label: 'Combination', value: u => u.academic_combinations?.[0]?.combination_name }
+    { label: 'Grade', path: 'affiliation.grade_info.grade_id', dropdownKey: "grades"},
+    { label: 'Family', path: 'affiliation.family_id', dropdownKey: "families" },
+    { label: 'Combination', path: 'academic_combinations.0.combination_id' , dropdownKey: "combinations"}
   ] : [];
   const asyvAcademicFields = user ? [
     { label: 'S4 Grade', value: u => u.academic_combinations?.[2]?.marks + '%' },
@@ -585,12 +618,12 @@ const ProfileCard = ({ propId }) => {
     { label: 'National Exam Score', value: u => `${u.national_exam_results?.points_achieved}/${u.national_exam_results?.maximum_points} (${u.national_exam_results?.mention})` }
   ] : [];
   const leapProgramFields = user ? [
-    { label: 'Leap Program', value: u => u.leap_activities?.map((a) => `${a.leap_name}`).join(", ") || 'Not Found' }
+    { label: 'Leap Program', value: u => u.leap_activities?.map((a) => `${a.leap_name}`).join(", ") || 'Not Found'}
   ] : [];
   const academicFields = [
     { label: 'Level', value: 'level', dropdownKey: 'levels' },
     { label: 'Degree', value: 'degree' },
-    { label: 'University', value: 'college', dropdownKey: 'colleges' , allowCustom: true},
+    { label: 'University', value: 'college', dropdownKey: 'colleges' },
     { label: 'Location', value: 'country' },
     { label: 'Scholarship', value: 'scholarship', dropdownKey: 'scholarship'},
     { label: 'Scholarship Details', value: 'scholarship_details'},

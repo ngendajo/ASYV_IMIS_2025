@@ -39,6 +39,49 @@ const AddStudents = () => {
     mention: ''
   };
   const [formData, setFormData] = useState(initialFormData)
+  const [excelFiles, setExcelFiles] = useState({
+    marks: null,
+    combination: null,
+    leap: null,
+    employment: null,
+    furtherEducation: null,
+  });
+  
+  const handleExcelUpload = (e, type) => {
+    setExcelFiles(prev => ({
+      ...prev,
+      [type]: e.target.files[0]
+    }));
+  };
+  
+  const submitExcel = async (type) => {
+    if (!excelFiles[type]) {
+      alert("Please select a file first.");
+      return;
+    }
+  
+    const formData = new FormData();
+    formData.append("file", excelFiles[type]);
+  
+    const endpoints = {
+      marks: `${baseUrl}/upload-marks/`,
+      combination: `${baseUrl}/upload-combination-xlsx/`,
+      leap: `${baseUrl}/upload-leap-xlsx/`,
+      employment: `${baseUrl}/upload-employment/`,
+      furtherEducation: `${baseUrl}/upload-further-education/`,
+    };
+  
+    try {
+      await axios.post(endpoints[type], formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      alert(`${type.toUpperCase()} upload successful!`);
+    } catch (err) {
+      console.error(err);
+      alert(`Failed to upload ${type} file.`);
+    }
+  };
+  
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
@@ -93,18 +136,94 @@ const AddStudents = () => {
 
   return (
         <div className="form-section">
-          {/* Bulk Upload */}
-          <label className="required">Upload Excel File</label>
-          <input type="file" accept=".xlsx, .xls" onChange={handleFileChange} />
-          <button onClick={handleUpload}>Upload</button>
-          {uploadStatus && <p>{uploadStatus}</p>}
+          {/* Bulk Upload Options */}
+          <div className="excel-upload-section">
+            <h4>Bulk Upload Options</h4>
 
-          {/* Toggle to Show Single Student Form */}
-          <div className="inline-link">
-            <p onClick={() => setShowSingleStudentForm(!showSingleStudentForm)}>
-              {showSingleStudentForm ? "Hide" : "Or Add One Student"}
-            </p>
-          </div>
+            {/* 1. Upload Basic Student Info */}
+            <div className="upload-block">
+              <label className="required">Upload Students Excel File</label>
+              <input type="file" accept=".xlsx, .xls" onChange={handleFileChange} />
+              <button onClick={handleUpload}>Upload Basic Info</button>
+              <a href="/templates/students_template.xlsx" download className="download-template">
+                Download Template
+              </a>
+              {uploadStatus && <p>{uploadStatus}</p>}
+            </div>
+
+            {/* 2. Upload Marks */}
+            <div className="upload-block">
+              <label className="required">Upload Marks Excel File</label>
+              <input
+                type="file"
+                accept=".xlsx, .xls"
+                onChange={(e) => handleExcelUpload(e, 'marks')}
+              />
+              <button onClick={() => submitExcel('marks')}>Upload Marks</button>
+              <a href="/templates/marks_template.xlsx" download className="download-template">
+                Download Template
+              </a>
+            </div>
+
+            {/* 3. Upload Combination */}
+            <div className="upload-block">
+              <label className="required">Upload Combination Excel File</label>
+              <input
+                type="file"
+                accept=".xlsx, .xls"
+                onChange={(e) => handleExcelUpload(e, 'combination')}
+              />
+              <button onClick={() => submitExcel('combination')}>Upload Combination</button>
+              <a href="/templates/combination_template.xlsx" download className="download-template">
+                Download Template
+              </a>
+            </div>
+
+            {/* 4. Upload LEAP Data */}
+            <div className="upload-block">
+              <label className="required">Upload LEAP Excel File</label>
+              <input
+                type="file"
+                accept=".xlsx, .xls"
+                onChange={(e) => handleExcelUpload(e, 'leap')}
+              />
+              <button onClick={() => submitExcel('leap')}>Upload LEAP</button>
+              <a href="/templates/leap_template.xlsx" download className="download-template">
+                Download Template
+              </a>
+            </div>
+
+            {/* Employment upload */}
+            <div className="upload-block">
+              <label className="required">Upload Employment Excel File</label>
+              <div className="upload-actions">
+                <input type="file" accept=".xlsx, .xls" onChange={(e) => handleExcelUpload(e, 'employment')} />
+                <button onClick={() => submitExcel('employment')}>Upload Employment</button>
+                <a href="/templates/employment_template.xlsx" download className="download-template">
+                  Download Template
+                </a>
+              </div>
+            </div>
+
+            {/* Further Education upload */}
+            <div className="upload-block">
+              <label className="required">Upload Further Education Excel File</label>
+              <div className="upload-actions">
+                <input type="file" accept=".xlsx, .xls" onChange={(e) => handleExcelUpload(e, 'furtherEducation')} />
+                <button onClick={() => submitExcel('furtherEducation')}>Upload Education</button>
+                <a href="/templates/further_education_template.xlsx" download className="download-template">
+                  Download Template
+                </a>
+              </div>
+            </div>
+
+
+            {/* Toggle to Show Single Student Form */}
+            <div className="inline-link">
+              <p onClick={() => setShowSingleStudentForm(!showSingleStudentForm)}>
+                {showSingleStudentForm ? "Hide" : "Or Add One Student"}
+              </p>
+            </div>
 
           {/* Optional: add one student manually (optional form stub) */}
           {showSingleStudentForm && (
@@ -224,6 +343,7 @@ const AddStudents = () => {
               <button onClick={handleAddStudent}>Add Student</button>
             </div>
           )}
+        </div>
         </div>
   )}
 

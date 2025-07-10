@@ -119,26 +119,34 @@ class EmploymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Employment
         fields = ['id', 'alumn', 'title', 'status', 'industry', 'company', 'start_date', 'end_date']
+        read_only_fields = ['alumn']
 
 class KidSerializer(serializers.ModelSerializer): 
     class Meta:
         model = Kid
         fields = '__all__'
 
-class FurtherEducationSerializer(serializers.ModelSerializer): 
-    college = serializers.SerializerMethodField()
+class FurtherEducationSerializer(serializers.ModelSerializer):
+    college = serializers.PrimaryKeyRelatedField(queryset=College.objects.all())
+    college_name = serializers.SerializerMethodField(read_only=True)
     location = serializers.SerializerMethodField(read_only=True)
-
 
     class Meta:
         model = FurtherEducation
-        fields = ['id', 'alumn', 'college', 'level', 'degree', 'status', 'location', 'scholarship', 'scholarship_details']
+        fields = [
+            'id', 'alumn', 'college', 'college_name',
+            'level', 'degree', 'status', 'location',
+            'scholarship', 'scholarship_details'
+        ]
+        read_only_fields = ['alumn']
 
     def get_location(self, obj):
         return f"{obj.college.city}, {obj.college.country}"
-    
-    def get_college(self, obj):
+
+    def get_college_name(self, obj):
         return obj.college.college_name
+
+
 
 class AlumniListSerializer(serializers.ModelSerializer):
     family = FamilySerializer()
@@ -151,6 +159,7 @@ class AlumniListSerializer(serializers.ModelSerializer):
     employment = EmploymentSerializer(many=True, read_only=True, required=False)
     image_url = serializers.ImageField(source='user.image_url')
     user_id = serializers.SerializerMethodField()
+    is_alumni = serializers.SerializerMethodField()
     further_education = FurtherEducationSerializer(source='furthereducation', many=True, read_only=True, required=False)
 
 
@@ -158,7 +167,7 @@ class AlumniListSerializer(serializers.ModelSerializer):
         model = Kid
         fields = ['id', 'user_id', 'first_name', 'rwandan_name', 
                   'gender', 'email', 'phone', 'image_url', 'family', 
-                  'employment', 'combination', 'further_education']
+                  'employment', 'combination', 'further_education', 'is_alumni']
     def get_gender(self, obj): 
         return obj.user.gender if obj.user else None
     
@@ -177,8 +186,11 @@ class AlumniListSerializer(serializers.ModelSerializer):
     def get_user_id(self, obj):
         return obj.user.id if obj.user else None
     
+    def get_is_alumni(self, obj):
+        return obj.user.is_alumni if obj.user else False
+
     def get_combination(self, obj):
-        academic = KidAcademics.objects.filter(kid=obj, level='S6').first()
+        academic = KidAcademics.objects.filter(kid=obj).first()
         if academic and academic.combination:
             return CombinationSerializer(academic.combination).data
         return None
@@ -283,6 +295,8 @@ class CollegeSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     
+from rest_framework import serializers
+
 class BasicInformationSerializer(serializers.Serializer):
     user_id = serializers.IntegerField(required=False)
     kid_id = serializers.IntegerField(required=False)
@@ -296,7 +310,7 @@ class PersonalStatusSerializer(serializers.Serializer):
     has_children = serializers.BooleanField(required=False)
     life_status = serializers.CharField(required=False, allow_blank=True)
     graduation_status = serializers.CharField(required=False, allow_blank=True)
-    health_issue = serializers.CharField(required=False, allow_blank=True)
+    health_issue = serializers.CharField(required=False, allow_blank=True, allow_null=True)
 
 class CurrentAddressSerializer(serializers.Serializer):
     current_district_or_city = serializers.CharField(required=False, allow_blank=True)
@@ -306,35 +320,36 @@ class StudentProfileSerializer(serializers.Serializer):
     basic_information = BasicInformationSerializer(required=False)
     personal_status = PersonalStatusSerializer(required=False)
     current_address = CurrentAddressSerializer(required=False)
-    # other nested fields if needed
 
     def update(self, instance, validated_data):
         user = instance['user']
         kid = instance['kid']
 
+        # Update user info
         basic_info = validated_data.get('basic_information', {})
-        personal_status = validated_data.get('personal_status', {})
-        current_address = validated_data.get('current_address', {})
-
-        # Update user fields from basic_information
         for attr in ['first_name', 'middle_name', 'rwandan_name']:
             if attr in basic_info:
                 setattr(user, attr, basic_info[attr])
         user.save()
 
-        # Update kid fields from personal_status
+        # Update kid personal_status, current_address, etc. as before
+        personal_status = validated_data.get('personal_status', {})
         for attr in ['marital_status', 'has_children', 'life_status', 'graduation_status', 'health_issue']:
             if attr in personal_status:
                 setattr(kid, attr, personal_status[attr])
-        
-        # Update kid fields from current_address
+
+        current_address = validated_data.get('current_address', {})
         for attr in ['current_district_or_city', 'current_county']:
             if attr in current_address:
                 setattr(kid, attr, current_address[attr])
-
         kid.save()
-
         return {'user': user, 'kid': kid}
+
+
+    def create(self, validated_data):
+        # Implement create if you want to support POST to create new user/kid
+        pass
+
 
 class CurrentInfoSerializer(serializers.Serializer):
     marital_status = serializers.CharField(required=False, allow_blank=True)
@@ -348,6 +363,57 @@ class CurrentInfoSerializer(serializers.Serializer):
             setattr(instance, attr, value)
         instance.save()
         return instance
+
+class ASYVInfoSerializer(serializers.Serializer):
+    kid_id = serializers.IntegerField()
+    family_id = serializers.IntegerField(required=False)
+    grade_id = serializers.IntegerField(required=False)
+    combination_ids = serializers.ListField(
+        child=serializers.IntegerField(), required=False
+    )
+
+    def validate(self, data):
+        # Validate family exists
+        if 'family_id' in data:
+            try:
+                data['family'] = Family.objects.get(pk=data['family_id'])
+            except Family.DoesNotExist:
+                raise serializers.ValidationError("Family not found.")
+
+        # Validate grade exists
+        if 'grade_id' in data:
+            try:
+                data['grade'] = Grade.objects.get(pk=data['grade_id'])
+            except Grade.DoesNotExist:
+                raise serializers.ValidationError("Grade not found.")
+
+        # Validate combinations
+        if 'combination_ids' in data:
+            combinations = Combination.objects.filter(id__in=data['combination_ids'])
+            if combinations.count() != len(data['combination_ids']):
+                raise serializers.ValidationError("One or more combinations not found.")
+            data['combinations'] = combinations
+
+        return data
+
+    def update(self, instance, validated_data):
+        family = validated_data.get('family')
+        grade = validated_data.get('grade')
+        combinations = validated_data.get('combinations')
+
+        if family:
+            instance.family = family
+        if grade and instance.family:
+            instance.family.grade = grade
+            instance.family.save()
+
+        if combinations is not None:
+            instance.academic_combinations.set(combinations)
+
+        instance.save()
+        return instance
+
+
 
 class FurtherEducationChoicesSerializer(serializers.Serializer):
     levels = serializers.SerializerMethodField()
