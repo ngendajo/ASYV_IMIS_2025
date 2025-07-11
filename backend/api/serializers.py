@@ -1,3 +1,4 @@
+import traceback
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
@@ -6,6 +7,8 @@ from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from .models import *
 from datetime import datetime
+from django.core.exceptions import ValidationError as DjangoValidationError
+
 
 User = get_user_model()
         
@@ -221,13 +224,15 @@ class UserSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
+        print("Validated data:", validated_data)
         try:
             user = User.objects.create_user(**validated_data)
             return user
-        except ValidationError as e:
-            raise serializers.ValidationError(str(e))
+        except DjangoValidationError as e:
+            raise serializers.ValidationError({'validation_error': e.messages})
         except Exception as e:
-            raise serializers.ValidationError(f"Error creating user: {str(e)}")
+            traceback.print_exc()  # For logging
+            raise serializers.ValidationError({'error': str(e)})
 
     def update(self, instance, validated_data):
         try:

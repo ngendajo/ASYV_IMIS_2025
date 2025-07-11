@@ -1020,28 +1020,35 @@ class KidViewSet(viewsets.ModelViewSet):
     ordering_fields = ['created_at', 'updated_at', 'points_in_national_exam']
     
     def create(self, request, *args, **kwargs):
-        """Create a new Kid instance with error handling"""
         try:
-            serializer = self.get_serializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            self.perform_create(serializer)
-            headers = self.get_success_headers(serializer.data)
-            return Response(
-                serializer.data, 
-                status=status.HTTP_201_CREATED, 
-                headers=headers
-            )
+            # Use transaction.atomic to ensure rollback on failure
+            with transaction.atomic():
+                # Extract user data from request.data (adjust keys accordingly)
+                user_data = request.data.get('user')
+                if not user_data:
+                    return Response({'error': 'User data is required'}, status=status.HTTP_400_BAD_REQUEST)
+                
+                # Create user serializer and validate
+                user_serializer = UserSerializer(data=user_data)
+                user_serializer.is_valid(raise_exception=True)
+                user = user_serializer.save()
+                
+                # Now create Kid with reference to created user
+                kid_data = request.data.copy()
+                kid_data['user'] = user.id  # or user.pk
+                
+                serializer = self.get_serializer(data=kid_data)
+                serializer.is_valid(raise_exception=True)
+                self.perform_create(serializer)
+                
+                headers = self.get_success_headers(serializer.data)
+                return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        
         except ValidationError as e:
-            return Response(
-                {'error': 'Validation error', 'details': str(e)}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({'error': 'Validation error', 'details': e.detail}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            return Response(
-                {'error': 'Failed to create kid record', 'details': str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-    
+            return Response({'error': 'Failed to create kid record', 'details': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
     def retrieve(self, request, *args, **kwargs):
         """Retrieve a Kid instance with error handling"""
         try:

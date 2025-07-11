@@ -118,21 +118,42 @@ const AddStudents = () => {
     const city = formData.current_city === "other" ? formData.other_city : formData.current_city;
     const country = formData.current_country === "other" ? formData.other_country : formData.current_country;
   
-    const payload = {
-      ...formData,
+    // Extract user-related fields from formData (adjust keys as needed)
+    const userPayload = {
+      username: formData.username,
+      password: formData.password,
+      email: formData.email,       // example, include email if relevant
+      phone: formData.phone,       // etc.
+      // add any other user fields you want to send
+    };
+  
+    // Extract kid-specific fields from formData
+    // For example, reg_number, first_name, rwandan_name, gender, etc.
+    const kidPayload = {
+      reg_number: formData.reg_number,
+      first_name: formData.first_name,
+      rwandan_name: formData.rwandan_name,
+      gender: formData.gender,
       current_city: city,
-      current_country: country
+      current_country: country,
+      // add other kid-specific fields here
+    };
+  
+    // Compose final payload with nested user
+    const payload = {
+      user: userPayload,
+      ...kidPayload,
     };
   
     try {
-      const res = await axios.post(`${baseUrl}/api/kid/`, payload);
+      const res = await axios.post(`${baseUrl}/kids/`, payload);
       alert("Student added successfully!");
       setFormData(initialFormData); // reset form if needed
     } catch (err) {
       console.error(err);
       alert("Failed to add student.");
     }
-}
+  };
 
   return (
         <div className="form-section">
