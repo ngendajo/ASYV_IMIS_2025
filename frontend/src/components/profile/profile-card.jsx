@@ -428,20 +428,6 @@ const ProfileCard = ({ propId }) => {
                               const locationInfo = collegeLookup[newValue];
                               updatedItem = { ...updatedItem, location: locationInfo || "" };
                             }
-
-                            // if (f.path === 'affiliation.grade_info.grade_id') {
-                            //   const selectedOption = dropdownOptions.grades.find(opt => String(opt.value) === String(newValue));
-                            //   const newGradeName = selectedOption?.label || '';
-                            
-                            //   updatedItem = setNestedValueImmutable(updatedItem, 'affiliation.grade_info.grade_name', newGradeName);
-                            // }
-
-                            // if (f.path === 'affiliation.family_id') {
-                            //   const selectedOption = dropdownOptions.families.find(opt => String(opt.value) === String(newValue));
-                            //   const newFamilyName = selectedOption?.label || '';
-                            
-                            //   updatedItem = setNestedValueImmutable(updatedItem, 'affiliation.family_name', newFamilyName);
-                            // }
   
                             const updatedData = [...data];
                             updatedData[i] = updatedItem;

@@ -168,16 +168,15 @@ const AddStudents = () => {
       password_confirm: formData.password_confirm,
       email: formData.email,       // example, include email if relevant
       phone: formData.phone,       // etc.
-      // add any other user fields you want to send
+      reg_number: formData.reg_number,
+      first_name: formData.first_name,
+      rwandan_name: formData.rwandan_name,
+      gender: formData.gender,
     };
   
     // Extract kid-specific fields from formData
     // For example, reg_number, first_name, rwandan_name, gender, etc.
     const kidPayload = {
-      reg_number: formData.reg_number,
-      first_name: formData.first_name,
-      rwandan_name: formData.rwandan_name,
-      gender: formData.gender,
       current_district_or_city: city,
       current_county: country,
       origin_district: formData.origin_district, 
@@ -346,7 +345,7 @@ const AddStudents = () => {
                     value={formData.dob}
                     onChange={handleChange} />
 
-                <label>Phone</label>
+                <label className = "required">Phone</label>
                 <input 
                     type="tel"
                     name="phone"
@@ -359,7 +358,7 @@ const AddStudents = () => {
                     value={formData.phone1}
                     onChange={handleChange} />
 
-                <label>Email</label>
+                <label className = "required">Email</label>
                 <input type="email" 
                         name="email"
                         value={formData.email}
