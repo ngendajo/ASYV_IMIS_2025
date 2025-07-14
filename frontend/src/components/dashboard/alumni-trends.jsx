@@ -404,19 +404,11 @@ It provides a snapshot in time, based on data last updated on ${formattedUpdateT
       {/* Lists Section */}
       <section className="lists-section">
         <div className="list-card">
-          <h2 className="list-title">Colleges Attended by Country</h2>
-          <p className="chart-description">
-            A breakdown of colleges attended by alumni, grouped by country. The size of each group reflects the number of alumni who studied in each country.
-          </p>
-          <CollegesByCountry collegesByCountry={collegeData} />
-        </div>
-
-        <div className="list-card">
           <h2 className="list-title">Employment Status Distribution</h2>
           <p className="chart-description">
             This chart shows the employment status of alumni, such as full-time, part-time, or unemployed.
           </p>
-          <EmploymentDistribution distribution={employmentStatusData} />
+            <EmploymentDistribution distribution={employmentStatusData} />
         </div>
 
         <div className="list-card">
@@ -425,6 +417,23 @@ It provides a snapshot in time, based on data last updated on ${formattedUpdateT
             A pie chart showing the distribution of degree levels earned by alumni, such as Bachelor’s, Master’s, or Ph.D.
           </p>
           <DegreeLevelPieChart distribution={degreeLevelData} />
+        </div>
+
+        <div className="list-card">
+          <h2 className="list-title">Colleges Attended by Country</h2>
+          <p className="chart-description">
+            A breakdown of colleges attended by alumni, grouped by country. The size of each group reflects the number of alumni who studied in each country. Click on a country to view colleges.
+          </p>
+            <CollegesByCountry collegesByCountry={collegeData} />
+        </div>
+
+        <div className="list-card">
+          <h2 className="list-title">Areas of Study</h2>
+          <p className="chart-description">
+            This list shows the most common academic disciplines alumni pursued.
+          </p>
+          <AreasOfStudyList data={degreeNameData}
+          />
         </div>
 
         <div className="list-card">
@@ -447,14 +456,7 @@ It provides a snapshot in time, based on data last updated on ${formattedUpdateT
           />
         </div>
 
-        <div className="list-card">
-          <h2 className="list-title">Areas of Study</h2>
-          <p className="chart-description">
-            This list shows the most common academic disciplines alumni pursued.
-          </p>
-          <AreasOfStudyList data={degreeNameData}
-          />
-        </div>
+
       </section>
     </div>
   );

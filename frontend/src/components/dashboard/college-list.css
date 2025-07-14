@@ -1,10 +1,3 @@
-.cbc-wrapper {
-  padding: 1rem;
-  border: 1px solid var(--coffeeli, #ccc);
-  border-radius: 8px;
-  background-color: white;
-}
-
 .no-data {
   font-style: italic;
   color: #777;
@@ -14,13 +7,11 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.01rem;
-  margin-bottom: 1rem;
 }
 
 .cbc-country-button {
-  padding: 0.4rem 1rem;
-  background-color: var(--orangeli, #ffba74);
-  border: 1px solid var(--coffee, #957967);
+  padding: 0.4rem .5rem;
+  background-color: var(--green);
   border-radius: 6px;
   cursor: pointer;
   font-family: Medium;
@@ -28,7 +19,7 @@
 }
 
 .cbc-country-button:hover {
-  background-color: var(--orange, #f49c46);
+  background-color: var(--brown);
   color: white;
 }
 
@@ -39,7 +30,6 @@
 
 .cbc-back-button {
   align-self: flex-start;
-  margin-bottom: 1rem;
   padding: 0.4rem 0.8rem;
   background-color: transparent;
   border: 1px solid var(--brown, #6d5736);
