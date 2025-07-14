@@ -120,8 +120,8 @@ urlpatterns = [
     path('options/all-dropdowns/', views.DropdownOptionsAPIView.as_view(), name='profile-dropdowns'),
     path('options/mamas/', views.get_mamas, name='mamas-info'),
 
-    #Updating Data
-     path('grades/<int:grade_id>/graduate-kids/', views.graduate_kids_by_grade, name='graduate_kids_by_grade'),
+    #Auto graduated kids in a grade
+    path('grades/<int:grade_id>/graduate-kids/', views.graduate_kids_by_grade, name='graduate_kids_by_grade'),
 
     #Events / RSVP 
     path('rsvps/', views.RSVPListCreateAPIView.as_view(), name='rsvp-list'),
