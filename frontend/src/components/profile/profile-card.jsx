@@ -47,10 +47,12 @@ const ProfileCard = ({ propId }) => {
 
   if (!user) return <div>Loading profile...</div>;
 
+
   // Define fields to render
   const safe = (v) => v || 'Not Found';
   const personalFields = [
     { label: 'First Name', path: 'basic_information.first_name' },
+
     { label: 'Rwandan Name', path: 'basic_information.rwandan_name' },
     { label: 'Gender', path: 'basic_information.gender' },
     { label: 'Date of Birth', path: 'basic_information.date_of_birth' },
@@ -152,7 +154,7 @@ const ProfileCard = ({ propId }) => {
         ], editState.employment, dropdownOptions, false, true)}
       </ProfileCardSection>
 
-      {/* Password change modals omitted here for brevity */}
+
     </div>
   );
 };
