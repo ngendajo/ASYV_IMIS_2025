@@ -97,7 +97,7 @@ const GradeList = () => {
 
   const graduateKids = async (gradeId) => {
     try {
-      const res = await axios.post(`${baseUrl}/grades/${gradeId}/graduate-kids/`);
+      const res = await axios.put(`${baseUrl}/grades/${gradeId}/graduate-kids/`);
       alert(res.data.message);
       fetchGrades();
     } catch (err) {

@@ -512,6 +512,7 @@ class GradeViewSet(viewsets.ModelViewSet):
 class FamilyViewSet(viewsets.ModelViewSet):
     queryset = Family.objects.all()
     serializer_class = FamilySerializer
+    pagination_class = None
 
     def create(self, request, *args, **kwargs):
         try:
@@ -1013,6 +1014,7 @@ class KidViewSet(viewsets.ModelViewSet):
     """
     queryset = Kid.objects.all()
     serializer_class = KidSerializer
+    pagination_class = None
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = KidFilter
     search_fields = ['user__first_name', 'user__last_name', 'family__family_name', 
@@ -5638,17 +5640,29 @@ class MediaFileViewSet(viewsets.ModelViewSet):
         except Exception as e:
             raise APIExceptionWithDetail(f"Error uploading media file: {str(e)}", code='media_upload_error', status_code=status.HTTP_400_BAD_REQUEST)
 
-# Automatically update graduation status
-@api_view(['POST'])
+
+@api_view(['PUT'])
 def graduate_kids_by_grade(request, grade_id):
     try:
         grade = Grade.objects.get(id=grade_id)
         kids = Kid.objects.filter(family__grade=grade)
-        updated = kids.update(graduation_status='graduated')
-        return Response({'updated_count': updated}, status=status.HTTP_200_OK)
+        
+        # Update kids' graduation status
+        updated_kids_count = kids.update(graduation_status='graduated')
+        
+        # Update corresponding users — assuming Kid has OneToOne or ForeignKey to User as 'user'
+        user_ids = kids.values_list('user_id', flat=True)
+        updated_users_count = User.objects.filter(id__in=user_ids).update(is_alumni=True)
+        
+        return Response({
+            'updated_kids_count': updated_kids_count,
+            'updated_users_count': updated_users_count,
+        }, status=status.HTTP_200_OK)
+    
     except Grade.DoesNotExist:
         return Response({'error': 'Grade not found'}, status=status.HTTP_404_NOT_FOUND)
-
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class EventViewSet(viewsets.ModelViewSet):
     queryset = Event.objects.all()
