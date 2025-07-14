@@ -13,13 +13,13 @@
 .cbc-country-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.01rem;
   margin-bottom: 1rem;
 }
 
 .cbc-country-button {
-  padding: 0.5rem 1rem;
-  background-color: var(--orangeli, #f4d2b0);
+  padding: 0.4rem 1rem;
+  background-color: var(--orangeli, #ffba74);
   border: 1px solid var(--coffee, #957967);
   border-radius: 6px;
   cursor: pointer;

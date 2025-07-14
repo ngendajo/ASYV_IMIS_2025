@@ -115,7 +115,7 @@ urlpatterns = [
     path('kid/<int:user_id>/', views.get_student_information, name='kid-info'),
     path('alumni-employment/', views.AlumniEmploymentView.as_view(), name='alumni-employment'),
     path('alumni-academic/', views.AlumniAcademicView.as_view(), name='alumni-academic'),
-    path('alumni-currentinfo/<int:kid_id>/', views.CurrentInfoUpdateView.as_view(), name ='alumni-currentinfo'),
+    
     #selection options
     path('options/all-dropdowns/', views.DropdownOptionsAPIView.as_view(), name='profile-dropdowns'),
     path('options/mamas/', views.get_mamas, name='mamas-info'),

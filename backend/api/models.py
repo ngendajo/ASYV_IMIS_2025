@@ -101,6 +101,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def clean(self):
         super().clean()
+        if getattr(self, '_skip_unique_fields_check', False):
+            return
 
         # Ensure no duplicate values across multiple fields
         fields = [self.email, self.email1, self.phone, self.phone1, self.username, self.reg_number]
@@ -365,7 +367,7 @@ class Employment(models.Model):
         related_name='related_employments'
     )
     start_date = models.CharField(max_length=100, default="")
-    end_date = models.CharField(max_length=100, default="")
+    end_date = models.CharField(max_length=100, default="", null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):

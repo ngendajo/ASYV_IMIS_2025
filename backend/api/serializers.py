@@ -1,3 +1,4 @@
+import traceback
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
@@ -6,6 +7,8 @@ from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from .models import *
 from datetime import datetime
+from django.core.exceptions import ValidationError as DjangoValidationError
+
 
 User = get_user_model()
         
@@ -119,26 +122,34 @@ class EmploymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Employment
         fields = ['id', 'alumn', 'title', 'status', 'industry', 'company', 'start_date', 'end_date']
+        read_only_fields = ['alumn']
 
 class KidSerializer(serializers.ModelSerializer): 
     class Meta:
         model = Kid
         fields = '__all__'
 
-class FurtherEducationSerializer(serializers.ModelSerializer): 
-    college = serializers.SerializerMethodField()
+class FurtherEducationSerializer(serializers.ModelSerializer):
+    college = serializers.PrimaryKeyRelatedField(queryset=College.objects.all())
+    college_name = serializers.SerializerMethodField(read_only=True)
     location = serializers.SerializerMethodField(read_only=True)
-
 
     class Meta:
         model = FurtherEducation
-        fields = ['id', 'alumn', 'college', 'level', 'degree', 'status', 'location', 'scholarship', 'scholarship_details']
+        fields = [
+            'id', 'alumn', 'college', 'college_name',
+            'level', 'degree', 'status', 'location',
+            'scholarship', 'scholarship_details'
+        ]
+        read_only_fields = ['alumn']
 
     def get_location(self, obj):
         return f"{obj.college.city}, {obj.college.country}"
-    
-    def get_college(self, obj):
+
+    def get_college_name(self, obj):
         return obj.college.college_name
+
+
 
 class AlumniListSerializer(serializers.ModelSerializer):
     family = FamilySerializer()
@@ -151,6 +162,7 @@ class AlumniListSerializer(serializers.ModelSerializer):
     employment = EmploymentSerializer(many=True, read_only=True, required=False)
     image_url = serializers.ImageField(source='user.image_url')
     user_id = serializers.SerializerMethodField()
+    is_alumni = serializers.SerializerMethodField()
     further_education = FurtherEducationSerializer(source='furthereducation', many=True, read_only=True, required=False)
 
 
@@ -158,7 +170,7 @@ class AlumniListSerializer(serializers.ModelSerializer):
         model = Kid
         fields = ['id', 'user_id', 'first_name', 'rwandan_name', 
                   'gender', 'email', 'phone', 'image_url', 'family', 
-                  'employment', 'combination', 'further_education']
+                  'employment', 'combination', 'further_education', 'is_alumni']
     def get_gender(self, obj): 
         return obj.user.gender if obj.user else None
     
@@ -177,8 +189,11 @@ class AlumniListSerializer(serializers.ModelSerializer):
     def get_user_id(self, obj):
         return obj.user.id if obj.user else None
     
+    def get_is_alumni(self, obj):
+        return obj.user.is_alumni if obj.user else False
+
     def get_combination(self, obj):
-        academic = KidAcademics.objects.filter(kid=obj, level='S6').first()
+        academic = KidAcademics.objects.filter(kid=obj).first()
         if academic and academic.combination:
             return CombinationSerializer(academic.combination).data
         return None
@@ -209,13 +224,15 @@ class UserSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
+        print("Validated data:", validated_data)
         try:
             user = User.objects.create_user(**validated_data)
             return user
-        except ValidationError as e:
-            raise serializers.ValidationError(str(e))
+        except DjangoValidationError as e:
+            raise serializers.ValidationError({'validation_error': e.messages})
         except Exception as e:
-            raise serializers.ValidationError(f"Error creating user: {str(e)}")
+            traceback.print_exc()  # For logging
+            raise serializers.ValidationError({'error': str(e)})
 
     def update(self, instance, validated_data):
         try:
@@ -283,6 +300,8 @@ class CollegeSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     
+from rest_framework import serializers
+
 class BasicInformationSerializer(serializers.Serializer):
     user_id = serializers.IntegerField(required=False)
     kid_id = serializers.IntegerField(required=False)
@@ -296,7 +315,7 @@ class PersonalStatusSerializer(serializers.Serializer):
     has_children = serializers.BooleanField(required=False)
     life_status = serializers.CharField(required=False, allow_blank=True)
     graduation_status = serializers.CharField(required=False, allow_blank=True)
-    health_issue = serializers.CharField(required=False, allow_blank=True)
+    health_issue = serializers.CharField(required=False, allow_blank=True, allow_null=True)
 
 class CurrentAddressSerializer(serializers.Serializer):
     current_district_or_city = serializers.CharField(required=False, allow_blank=True)
@@ -306,48 +325,36 @@ class StudentProfileSerializer(serializers.Serializer):
     basic_information = BasicInformationSerializer(required=False)
     personal_status = PersonalStatusSerializer(required=False)
     current_address = CurrentAddressSerializer(required=False)
-    # other nested fields if needed
 
     def update(self, instance, validated_data):
         user = instance['user']
         kid = instance['kid']
 
+        # Update user info
         basic_info = validated_data.get('basic_information', {})
-        personal_status = validated_data.get('personal_status', {})
-        current_address = validated_data.get('current_address', {})
-
-        # Update user fields from basic_information
         for attr in ['first_name', 'middle_name', 'rwandan_name']:
             if attr in basic_info:
                 setattr(user, attr, basic_info[attr])
         user.save()
 
-        # Update kid fields from personal_status
+        # Update kid personal_status, current_address, etc. as before
+        personal_status = validated_data.get('personal_status', {})
         for attr in ['marital_status', 'has_children', 'life_status', 'graduation_status', 'health_issue']:
             if attr in personal_status:
                 setattr(kid, attr, personal_status[attr])
-        
-        # Update kid fields from current_address
+
+        current_address = validated_data.get('current_address', {})
         for attr in ['current_district_or_city', 'current_county']:
             if attr in current_address:
                 setattr(kid, attr, current_address[attr])
-
         kid.save()
-
         return {'user': user, 'kid': kid}
 
-class CurrentInfoSerializer(serializers.Serializer):
-    marital_status = serializers.CharField(required=False, allow_blank=True)
-    has_children = serializers.BooleanField(required=False)
-    current_district_or_city = serializers.CharField(required=False, allow_blank=True)
-    current_county = serializers.CharField(required=False, allow_blank=True)
 
-    def update(self, instance, validated_data):
-        # instance here should be the Kid model instance (or whatever model holds these fields)
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-        instance.save()
-        return instance
+    def create(self, validated_data):
+        # Implement create if you want to support POST to create new user/kid
+        pass
+
 
 class FurtherEducationChoicesSerializer(serializers.Serializer):
     levels = serializers.SerializerMethodField()

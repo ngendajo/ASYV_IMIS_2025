@@ -1020,28 +1020,35 @@ class KidViewSet(viewsets.ModelViewSet):
     ordering_fields = ['created_at', 'updated_at', 'points_in_national_exam']
     
     def create(self, request, *args, **kwargs):
-        """Create a new Kid instance with error handling"""
         try:
-            serializer = self.get_serializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            self.perform_create(serializer)
-            headers = self.get_success_headers(serializer.data)
-            return Response(
-                serializer.data, 
-                status=status.HTTP_201_CREATED, 
-                headers=headers
-            )
+            # Use transaction.atomic to ensure rollback on failure
+            with transaction.atomic():
+                # Extract user data from request.data (adjust keys accordingly)
+                user_data = request.data.get('user')
+                if not user_data:
+                    return Response({'error': 'User data is required'}, status=status.HTTP_400_BAD_REQUEST)
+                
+                # Create user serializer and validate
+                user_serializer = UserSerializer(data=user_data)
+                user_serializer.is_valid(raise_exception=True)
+                user = user_serializer.save()
+                
+                # Now create Kid with reference to created user
+                kid_data = request.data.copy()
+                kid_data['user'] = user.id  # or user.pk
+                
+                serializer = self.get_serializer(data=kid_data)
+                serializer.is_valid(raise_exception=True)
+                self.perform_create(serializer)
+                
+                headers = self.get_success_headers(serializer.data)
+                return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        
         except ValidationError as e:
-            return Response(
-                {'error': 'Validation error', 'details': str(e)}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({'error': 'Validation error', 'details': e.detail}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            return Response(
-                {'error': 'Failed to create kid record', 'details': str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-    
+            return Response({'error': 'Failed to create kid record', 'details': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
     def retrieve(self, request, *args, **kwargs):
         """Retrieve a Kid instance with error handling"""
         try:
@@ -2899,6 +2906,13 @@ def get_student_information(request, user_id):
     PUT: Update basic student profile info by user_id
 
     """
+    def str_to_bool(value):
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, str):
+            return value.lower() == 'true'
+        return bool(value)
+
     try:
         with transaction.atomic():
             # Get the user
@@ -2955,13 +2969,15 @@ def get_student_information(request, user_id):
                 try:
                     if kid.family:
                         affiliation = {
-                            'family_name': kid.family.family_name,
-                            'family_number': kid.family.family_number,
-                            'mother_name': kid.family.mother.get_full_name() if kid.family.mother else None,
+                            'family_id': kid.family.id,
+                            # 'family_name': kid.family.family_name,
+                            # 'family_number': kid.family.family_number,
+                            # 'mother_name': kid.family.mother.get_full_name() if kid.family.mother else None,
                             'grade_info': {
-                                'grade_name': kid.family.grade.grade_name if kid.family.grade else None,
-                                'admission_year': kid.family.grade.admission_year_to_asyv if kid.family.grade else None,
-                                'graduation_year': kid.family.grade.graduation_year_to_asyv if kid.family.grade else None,
+                                'grade_id': kid.family.grade.id if kid.family.grade else None,
+                                # 'grade_name': kid.family.grade.grade_name if kid.family.grade else None,
+                                # 'admission_year': kid.family.grade.admission_year_to_asyv if kid.family.grade else None,
+                                # 'graduation_year': kid.family.grade.graduation_year_to_asyv if kid.family.grade else None,
                             } if kid.family.grade else {}
                         }
                     else:
@@ -2978,6 +2994,7 @@ def get_student_information(request, user_id):
                         combinations.append({
                             'academic_year': academic.academic_year,
                             'level': academic.level,
+                            'combination_id': academic.combination.id,
                             'combination_name': academic.combination.combination_name,
                             'combination_abbreviation': academic.combination.abbreviation,
                             'marks': academic.marks,
@@ -3041,20 +3058,68 @@ def get_student_information(request, user_id):
                 return Response(student_info, status=status.HTTP_200_OK)
             
             elif request.method == 'PUT':
-                serializer = StudentProfileSerializer(data=request.data)
-                if serializer.is_valid():
-                    print("serializer is valid")
-                    try:
-                        serializer.update({'user': user, 'kid': kid}, serializer.validated_data)
-                        return Response({'message': 'Profile updated successfully'}, status=status.HTTP_200_OK)
-                    except Exception as e:
-                        print("Serializer errors:", serializer.errors)
-                        logger.error(f"Error updating student profile for user_id {user_id}: {str(e)}")
-                        return Response({'error': 'Error updating profile', 'details': str(e)},
-                                        status=status.HTTP_400_BAD_REQUEST)
-                print("serializaer not valid")
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                data = request.data
 
+                try:
+                    # ✅ Basic Info
+                    user.first_name = data['basic_information'].get('first_name', user.first_name)
+                    user.rwandan_name = data['basic_information'].get('rwandan_name', user.rwandan_name)
+                    user.middle_name = data['basic_information'].get('middle_name', user.middle_name)
+                    gender = data['basic_information'].get('gender')
+                    if gender in ['Male', 'Female']:
+                        user.gender = 'M' if gender == 'Male' else 'F'
+                    user.dob = data['basic_information'].get('date_of_birth', user.dob)
+                    user._skip_unique_fields_check = True
+                    user.save()
+
+
+                    # ✅ Place of Birth
+                    kid.origin_district = data['place_of_birth'].get('origin_district', kid.origin_district)
+                    kid.origin_sector = data['place_of_birth'].get('origin_sector', kid.origin_sector)
+
+                    # ✅ Current Address
+                    kid.current_district_or_city = data['current_address'].get('current_district_or_city', kid.current_district_or_city)
+                    kid.current_county = data['current_address'].get('current_county', kid.current_county)
+
+                    # ✅ Personal Status
+                    kid.marital_status = data['personal_status'].get('marital_status', kid.marital_status)
+                    kid.has_children = str_to_bool(data['personal_status'].get('has_children', kid.has_children))
+                    kid.life_status = data['personal_status'].get('life_status', kid.life_status)
+                    kid.graduation_status = data['personal_status'].get('graduation_status', kid.graduation_status)
+                    kid.health_issue = data['personal_status'].get('health_issue', kid.health_issue)
+
+                    # ✅ Affiliation
+                    family_id = data['affiliation'].get('family_id')
+                    grade_id = data['affiliation'].get('grade_info', {}).get('grade_id')
+                    if family_id:
+                        family = get_object_or_404(Family, id=family_id)
+                        kid.family = family
+                        if grade_id:
+                            grade = get_object_or_404(Grade, id=grade_id)
+                            family.grade = grade
+                            family.save()
+
+                    kid.save()
+
+                    # ✅ Academic Combinations (update first one only for now)
+                    academic_combinations = data.get('academic_combinations', [])
+                    if academic_combinations:
+                        ac = academic_combinations[0]
+                        combination_id = ac.get('combination_id')
+                        if combination_id:
+                            kid_academic = KidAcademics.objects.filter(kid=kid).first()
+                            if kid_academic:
+                                combination = get_object_or_404(Combination, id=combination_id)
+                                kid_academic.combination = combination
+                                kid_academic.save()
+
+                    return Response({'message': 'Student profile updated successfully.'}, status=status.HTTP_200_OK)
+
+                except Exception as e:
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.exception(f"Error updating student profile: {str(e)}")
+                    return Response({'error': 'Failed to update student profile.'}, status=status.HTTP_400_BAD_REQUEST)
             
     except Exception as e:
         logger.error(f"Unexpected error retrieving student information for user_id {user_id}: {str(e)}")
@@ -3066,22 +3131,6 @@ def get_student_information(request, user_id):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
 
         )
-    
-class CurrentInfoUpdateView(APIView):
-    #permission_classes = [permissions.IsAuthenticated]
-
-    def put(self, request, kid_id):
-        # Retrieve the Kid instance
-        try:
-            kid = Kid.objects.get(id=kid_id)
-        except Kid.DoesNotExist:
-            return Response({"detail": "Kid not found."}, status=status.HTTP_404_NOT_FOUND)
-
-        serializer = CurrentInfoSerializer(kid, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 #Map Visualization Alumni Outcomes Further Education 
 class AlumniCountryMap(APIView): 
@@ -3139,6 +3188,7 @@ class AlumniEmploymentView(APIView):
         updated_ids = []
 
         for emp_data in updated_employments:
+            print("Incoming employment data:", emp_data)
             emp_id = emp_data.get('id')
 
             if emp_id and emp_id in existing_employments:
@@ -3155,13 +3205,16 @@ class AlumniEmploymentView(APIView):
                     print("Serializer errors:", serializer.errors)
                     return Response(serializer.errors, status=400)
             else:
-                # Create new
-                emp_data['alumn'] = kid.id  # link it to the Kid
-                serializer = EmploymentSerializer(data=emp_data)
-                if serializer.is_valid():
-                    serializer.save()
-                else:
-                    return Response(serializer.errors, status=400)
+                try:
+                    serializer = EmploymentSerializer(data=emp_data)
+                    if serializer.is_valid():
+                        serializer.save(alumn=kid)  
+                    else:
+                        print("Validation error on create:", serializer.errors)
+                        return Response(serializer.errors, status=400)
+                except Exception as e:
+                    print("Exception during employment creation:", str(e))
+                    return Response({'error': str(e)}, status=500)
         
         return Response({'message': 'Employment record created/updated', 'updated_ids': updated_ids}, status=200)
     
@@ -3217,14 +3270,14 @@ class AlumniAcademicView(APIView):
                     print("Serializer errors:", serializer.errors)
                     return Response(serializer.errors, status=400)
             else:
-                # Create new
-                aca_data['alumn'] = kid.id  # link it to the Kid
+            
                 serializer = FurtherEducationSerializer(data=aca_data)
                 if serializer.is_valid():
-                    serializer.save()
+                    serializer.save(alumn=kid)  
                 else:
+                    print("Validation error on create:", serializer.errors)
                     return Response(serializer.errors, status=400)
-        
+                        
         return Response({'message': 'FurtherEducation record created/updated', 'updated_ids': updated_ids}, status=200)
 
 #current student directory api 
@@ -3258,9 +3311,7 @@ class CurrentStudentDirectoryView(APIView):
             'id', 'family_name'
         ).distinct().order_by('family_name')
    
-        combinations_available = KidAcademics.objects.filter(
-            level='S6'
-        ).values(
+        combinations_available = KidAcademics.objects.values(
             'combination_id', 'combination__abbreviation', 'combination__combination_name'
         ).distinct()
 
@@ -3798,6 +3849,10 @@ class DropdownOptionsAPIView(APIView):
             "Others / Not Specified"
         ]
         colleges = College.objects.all().order_by('college_name')
+        combinations = Combination.objects.all().order_by('combination_name')
+        grades = Grade.objects.all().order_by('graduation_year_to_asyv')
+        families = Family.objects.all().order_by('family_name')
+        leaps = Leap.objects.all().order_by('ep')
         data = {
             "marital_statuses": [
                 {"value": "single", "label": "Single"},
@@ -3817,6 +3872,10 @@ class DropdownOptionsAPIView(APIView):
                 {"value": "PHD", "label": "Ph.D."},
             ],
             "colleges": [{"value": c.id, "label": c.college_name, "location": c.locationString()} for c in colleges],
+            "combinations": [{"value": c.id, "label": c.combination_name} for c in combinations],
+            "grades": [{"value": g.id, "label": g.grade_name} for g in grades],
+            "families": [{"value": f.id, "label": f.family_name} for f in families],
+            "leaps": [{"value": l.id, "label": l.ep} for l in leaps],
             "industries": [{"value": name, "label": name} for name in industry_list],
             "status": [
                 {"value" : "D", "label": "Dropped_Out"},

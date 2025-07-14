@@ -248,7 +248,7 @@ const handleDownload = async () => {
   return (
     <div className="DirectoryWrapper">
       <div className="DirectorySearchWrapper">
-        <SearchBar value={searchTerm} onChange={handleSearchChange} placeholder="Search alumni..." per="100" />
+        <SearchBar value={searchTerm} onChange={handleSearchChange} placeholder="Search current students..." per="100" />
       </div>
 
       <div className="directory-controls">
