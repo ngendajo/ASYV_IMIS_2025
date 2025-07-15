@@ -4,11 +4,12 @@ import ProfileImage from '../dashboard/ProfileImage'; // use the working image c
 
 const ContactCard = ({ user, editable = false }) => {
   const [hover, setHover] = useState(false);
+  console.log("passed in", user)
 
   // use the correct model fields
-  const name = `${user?.first_name || ''} ${user?.rwandan_name || ''}`.trim();
-  const email = user?.email || user?.email1 || "Email not available";
-  const phone = user?.phone || user?.phone1 || "Phone not available";
+  const name = `${user?.data.first_name || ''} ${user?.data.rwandan_name || ''}`.trim();
+  const email = user?.data.email || user?.data.email1 || "Email not available";
+  const phone = user?.data.phone || user?.data.phone1 || "Phone not available";
 
   return (
     <div className="ContactWrapper">
