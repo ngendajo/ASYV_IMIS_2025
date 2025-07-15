@@ -7,6 +7,7 @@ import { Event } from '../social/events-cards';
 import OpportunityCard from '../opportunities/opportunity-card';
 import axios from 'axios';
 import baseUrl from '../../api/baseUrl';
+import { useNavigate } from 'react-router-dom';
 //const  baseUrl='https://backend.asyv.ac.rw/api';
 
 
@@ -55,6 +56,8 @@ const AlumniDashboard = () => {
     alert("CRC support requested.");
   };
 
+  const navigate = useNavigate();
+  
   return (
     <div>
       <div className="welcome-banner">
@@ -64,7 +67,7 @@ const AlumniDashboard = () => {
         </div>
         <button
           className="update-profile-btn"
-          onClick={() => window.location.href = '/personal_profile'}
+          onClick={() => navigate('/personal_profile')}
         >
           Update Profile
         </button>
