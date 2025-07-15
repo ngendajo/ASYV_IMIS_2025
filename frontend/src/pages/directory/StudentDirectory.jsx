@@ -222,6 +222,7 @@ const handleDownload = async () => {
     setAppliedFilters(filterUI);
     setPagination((prev) => ({ ...prev, current_page: 1 }));
     setAlumniData([]); // Clear current data to load fresh results
+    setShowFilters(false);
   };
 
   const toggleCheckbox = (filterKey, value) => {

@@ -194,7 +194,7 @@
 /* === Lists Section === */
 .lists-section {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(515px, 1fr));
   gap: 2rem;
   margin-top: 2rem;
 }
@@ -204,7 +204,7 @@
   background: var(--white);
   border-radius: 10px;
   box-shadow: 0 3px 8px var(--blackopa);
-  padding: 1.2rem 1.5rem;
+  padding: 1rem .5rem;
   display: flex;
   flex-direction: column;
   border: 1px solid var(--palegrey);
