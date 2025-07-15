@@ -84,9 +84,9 @@ const AddStudents = () => {
 
   const [excelFiles, setExcelFiles] = useState({
     marks: null,
-    combination: null,
-    leap: null,
     employment: null,
+    combination: null, 
+    leap: null,
     furtherEducation: null,
   });
   
@@ -172,6 +172,7 @@ const AddStudents = () => {
       first_name: formData.first_name,
       rwandan_name: formData.rwandan_name,
       gender: formData.gender,
+      is_student: true,
     };
   
     // Extract kid-specific fields from formData
@@ -184,6 +185,7 @@ const AddStudents = () => {
       marital_status: formData.marital_status, 
       life_status: formData.life_status, 
       has_children: formData.has_children,
+      family: parseInt(formData.family),
       // add other kid-specific fields here
     };
   

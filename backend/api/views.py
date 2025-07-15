@@ -2994,11 +2994,12 @@ def get_student_information(request, user_id):
                     kid_academics = KidAcademics.objects.select_related('combination').filter(kid=kid)
                     for academic in kid_academics:
                         combinations.append({
+                            'id': academic.id,
                             'academic_year': academic.academic_year,
                             'level': academic.level,
                             'combination_id': academic.combination.id,
-                            'combination_name': academic.combination.combination_name,
-                            'combination_abbreviation': academic.combination.abbreviation,
+                            # 'combination_name': academic.combination.combination_name,
+                            # 'combination_abbreviation': academic.combination.abbreviation,
                             'marks': academic.marks,
                         })
                 except Exception as e:
@@ -3012,11 +3013,11 @@ def get_student_information(request, user_id):
                     for kid_leap in kid_leaps:
                         leap_activities.append({
                             'leap_name': kid_leap.leap.ep,
-                            'category': kid_leap.leap.leap_category,
-                            'is_approved': kid_leap.is_approved,
-                            'approved_at': kid_leap.approved_at.isoformat() if kid_leap.approved_at else None,
-                            'recorded_by': kid_leap.recorded_by.get_full_name() if kid_leap.recorded_by else None,
-                            'created_at': kid_leap.created_at.isoformat(),
+                            # 'category': kid_leap.leap.leap_category,
+                            # 'is_approved': kid_leap.is_approved,
+                            # 'approved_at': kid_leap.approved_at.isoformat() if kid_leap.approved_at else None,
+                            # 'recorded_by': kid_leap.recorded_by.get_full_name() if kid_leap.recorded_by else None,
+                            # 'created_at': kid_leap.created_at.isoformat(),
                         })
                 except Exception as e:
                     logger.error(f"Error retrieving LEAP activities for user_id {user_id}: {str(e)}")
@@ -3103,17 +3104,50 @@ def get_student_information(request, user_id):
 
                     kid.save()
 
-                    # ✅ Academic Combinations (update first one only for now)
-                    academic_combinations = data.get('academic_combinations', [])
-                    if academic_combinations:
-                        ac = academic_combinations[0]
+                    academic_combinations_dict = data.get('academic_combinations', [])
+
+                    # Convert dict with numeric keys to a list (if needed)
+                    if isinstance(academic_combinations_dict, dict):
+                        academic_combinations = [academic_combinations_dict[key] for key in sorted(academic_combinations_dict, key=int)]
+                    else:
+                        academic_combinations = academic_combinations_dict
+
+                    for ac in academic_combinations:
+                        kid_academic_id = ac.get('id')
                         combination_id = ac.get('combination_id')
-                        if combination_id:
-                            kid_academic = KidAcademics.objects.filter(kid=kid).first()
-                            if kid_academic:
+                        academic_year = ac.get('academic_year')
+                        level = ac.get('level')
+                        marks = ac.get('marks')
+
+                        if combination_id is not None:
+                            try:
+                                combination_id = int(combination_id)
                                 combination = get_object_or_404(Combination, id=combination_id)
-                                kid_academic.combination = combination
-                                kid_academic.save()
+
+                                if kid_academic_id:
+                                    # Try to update existing record
+                                    try:
+                                        kid_academic = KidAcademics.objects.get(id=kid_academic_id, kid=kid)
+                                        kid_academic.combination = combination
+                                        kid_academic.academic_year = academic_year
+                                        kid_academic.level = level
+                                        kid_academic.marks = marks
+                                        kid_academic.save()
+                                    except KidAcademics.DoesNotExist:
+                                        pass  # Record not found; skip or handle
+                                else:
+                                    # Create new record
+                                    KidAcademics.objects.create(
+                                        kid=kid,
+                                        combination=combination,
+                                        academic_year=academic_year,
+                                        level=level,
+                                        marks=marks
+                                    )
+
+                            except (ValueError, Combination.DoesNotExist):
+                                pass  # Handle error if combination_id isn't valid
+
 
                     return Response({'message': 'Student profile updated successfully.'}, status=status.HTTP_200_OK)
 

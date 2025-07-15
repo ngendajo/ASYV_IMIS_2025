@@ -40,18 +40,22 @@ const ProfileCard = ({ propId }) => {
     setEditState(prev => ({ ...prev, [section]: false }));
   };
 
+
   const toggleEdit = (section, saveFunc) => {
     if (editState[section]) saveFunc();
     setEditState(prev => ({ ...prev, [section]: !prev[section] }));
   };
 
+
   if (!user) return <div>Loading profile...</div>;
+
 
 
   // Define fields to render
   const safe = (v) => v || 'Not Found';
   const personalFields = [
     { label: 'First Name', path: 'basic_information.first_name' },
+
 
     { label: 'Rwandan Name', path: 'basic_information.rwandan_name' },
     { label: 'Gender', path: 'basic_information.gender' },
@@ -67,23 +71,48 @@ const ProfileCard = ({ propId }) => {
   const asyvIdentityFields = [
     { label: 'Grade', path: 'affiliation.grade_info.grade_id', dropdownKey: "grades" },
     { label: 'Family', path: 'affiliation.family_id', dropdownKey: "families" },
-    { label: 'Combination', path: 'academic_combinations.0.combination_id', dropdownKey: "combinations" }
+
+  ] : [];
+  const academicYears = [
+    { label: 'EY Combination', index: 3 },
+    { label: 'S4 Combination', index: 2 },
+    { label: 'S5 Combination', index: 1 },
+    { label: 'S6 Combination', index: 0 }
   ];
-  const asyvAcademicFields = [
-    { label: 'S4 Grade', value: u => safe(u.academic_combinations?.[2]?.marks) + '%' },
-    { label: 'S5 Grade', value: u => safe(u.academic_combinations?.[1]?.marks) + '%' },
-    { label: 'S6 Grade', value: u => safe(u.academic_combinations?.[0]?.marks) + '%' },
-    {
-      label: 'National Exam Score',
-      value: u => {
-        const r = u.national_exam_results;
-        return r ? `${r.points_achieved}/${r.maximum_points} (${r.mention})` : 'Not Found';
-      }
+  const combinationFields = user ? academicYears.map(({ label, index }) => ({
+    label,
+    value: (u) => u.academic_combinations?.[index]?.combination_id || "",
+    dropdownKey: 'combinations',
+    get path() {
+      return `academic_combinations.${index}.combination_id`;
     }
+  })) : [];
+  const asyvAcademicFields = user ? [
+    { label: 'S4 Grade', value: u => u.academic_combinations?.[2]?.marks + '%' },
+    { label: 'S5 Grade', value: u => u.academic_combinations?.[1]?.marks + '%' },
+    { label: 'S6 Grade', value: u => u.academic_combinations?.[0]?.marks + '%' },
+    { label: 'National Exam Score', value: u => `${u.national_exam_results?.points_achieved}/${u.national_exam_results?.maximum_points} (${u.national_exam_results?.mention})` }
+  ] : [];
+  const leapProgramFields = user ? [
+    {
+      label: 'Leap Activities',
+      // value returns array of leap ids for multi-select
+      value: u => u.leap_activities?.map(a => a.leap_id.toString()) || [],
+      dropdownKey: 'leaps',
+      isMultiSelect: true
+    }
+  ] : [];
+  const academicFields = [
+    { label: 'Level', value: 'level', dropdownKey: 'levels' },
+    { label: 'Degree', value: 'degree' },
+    { label: 'University', value: 'college', dropdownKey: 'colleges' },
+    { label: 'Location', value: 'country' },
+    { label: 'Scholarship', value: 'scholarship', dropdownKey: 'scholarship'},
+    { label: 'Scholarship Details', value: 'scholarship_details'},
+    { label: 'Status', value: 'status', dropdownKey: 'status' }
+
   ];
-  const leapFields = [
-    { label: 'Leap Program', value: u => (u.leap_activities || []).map(a => a.leap_name).join(', ') || 'Not Found' }
-  ];
+
 
   return (
     <div className="profile-container vertical-cards">
@@ -111,12 +140,51 @@ const ProfileCard = ({ propId }) => {
         title="ASYV Info"
         canEdit={auth.user?.is_superuser}
         isEditing={editState.asyv}
-        onToggleEdit={() => toggleEdit('asyv', saveKidInfo)}
-        onCancelEdit={() => cancelEdit('asyv')}
-      >
-        {renderSection(user, setUser, asyvIdentityFields, editState.asyv, dropdownOptions)}
-        {renderSection(user, setUser, asyvAcademicFields, editState.asyv, dropdownOptions)}
-        {renderSection(user, setUser, leapFields, editState.asyv, dropdownOptions)}
+        // When entering edit mode:
+        onToggleEdit={async () => {
+          if (editState.asyv) {
+            try {
+              await saveKidInfo(editUser);
+              await fetchData(); // Refresh after saving
+              setEditUser(null);
+            } catch (err) {
+              console.error("Save failed", err);
+            }
+          } else {
+            // Entering edit mode — make a working copy
+            setEditUser(user ? {
+              ...user,
+              academic_combinations: Array.isArray(user.academic_combinations) 
+                ? [...user.academic_combinations] 
+                : []
+            } : null);
+        
+            // Ensure 4 slots
+            setEditUser(prev => {
+              if (!prev) return prev;
+              while (prev.academic_combinations.length < 4) {
+                prev.academic_combinations.unshift({ combination_id: "" });
+              }
+              return { ...prev };
+            });
+          }
+        
+          setEditState(prev => ({ ...prev, asyv: !prev.asyv }));
+        }}
+        onCancelEdit={() => {
+          setEditUser(null);          // discard changes
+          setEditState(prev => ({ ...prev, asyv: false }));
+        }}
+        >
+        {renderSection([editState.asyv ? editUser : user],
+  (newArr) => editState.asyv ? setEditUser(newArr[0]) : setUser(newArr[0]), asyvIdentityFields, editState.asyv)}
+        {renderSection([editState.asyv ? editUser : user],
+  (newArr) => editState.asyv ? setEditUser(newArr[0]) : setUser(newArr[0]), asyvAcademicFields, editState.asyv)}
+        {renderSection([editState.asyv ? editUser : user],
+  (newArr) => editState.asyv ? setEditUser(newArr[0]) : setUser(newArr[0]), combinationFields, editState.asyv)}
+        {renderSection([editState.asyv ? editUser : user],
+  (newArr) => editState.asyv ? setEditUser(newArr[0]) : setUser(newArr[0]), leapProgramFields, editState.asyv)}
+
       </ProfileCardSection>
 
       <ProfileCardSection

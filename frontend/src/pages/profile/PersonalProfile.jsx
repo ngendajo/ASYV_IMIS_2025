@@ -19,7 +19,7 @@ const Profile = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get(`${baseUrl}/users/?id=${selectedID}`, {
+        const res = await axios.get(`${baseUrl}/users/${selectedID}`, {
           headers: {
             Authorization: `Bearer ${auth.accessToken}`,
             'Content-Type': 'multipart/form-data',
@@ -27,6 +27,7 @@ const Profile = () => {
           withCredentials: true,
         });
         setUser(res.data);
+        console.log("user", user)
       } catch (err) {
         console.error(err);
       }
