@@ -200,8 +200,35 @@ const useProfileData = (userIdOverride) => {
     employment, setEmployment, originalEmployment,
     dropdownOptions,
     editState, setEditState,
-    saveKidInfo, saveStudyData, saveEmploymentData
+    saveKidInfo, saveStudyData, saveEmploymentData,
+
+    // --- NEW derived user info ---
+    fullName: user ? `${user.first_name || ''} ${user.middle_name || ''} ${user.rwandan_name || ''}`.trim() : '',
+    phone: user?.phone || user?.phone1 || '',
+    email: user?.email || user?.email1 || '',
+    roles: {
+      is_staff: user?.is_staff || false,
+      is_crc: user?.is_crc || false,
+      is_superuser: user?.is_superuser || false,
+      is_alumni: user?.is_alumni || false,
+      is_mama: user?.is_mama || false,
+      is_student: user?.is_student || false,
+      is_teacher: user?.is_teacher || false,
+      is_librarian: user?.is_librarian || false,
+    },
+    roleLabel: user
+      ? user.is_superuser ? 'Superuser'
+      : user.is_crc ? 'CRC'
+      : user.is_staff ? 'Staff'
+      : user.is_teacher ? 'Teacher'
+      : user.is_mama ? 'Mama'
+      : user.is_librarian ? 'Librarian'
+      : user.is_alumni ? 'Alumni'
+      : user.is_student ? 'Student'
+      : 'User'
+      : '',
   };
+
 };
 
 export default useProfileData;

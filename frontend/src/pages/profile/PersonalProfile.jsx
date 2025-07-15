@@ -8,6 +8,8 @@ import useAuth from '../../hooks/useAuth';
 import baseUrl from '../../api/baseUrl';
 import '../../App.css';
 import ContactCard from '../../components/profile/contact-card';
+import ChangePasswordFlow from '../../components/profile/ChangePasswordFlow';
+
 
 const Profile = () => {
   const { auth } = useAuth();
@@ -35,20 +37,26 @@ const Profile = () => {
   }, [selectedID, auth]);
 
   return (
-    <div className="ProfileWrapper">
-      
-      {user && (
-        <ContactCard
-          user={user}
-          editable={auth.user?.id === selectedID}
-          onEditPicture={() => alert("Open profile picture edit modal")}
-        />
-      )}
+  <div className="ProfileWrapper">
+    {user && (
+      <ContactCard
+        user={user}
+        editable={auth.user?.id === selectedID}
+        onEditPicture={() => alert("Open profile picture edit modal")}
+      />
+    )}
 
-      <ProfileCard propId={selectedID} />
-      <Link to="/personal_profile-resume" className="toResume">Generate Resume &gt;</Link>
-    </div>
-  );
+    {auth.user.is_alumni ? (
+      <>
+        <ProfileCard propId={selectedID} />
+        <Link to="/personal_profile-resume" className="toResume">Generate Resume &gt;</Link>
+      </>
+    ) : (
+      <ChangePasswordFlow />
+    )}
+  </div>
+);
+
 };
 
 export default Profile;
