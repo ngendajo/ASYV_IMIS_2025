@@ -69,6 +69,17 @@ const getEmploymentStatusLabel = (status) => {
       return 'NA';
   }
 };
+
+function computeAcademicYear(level, graduationYear) {
+  const levelOffsets = {
+    S6: 0,
+    S5: 1,
+    S4: 2,
+    EY: 3
+  };
+
+  return graduationYear - levelOffsets[level];
+}
 const ProfileCardSection = ({
   title,
   children,
@@ -122,6 +133,8 @@ const ProfileCard = ({ propId }) => {
   const [verifiedCurrentPassword, setVerifiedCurrentPassword] = useState('');
  
   const [originalUser, setOriginalUser] = useState(null);
+  const [editUser, setEditUser] = useState(user ? {...user} : {});;
+
   const [originalStudy, setOriginalStudy] = useState([]);
   const [originalEmployment, setOriginalEmployment] = useState([]);
 
@@ -165,35 +178,45 @@ const ProfileCard = ({ propId }) => {
   
   console.log(userId)
 
-  useEffect(() => {
-    console.log("Received userId:", userId);
-    const fetchData = async () => {
-      try {
-        const [userRes, dropdownRes] = await Promise.all([
-          axios.get(baseUrl + '/kid/' + userId, {
-            headers: { Authorization: 'Bearer ' + String(auth.accessToken), "Content-Type": 'multipart/form-data' },
-            withCredentials: true
-          }),
-          axios.get(baseUrl + '/options/all-dropdowns/', { 
-            headers: { Authorization: 'Bearer ' + String(auth.accessToken) },
-            withCredentials: true
-          
-          })
-        ]);
+  const fetchData = async () => {
+    try {
+      const [userRes, dropdownRes] = await Promise.all([
+        axios.get(`${baseUrl}/kid/${userId}`, {
+          headers: { Authorization: 'Bearer ' + String(auth.accessToken) },
+          withCredentials: true
+        }),
+        axios.get(`${baseUrl}/options/all-dropdowns/`, {
+          headers: { Authorization: 'Bearer ' + String(auth.accessToken) },
+          withCredentials: true
+        })
+      ]);
   
-        //setUser_id(auth.user.id);
-        setUser(userRes.data);
-        setOriginalUser(userRes.data);
-        setKid_id(userRes.data.basic_information?.kid_id);
-        setDropdownOptions(dropdownRes.data); 
+      let fetchedUser = userRes.data;
   
-      } catch (err) {
-        console.error(err);
+      if (Array.isArray(fetchedUser.academic_combinations)) {
+        fetchedUser.academic_combinations = fetchedUser.academic_combinations
+          .slice()
+          .sort((a, b) => b.academic_year - a.academic_year);
+      } else {
+        fetchedUser.academic_combinations = [];
       }
-    };
   
-    fetchData();
-  }, [auth, userId]);
+      while (fetchedUser.academic_combinations.length < 4) {
+        fetchedUser.academic_combinations.unshift({ combination_id: "" });
+      }
+
+      fetchedUser.leap_activities = mapLeapActivitiesWithIds(fetchedUser.leap_activities || [], dropdownRes.data.leaps);
+  
+      setUser(fetchedUser);
+      setOriginalUser(fetchedUser);
+      setKid_id(fetchedUser.basic_information?.kid_id);
+      setDropdownOptions(dropdownRes.data);
+      
+      return fetchedUser; // So it can be reused after save
+    } catch (err) {
+      console.error("Failed to fetch user or dropdowns:", err);
+    }
+  };
 
   const sortStudyLevel = (studies) => {
     const levelOrder = { C: 1, A1: 2, A0: 3, M: 4, PHD: 5 };
@@ -268,6 +291,11 @@ const ProfileCard = ({ propId }) => {
   };
 
   useEffect(() => {
+    console.log("Received userId:", userId);
+    fetchData();
+  }, [auth, userId]);
+
+  useEffect(() => {
     console.log("user data updated", user);
   }, [user]);
 
@@ -323,23 +351,25 @@ const ProfileCard = ({ propId }) => {
     }
   };
 //Edit current info
-  const saveKidInfo = async () => {
-    console.log(user);
-    try {
-      await axios.put(`${baseUrl}/kid/${userId}/`, user, {
-        headers: {
-          Authorization: 'Bearer ' + String(auth.accessToken),
-          'Content-Type': 'application/json'
-        },
-        withCredentials: true
-      });
-      alert('Kid info saved!');
-      setOriginalUser(user);
-    } catch (err) {
-      console.error(err);
-      alert('Failed to save Kid info.');
-    }
-  };
+const saveKidInfo = async (dataToSave) => {
+  try {
+    const res = await axios.put(`${baseUrl}/kid/${userId}/`, dataToSave, {
+      headers: {
+        Authorization: 'Bearer ' + String(auth.accessToken),
+        'Content-Type': 'application/json'
+      },
+      withCredentials: true
+    });
+
+    const updatedUser = res.data;
+    alert('Kid info saved!');
+    return updatedUser; // Return the updated user from the server
+  } catch (err) {
+    console.error(err);
+    alert('Failed to save Kid info.');
+    throw err;
+  }
+};
 
   const collegeLookup = Object.fromEntries(
     dropdownOptions.colleges.map(c => [c.value, c.location])
@@ -380,6 +410,15 @@ const ProfileCard = ({ propId }) => {
     return updated;
   }
   
+  const mapLeapActivitiesWithIds = (leapActivities, leapsDropdown) => {
+    return leapActivities.map(a => {
+      const found = leapsDropdown.find(l => l.label === a.leap_name);
+      return {
+        leap_id: found ? found.value : null,
+        leap_name: a.leap_name
+      };
+    }).filter(a => a.leap_id !== null);
+  };
   
   const renderSection = (
     data,
@@ -407,6 +446,37 @@ const ProfileCard = ({ propId }) => {
   
                   if (typeof val === 'boolean') {
                     val = val ? 'Yes' : 'No';
+                  }
+
+                  // Handle multi-select dropdown
+                  if (editing && f.isMultiSelect && dropdownOptions[f.dropdownKey]) {
+                    const selectedValues = val || [];
+
+                    return (
+                      <td key={j}>
+                        <select
+                          multiple
+                          value={val ?? []}
+                          onChange={(e) => {
+                            const selectedValues = Array.from(e.target.selectedOptions, opt => Number(opt.value));
+                            const updatedItem = f.path
+                              ? setNestedValueImmutable(item, f.path, selectedValues)
+                              : { ...item, [f.value]: selectedValues };
+
+                            const updatedData = [...data];
+                            updatedData[i] = updatedItem;
+                            setData(updatedData);
+                          }}
+                          style={{ width: "100%" }}
+                        >
+                          {dropdownOptions[f.dropdownKey].map(opt => (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    );
                   }
   
                   if (editing && f.dropdownKey && dropdownOptions[f.dropdownKey]) {
@@ -470,6 +540,20 @@ const ProfileCard = ({ propId }) => {
                         />
                       </td>
                     );
+                  }
+
+                  if (!editing) {
+                    if (f.dropdownKey === 'leaps') {
+                      return (
+                        <td key={j}>
+                          {val && val.length > 0
+                            ? val.map(id => dropdownOptions.leaps.find(opt => String(opt.value) === id)?.label)
+                                 .filter(Boolean)
+                                 .join(", ")
+                            : 'None'}
+                        </td>
+                      );
+                    }
                   }
   
                   return (
@@ -595,8 +679,21 @@ const ProfileCard = ({ propId }) => {
   const asyvIdentityFields =  user ? [
     { label: 'Grade', path: 'affiliation.grade_info.grade_id', dropdownKey: "grades"},
     { label: 'Family', path: 'affiliation.family_id', dropdownKey: "families" },
-    { label: 'Combination', path: 'academic_combinations.0.combination_id' , dropdownKey: "combinations"}
   ] : [];
+  const academicYears = [
+    { label: 'EY Combination', index: 3 },
+    { label: 'S4 Combination', index: 2 },
+    { label: 'S5 Combination', index: 1 },
+    { label: 'S6 Combination', index: 0 }
+  ];
+  const combinationFields = user ? academicYears.map(({ label, index }) => ({
+    label,
+    value: (u) => u.academic_combinations?.[index]?.combination_id || "",
+    dropdownKey: 'combinations',
+    get path() {
+      return `academic_combinations.${index}.combination_id`;
+    }
+  })) : [];
   const asyvAcademicFields = user ? [
     { label: 'S4 Grade', value: u => u.academic_combinations?.[2]?.marks + '%' },
     { label: 'S5 Grade', value: u => u.academic_combinations?.[1]?.marks + '%' },
@@ -604,7 +701,13 @@ const ProfileCard = ({ propId }) => {
     { label: 'National Exam Score', value: u => `${u.national_exam_results?.points_achieved}/${u.national_exam_results?.maximum_points} (${u.national_exam_results?.mention})` }
   ] : [];
   const leapProgramFields = user ? [
-    { label: 'Leap Program', value: u => u.leap_activities?.map((a) => `${a.leap_name}`).join(", ") || 'Not Found'}
+    {
+      label: 'Leap Activities',
+      // value returns array of leap ids for multi-select
+      value: u => u.leap_activities?.map(a => a.leap_id.toString()) || [],
+      dropdownKey: 'leaps',
+      isMultiSelect: true
+    }
   ] : [];
   const academicFields = [
     { label: 'Level', value: 'level', dropdownKey: 'levels' },
@@ -660,20 +763,50 @@ const ProfileCard = ({ propId }) => {
       </ProfileCardSection>
       <ProfileCardSection title="ASYV Info" canEdit={auth.user?.is_superuser}
         isEditing={editState.asyv}
-        onToggleEdit={() => {
+        // When entering edit mode:
+        onToggleEdit={async () => {
           if (editState.asyv) {
-            saveKidInfo();
+            try {
+              await saveKidInfo(editUser);
+              await fetchData(); // Refresh after saving
+              setEditUser(null);
+            } catch (err) {
+              console.error("Save failed", err);
+            }
+          } else {
+            // Entering edit mode — make a working copy
+            setEditUser(user ? {
+              ...user,
+              academic_combinations: Array.isArray(user.academic_combinations) 
+                ? [...user.academic_combinations] 
+                : []
+            } : null);
+        
+            // Ensure 4 slots
+            setEditUser(prev => {
+              if (!prev) return prev;
+              while (prev.academic_combinations.length < 4) {
+                prev.academic_combinations.unshift({ combination_id: "" });
+              }
+              return { ...prev };
+            });
           }
+        
           setEditState(prev => ({ ...prev, asyv: !prev.asyv }));
         }}
         onCancelEdit={() => {
-          setUser(originalUser);
+          setEditUser(null);          // discard changes
           setEditState(prev => ({ ...prev, asyv: false }));
         }}
         >
-        {renderSection([user], (newArr) => setUser(newArr[0]), asyvIdentityFields, editState.asyv)}
-        {renderSection([user], (newArr) => setUser(newArr[0]), asyvAcademicFields, editState.asyv)}
-        {renderSection([user], (newArr) => setUser(newArr[0]), leapProgramFields, editState.asyv)}
+        {renderSection([editState.asyv ? editUser : user],
+  (newArr) => editState.asyv ? setEditUser(newArr[0]) : setUser(newArr[0]), asyvIdentityFields, editState.asyv)}
+        {renderSection([editState.asyv ? editUser : user],
+  (newArr) => editState.asyv ? setEditUser(newArr[0]) : setUser(newArr[0]), asyvAcademicFields, editState.asyv)}
+        {renderSection([editState.asyv ? editUser : user],
+  (newArr) => editState.asyv ? setEditUser(newArr[0]) : setUser(newArr[0]), combinationFields, editState.asyv)}
+        {renderSection([editState.asyv ? editUser : user],
+  (newArr) => editState.asyv ? setEditUser(newArr[0]) : setUser(newArr[0]), leapProgramFields, editState.asyv)}
       </ProfileCardSection>
       <ProfileCardSection
         title="Academic Info"
