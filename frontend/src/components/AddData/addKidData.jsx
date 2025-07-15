@@ -186,6 +186,7 @@ const AddStudents = () => {
       life_status: formData.life_status, 
       has_children: formData.has_children,
       family: parseInt(formData.family),
+      graduation_status: formData.graduation_status,
       // add other kid-specific fields here
     };
   

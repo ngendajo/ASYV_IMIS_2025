@@ -75,6 +75,11 @@ const ProfileCard = ({ propId }) => {
         })
       ]);
 
+      const res = userRes.data?.national_exam_results || {};
+      userRes.data.national_exam_results_text = res.points_achieved
+        ? `${res.points_achieved} / ${res.maximum_points} (${res.mention})`
+        : '';
+
       const normalizedUser = {
         ...userRes.data,
         academic_combinations: normalizeAcademicCombinations(userRes.data.academic_combinations || [])
@@ -122,15 +127,43 @@ const ProfileCard = ({ propId }) => {
   };
 
   const saveKidInfo = async () => {
-    console.log("updated user info", user);
+    console.log("Updated user info:", user);
+  
+    const text = user.national_exam_results_text || '';
+    const regex = /^(\d+\.?\d*)\s*\/\s*(\d+\.?\d*)\s*\((.+?)\)$/;
+    const match = text.match(regex);
+  
+    const updatedNationalExamResults = match
+      ? {
+          points_achieved: parseFloat(match[1]),
+          maximum_points: parseFloat(match[2]),
+          mention: match[3].trim(),
+          percentage: (parseFloat(match[1]) / parseFloat(match[2])) * 100
+        }
+      : {
+          points_achieved: null,
+          maximum_points: null,
+          mention: null,
+          percentage: null
+        };
+  
+    const updatedUser = {
+      ...user,
+      national_exam_results: updatedNationalExamResults
+    };
+    console.log("exam", updatedNationalExamResults)
+  
     try {
-      await axios.put(`${baseUrl}/kid/${userId}/`, user, {
+      console.log("updated national exam", updatedUser)
+      await axios.put(`${baseUrl}/kid/${userId}/`, updatedUser, {
         headers: { Authorization: 'Bearer ' + auth.accessToken }
       });
-      alert('Kid info saved!');
-      setOriginalUser(user);
-    } catch {
-      alert('Failed to save kid info.');
+      alert('Saved!');
+      setOriginalUser(updatedUser);
+      setUser(updatedUser);
+    } catch (err) {
+      console.error('Save failed:', err);
+      alert('Failed to save.');
     }
   };
 
@@ -169,6 +202,16 @@ const ProfileCard = ({ propId }) => {
   useEffect(() => {
     if (userId) {
       fetchUserData();
+      if (user) {
+        const res = user.national_exam_results || {};
+        const text = res.points_achieved != null && res.maximum_points != null && res.mention
+          ? `${res.points_achieved} / ${res.maximum_points} (${res.mention})`
+          : '';
+        setUser(prev => ({
+          ...prev,
+          national_exam_results_text: text,
+        }));
+      }
       if (user && user.personal_status.graduation_status === 'graduated') {
         fetchStudy();
         fetchEmployment();
@@ -261,8 +304,10 @@ const ProfileCard = ({ propId }) => {
           dropdownOptions={dropdownOptions}
         />
         <FieldRenderer
-          data={[user]} setData={arr => setUser(arr[0])}
-          fields={getAsyvAcademicFields(user)} editing={editState.asyv}
+          data={[user]}
+          setData={arr => setUser(arr[0])}
+          fields={getAsyvAcademicFields()}
+          editing={editState.asyv}
           dropdownOptions={dropdownOptions}
         />
         <FieldRenderer

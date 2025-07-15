@@ -91,9 +91,15 @@ const FieldRenderer = ({
                           value={val ?? ""}
                           onChange={(e) => {
                             const newValue = e.target.value;
-                            const updatedItem = f.path
-                              ? setNestedValueImmutable(item, f.path, newValue)
-                              : { ...item, [f.value]: newValue };
+                            let updatedItem;
+
+                            if (typeof f.onSave === 'function') {
+                              updatedItem = f.onSave(newValue, item);
+                            } else if (f.path) {
+                              updatedItem = setNestedValueImmutable(item, f.path, newValue);
+                            } else {
+                              updatedItem = { ...item, [f.value]: newValue };
+                            }
 
                             const updatedData = [...data];
                             updatedData[i] = updatedItem;
@@ -120,6 +126,8 @@ const FieldRenderer = ({
                       ) : (
                         f.dropdownKey && dropdownOptions[f.dropdownKey]
                           ? dropdownOptions[f.dropdownKey].find(opt => String(opt.value) === String(val))?.label ?? safeValue(val)
+                          : f.suffix
+                          ? `${typeof val === 'number' ? val.toFixed(2) : safeValue(val)}${f.suffix}`
                           : safeValue(val)
                       )}
                     </td>
@@ -188,9 +196,15 @@ const FieldRenderer = ({
                         value={val ?? ""}
                         onChange={(e) => {
                           const newValue = e.target.value;
-                          const updatedItem = f.path
-                            ? setNestedValueImmutable(item, f.path, newValue)
-                            : { ...item, [f.value]: newValue };
+                          let updatedItem;
+
+                          if (typeof f.onSave === 'function') {
+                            updatedItem = f.onSave(newValue, item);
+                          } else if (f.path) {
+                            updatedItem = setNestedValueImmutable(item, f.path, newValue);
+                          } else {
+                            updatedItem = { ...item, [f.value]: newValue };
+                          }
 
                           const updatedData = [...data];
                           updatedData[i] = updatedItem;
@@ -211,6 +225,8 @@ const FieldRenderer = ({
                       ) : (
                         f.dropdownKey && dropdownOptions[f.dropdownKey]
                           ? dropdownOptions[f.dropdownKey].find(opt => String(opt.value) === String(val))?.label ?? safeValue(val)
+                          : f.suffix
+                          ? `${typeof val === 'number' ? val.toFixed(2) : safeValue(val)}${f.suffix}`
                           : safeValue(val)
                       )
                     )}

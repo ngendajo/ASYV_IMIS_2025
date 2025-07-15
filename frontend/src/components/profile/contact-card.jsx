@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
 import './contact-card.css';
 import ProfileImage from '../dashboard/ProfileImage';
+import axios from 'axios';
+import baseUrl from '../../api/baseUrl';
+import useAuth from '../../hooks/useAuth';
 
 const ContactCard = ({ user, editable = false }) => {
+  const { auth } = useAuth();
   const [hover, setHover] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
@@ -27,6 +31,30 @@ const ContactCard = ({ user, editable = false }) => {
       phone: user?.data.phone || user?.data.phone1 || '',
     });
     setIsEditing(false);
+  };
+
+  const handleSave = async () => {
+    try {
+      const updatedUser = {
+        email: formData.email,
+        phone: formData.phone,
+      };
+
+      console.log("userid", user.data.id); 
+      console.log("updated contact", updatedUser);
+  
+      await axios.patch(baseUrl + `/users/${user.data.id}/`, updatedUser, {
+        headers: {
+          Authorization: 'Bearer ' + auth.accessToken, 
+        },
+      });
+  
+      alert("Contact info saved!");
+      setIsEditing(false);
+    } catch (err) {
+      console.error("Failed to save contact info:", err);
+      alert("Failed to save contact info.");
+    }
   };
 
   return (
@@ -81,7 +109,7 @@ const ContactCard = ({ user, editable = false }) => {
 
           {isEditing && (
             <div className="edit-actions">
-              <button className="save-btn" onClick={() => setIsEditing(false)}>Save</button>
+              <button className="save-btn" onClick={handleSave}>Save</button>
               <button className="cancel-btn" onClick={handleCancel}>Cancel</button>
             </div>
           )}
