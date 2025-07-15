@@ -205,9 +205,20 @@ class UserSerializer(serializers.ModelSerializer):
     password_confirm = serializers.CharField(write_only=True, required=True)
     kid = KidSerializer(read_only=True)
 
+    is_alumni = serializers.BooleanField(read_only=True)
+    is_crc = serializers.BooleanField(read_only=True)
+    is_staff = serializers.BooleanField(read_only=True)
+    is_superuser = serializers.BooleanField(read_only=True)
+    is_teacher = serializers.BooleanField(read_only=True)
+    is_mama = serializers.BooleanField(read_only=True)
+    is_librarian = serializers.BooleanField(read_only=True)
+    is_student = serializers.BooleanField(read_only=True)
+
     class Meta:
         model = User
-        fields = [field.name for field in User._meta.fields] + ['kid' ,'password', 'password_confirm']
+        fields = [field.name for field in User._meta.fields] + ['kid' ,'password', 'password_confirm',
+                                                                'is_alumni', 'is_crc', 'is_staff', 'is_superuser',
+                                                                'is_teacher', 'is_mama', 'is_librarian', 'is_student',]
         # extra_kwargs = {
         #     'password': {'write_only': True},
         #     'password_confirm': {'write_only': True},

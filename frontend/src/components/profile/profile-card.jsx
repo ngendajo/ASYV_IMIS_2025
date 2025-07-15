@@ -1,228 +1,286 @@
-import React, { useState } from 'react';
-import useProfileData from '../../hooks/useProfileData';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import baseUrl from '../../api/baseUrl';
 import useAuth from '../../hooks/useAuth';
 import './profile-card.css';
-import ChangePasswordModal from '../home/change_password';
-import VerifyCurrentPasswordModal from './verify-password';
-import ProfileCardSection from './profile-card-section';
-import renderSection from './render-section';
+
+import ChangePasswordFlow from './ChangePasswordFlow';
+import FieldRenderer from './FieldRenderer';
+import ProfileCardSection from './ProfileCardSection';
+import {
+  safeValue,
+  getNestedValue,
+  setNestedValueImmutable
+} from './helpers';
+
+import {
+  getPersonalFields,
+  getCurrentInfoFields,
+  getAsyvIdentityFields,
+  getAsyvAcademicFields,
+  getLeapProgramFields,
+  academicFields,
+  employmentFields
+} from './fieldConfigs';
+
 
 const ProfileCard = ({ propId }) => {
   const { auth } = useAuth();
+  const [userId, setUserId] = useState(propId || auth.user?.id);
+  const [user, setUser] = useState(null);
+  const [study, setStudy] = useState([]);
+  const [employment, setEmployment] = useState([]);
+  const [editState, setEditState] = useState({ info: false, current: false, asyv: false, academic: false, employment: false });
 
-  const {
-    user, setUser, originalUser,
-    study, setStudy, originalStudy,
-    employment, setEmployment, originalEmployment,
-    dropdownOptions,
-    editState, setEditState,
-    saveKidInfo, saveStudyData, saveEmploymentData
-  } = useProfileData(propId);
+  const [originalUser, setOriginalUser] = useState(null);
+  const [originalStudy, setOriginalStudy] = useState([]);
+  const [originalEmployment, setOriginalEmployment] = useState([]);
 
-  const [showVerifyModal, setShowVerifyModal] = useState(false);
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [verifiedCurrentPassword, setVerifiedCurrentPassword] = useState('');
+  const [dropdownOptions, setDropdownOptions] = useState({
+    marital_statuses: [], children_options: [], levels: [], colleges: [], combinations: [],
+    grades: [], leaps: [], families: [], industries: [], status: [], employment_status: [], scholarship: []
+  });
+  
 
-  const cancelEdit = (section) => {
-    switch (section) {
-      case 'info':
-      case 'current':
-      case 'asyv':
-        setUser(originalUser);
-        break;
-      case 'academic':
-        setStudy(originalStudy);
-        break;
-      case 'employment':
-        setEmployment(originalEmployment);
-        break;
+  const fetchUserData = async () => {
+    try {
+      const [userRes, dropdownRes] = await Promise.all([
+        axios.get(`${baseUrl}/kid/${userId}`, {
+          headers: { Authorization: 'Bearer ' + auth.accessToken },
+          withCredentials: true
+        }),
+        axios.get(`${baseUrl}/options/all-dropdowns/`, {
+          headers: { Authorization: 'Bearer ' + auth.accessToken },
+          withCredentials: true
+        })
+      ]);
+
+      setUser(userRes.data);
+      setOriginalUser(userRes.data);
+      setDropdownOptions(dropdownRes.data);
+    } catch (err) {
+      console.error(err);
     }
-    setEditState(prev => ({ ...prev, [section]: false }));
   };
 
-
-  const toggleEdit = (section, saveFunc) => {
-    if (editState[section]) saveFunc();
-    setEditState(prev => ({ ...prev, [section]: !prev[section] }));
+  const fetchStudy = async () => {
+    try {
+      const res = await axios.get(`${baseUrl}/alumni-academic/?id=${userId}`, {
+        headers: { Authorization: 'Bearer ' + auth.accessToken }
+      });
+      const sorted = res.data.sort((a, b) => {
+        const order = { C: 1, A1: 2, A0: 3, M: 4, PHD: 5 };
+        return order[a.level] - order[b.level];
+      });
+      setStudy(sorted);
+      setOriginalStudy(sorted);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-
-  if (!user) return <div>Loading profile...</div>;
-
-
-
-  // Define fields to render
-  const safe = (v) => v || 'Not Found';
-  const personalFields = [
-    { label: 'First Name', path: 'basic_information.first_name' },
-
-
-    { label: 'Rwandan Name', path: 'basic_information.rwandan_name' },
-    { label: 'Gender', path: 'basic_information.gender' },
-    { label: 'Date of Birth', path: 'basic_information.date_of_birth' },
-    { label: 'Place of Birth', value: u => `${u.place_of_birth?.origin_district}, ${u.place_of_birth?.origin_sector}` }
-  ];
-  const currentFields = [
-    { label: 'Marital Status', path: 'personal_status.marital_status', dropdownKey: 'marital_statuses' },
-    { label: 'Children', path: 'personal_status.has_children', dropdownKey: 'children_options' },
-    { label: 'City', path: 'current_address.current_district_or_city' },
-    { label: 'Country', path: 'current_address.current_county' }
-  ];
-  const asyvIdentityFields = [
-    { label: 'Grade', path: 'affiliation.grade_info.grade_id', dropdownKey: "grades" },
-    { label: 'Family', path: 'affiliation.family_id', dropdownKey: "families" },
-
-  ] : [];
-  const academicYears = [
-    { label: 'EY Combination', index: 3 },
-    { label: 'S4 Combination', index: 2 },
-    { label: 'S5 Combination', index: 1 },
-    { label: 'S6 Combination', index: 0 }
-  ];
-  const combinationFields = user ? academicYears.map(({ label, index }) => ({
-    label,
-    value: (u) => u.academic_combinations?.[index]?.combination_id || "",
-    dropdownKey: 'combinations',
-    get path() {
-      return `academic_combinations.${index}.combination_id`;
+  const fetchEmployment = async () => {
+    try {
+      const res = await axios.get(`${baseUrl}/alumni-employment/?id=${userId}`, {
+        headers: { Authorization: 'Bearer ' + auth.accessToken }
+      });
+      const sorted = res.data.sort((a, b) => {
+        if (!a.end_date) return 1;
+        if (!b.end_date) return -1;
+        return new Date(a.end_date) - new Date(b.end_date);
+      });
+      setEmployment(sorted);
+      setOriginalEmployment(sorted);
+    } catch (err) {
+      console.error(err);
     }
-  })) : [];
-  const asyvAcademicFields = user ? [
-    { label: 'S4 Grade', value: u => u.academic_combinations?.[2]?.marks + '%' },
-    { label: 'S5 Grade', value: u => u.academic_combinations?.[1]?.marks + '%' },
-    { label: 'S6 Grade', value: u => u.academic_combinations?.[0]?.marks + '%' },
-    { label: 'National Exam Score', value: u => `${u.national_exam_results?.points_achieved}/${u.national_exam_results?.maximum_points} (${u.national_exam_results?.mention})` }
-  ] : [];
-  const leapProgramFields = user ? [
-    {
-      label: 'Leap Activities',
-      // value returns array of leap ids for multi-select
-      value: u => u.leap_activities?.map(a => a.leap_id.toString()) || [],
-      dropdownKey: 'leaps',
-      isMultiSelect: true
+  };
+
+  const saveKidInfo = async () => {
+    try {
+      await axios.put(`${baseUrl}/kid/${userId}/`, user, {
+        headers: { Authorization: 'Bearer ' + auth.accessToken }
+      });
+      alert('Kid info saved!');
+      setOriginalUser(user);
+    } catch {
+      alert('Failed to save kid info.');
     }
-  ] : [];
-  const academicFields = [
-    { label: 'Level', value: 'level', dropdownKey: 'levels' },
-    { label: 'Degree', value: 'degree' },
-    { label: 'University', value: 'college', dropdownKey: 'colleges' },
-    { label: 'Location', value: 'country' },
-    { label: 'Scholarship', value: 'scholarship', dropdownKey: 'scholarship'},
-    { label: 'Scholarship Details', value: 'scholarship_details'},
-    { label: 'Status', value: 'status', dropdownKey: 'status' }
+  };
 
-  ];
+  const saveStudyData = async () => {
+    try {
+      await axios.put(`${baseUrl}/alumni-academic/?id=${userId}`, {
+        academic: study
+      }, {
+        headers: { Authorization: 'Bearer ' + auth.accessToken }
+      });
+      alert('Academic data saved!');
+      setOriginalStudy(study);
+      fetchStudy();
+    } catch {
+      alert('Failed to save academic data.');
+    }
+  };
 
+  const saveEmploymentData = async () => {
+    try {
+      await axios.put(`${baseUrl}/alumni-employment/?id=${userId}`, {
+        employment
+      }, {
+        headers: { Authorization: 'Bearer ' + auth.accessToken }
+      });
+      alert('Employment data saved!');
+      setOriginalEmployment(employment);
+      fetchEmployment();
+    } catch {
+      alert('Failed to save employment data.');
+    }
+  };
+
+  const collegeLookup = Object.fromEntries(dropdownOptions.colleges.map(c => [c.value, c.location]));
+
+  useEffect(() => {
+    if (userId) {
+      fetchUserData();
+      fetchStudy();
+      fetchEmployment();
+    }
+  }, [userId]);
+
+  const isStaff = auth.user?.is_staff || auth.user?.is_superuser;
+  const isOwnProfile = auth.user?.id === userId;
 
   return (
     <div className="profile-container vertical-cards">
-
       <ProfileCardSection
         title="Personal Info"
         canEdit={auth.user?.is_superuser}
         isEditing={editState.info}
-        onToggleEdit={() => toggleEdit('info', saveKidInfo)}
-        onCancelEdit={() => cancelEdit('info')}
+        onToggleEdit={() => {
+          if (editState.info) saveKidInfo();
+          setEditState(prev => ({ ...prev, info: !prev.info }));
+        }}
+        onCancelEdit={() => {
+          setUser(originalUser);
+          setEditState(prev => ({ ...prev, info: false }));
+        }}
       >
-        {renderSection(user, setUser, personalFields, editState.info, dropdownOptions)}
+        <FieldRenderer
+          data={[user]} setData={arr => setUser(arr[0])}
+          fields={getPersonalFields(user)} editing={editState.info}
+          dropdownOptions={dropdownOptions}
+        />
       </ProfileCardSection>
 
       <ProfileCardSection
         title="Current Info"
         isEditing={editState.current}
-        onToggleEdit={() => toggleEdit('current', saveKidInfo)}
-        onCancelEdit={() => cancelEdit('current')}
+        onToggleEdit={() => {
+          if (editState.current) saveKidInfo();
+          setEditState(prev => ({ ...prev, current: !prev.current }));
+        }}
+        onCancelEdit={() => {
+          setUser(originalUser);
+          setEditState(prev => ({ ...prev, current: false }));
+        }}
       >
-        {renderSection(user, setUser, currentFields, editState.current, dropdownOptions)}
+        <FieldRenderer
+          data={[user]} setData={arr => setUser(arr[0])}
+          fields={getCurrentInfoFields(user)} editing={editState.current}
+          dropdownOptions={dropdownOptions}
+        />
       </ProfileCardSection>
 
       <ProfileCardSection
         title="ASYV Info"
         canEdit={auth.user?.is_superuser}
         isEditing={editState.asyv}
-        // When entering edit mode:
-        onToggleEdit={async () => {
-          if (editState.asyv) {
-            try {
-              await saveKidInfo(editUser);
-              await fetchData(); // Refresh after saving
-              setEditUser(null);
-            } catch (err) {
-              console.error("Save failed", err);
-            }
-          } else {
-            // Entering edit mode — make a working copy
-            setEditUser(user ? {
-              ...user,
-              academic_combinations: Array.isArray(user.academic_combinations) 
-                ? [...user.academic_combinations] 
-                : []
-            } : null);
-        
-            // Ensure 4 slots
-            setEditUser(prev => {
-              if (!prev) return prev;
-              while (prev.academic_combinations.length < 4) {
-                prev.academic_combinations.unshift({ combination_id: "" });
-              }
-              return { ...prev };
-            });
-          }
-        
+        onToggleEdit={() => {
+          if (editState.asyv) saveKidInfo();
           setEditState(prev => ({ ...prev, asyv: !prev.asyv }));
         }}
         onCancelEdit={() => {
-          setEditUser(null);          // discard changes
+          setUser(originalUser);
           setEditState(prev => ({ ...prev, asyv: false }));
         }}
-        >
-        {renderSection([editState.asyv ? editUser : user],
-  (newArr) => editState.asyv ? setEditUser(newArr[0]) : setUser(newArr[0]), asyvIdentityFields, editState.asyv)}
-        {renderSection([editState.asyv ? editUser : user],
-  (newArr) => editState.asyv ? setEditUser(newArr[0]) : setUser(newArr[0]), asyvAcademicFields, editState.asyv)}
-        {renderSection([editState.asyv ? editUser : user],
-  (newArr) => editState.asyv ? setEditUser(newArr[0]) : setUser(newArr[0]), combinationFields, editState.asyv)}
-        {renderSection([editState.asyv ? editUser : user],
-  (newArr) => editState.asyv ? setEditUser(newArr[0]) : setUser(newArr[0]), leapProgramFields, editState.asyv)}
-
+      >
+        <FieldRenderer
+          data={[user]} setData={arr => setUser(arr[0])}
+          fields={getAsyvIdentityFields(user)} editing={editState.asyv}
+          dropdownOptions={dropdownOptions}
+        />
+        <FieldRenderer
+          data={[user]} setData={arr => setUser(arr[0])}
+          fields={getAsyvAcademicFields(user)} editing={editState.asyv}
+          dropdownOptions={dropdownOptions}
+        />
+        <FieldRenderer
+          data={[user]} setData={arr => setUser(arr[0])}
+          fields={getLeapProgramFields(user)} editing={editState.asyv}
+          dropdownOptions={dropdownOptions}
+        />
       </ProfileCardSection>
 
       <ProfileCardSection
         title="Academic Info"
         isEditing={editState.academic}
-        onToggleEdit={() => toggleEdit('academic', saveStudyData)}
-        onCancelEdit={() => cancelEdit('academic')}
+        onToggleEdit={() => {
+          if (editState.academic) saveStudyData();
+          setEditState(prev => ({ ...prev, academic: !prev.academic }));
+        }}
+        onCancelEdit={() => {
+          setStudy(originalStudy);
+          setEditState(prev => ({ ...prev, academic: false }));
+        }}
         onAddRow={() => setStudy(prev => [...prev, {}])}
       >
-        {renderSection(study, setStudy, [
-          { label: 'Level', value: 'level', dropdownKey: 'levels' },
-          { label: 'Degree', value: 'degree' },
-          { label: 'University', value: 'college', dropdownKey: 'colleges' },
-          { label: 'Location', value: 'country' },
-          { label: 'Scholarship', value: 'scholarship', dropdownKey: 'scholarship' },
-          { label: 'Scholarship Details', value: 'scholarship_details' },
-          { label: 'Status', value: 'status', dropdownKey: 'status' }
-        ], editState.academic, dropdownOptions, true)}
+        <FieldRenderer
+          data={study} setData={setStudy}
+          fields={academicFields}
+          editing={editState.academic}
+          dropdownOptions={dropdownOptions}
+          isAcademicSection={true}
+          collegeLookup={collegeLookup}
+          isStaff={auth.user?.is_staff || auth.user?.is_superuser}
+        />
       </ProfileCardSection>
 
       <ProfileCardSection
         title="Employment Info"
         isEditing={editState.employment}
-        onToggleEdit={() => toggleEdit('employment', saveEmploymentData)}
-        onCancelEdit={() => cancelEdit('employment')}
+        onToggleEdit={() => {
+          if (editState.employment) saveEmploymentData();
+          setEditState(prev => ({ ...prev, employment: !prev.employment }));
+        }}
+        onCancelEdit={() => {
+          setEmployment(originalEmployment);
+          setEditState(prev => ({ ...prev, employment: false }));
+        }}
         onAddRow={() => setEmployment(prev => [...prev, {}])}
       >
-        {renderSection(employment, setEmployment, [
-          { label: 'Title', value: 'title' },
-          { label: 'Company', value: 'company' },
-          { label: 'Status', value: 'status', dropdownKey: 'employment_status' },
-          { label: 'Industry', value: 'industry', dropdownKey: 'industries' },
-          { label: 'Start Date', value: 'start_date', type: 'date' },
-          { label: 'End Date', value: 'end_date', type: 'date' }
-        ], editState.employment, dropdownOptions, false, true)}
+        <FieldRenderer
+          data={employment} setData={setEmployment}
+          fields={employmentFields}
+          editing={editState.employment}
+          dropdownOptions={dropdownOptions}
+          isEmploymentSection={true}
+          isStaff={auth.user?.is_staff || auth.user?.is_superuser}
+        />
       </ProfileCardSection>
 
-
+      {/* Password Section */}
+      {isOwnProfile ? (
+        <ChangePasswordFlow />
+      ) : isStaff ? (
+        <button
+          type="button"
+          className="reset-password-button"
+          onClick={() => alert("Reset password functionality not implemented yet.")}
+        >
+          Reset Password
+        </button>
+      ) : null}
     </div>
   );
 };
