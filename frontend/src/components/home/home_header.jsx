@@ -8,14 +8,14 @@ import '../../pages/home/Home.css';
 
 export default function HomeHeader({ onLoginClick, currentPage }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1025);
 
   const toggleMenu = () => setMenuOpen(prev => !prev);
 
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-      if (window.innerWidth >= 768) setMenuOpen(false);
+      setIsMobile(window.innerWidth < 1025);
+      if (window.innerWidth >= 1024) setMenuOpen(false);
     };
 
     window.addEventListener('resize', handleResize);
