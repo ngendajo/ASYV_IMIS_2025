@@ -32,6 +32,7 @@ const AlumniDetail = ({ selectedAlumni, handleClear }) => {
           <ContactCard
             user={{
               data: {
+                id: selectedAlumni.user_id,
                 first_name: selectedAlumni.first_name || selectedAlumni.firstName,
                 rwandan_name: selectedAlumni.rwandan_name || selectedAlumni.lastName,
                 email: selectedAlumni.email,
