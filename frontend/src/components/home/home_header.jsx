@@ -39,12 +39,12 @@ export default function HomeHeader({ onLoginClick, currentPage }) {
           </div>
         ) : (
           <div className="HomeHeaderRight">
-            <div className="HomeHeaderMenu">
+            {/* <div className="HomeHeaderMenu">
             <Link to="/home" className={currentPage === 'home' ? 'active' : ''}>Home</Link>
             <Link to="/news_and_events#top2" className={currentPage === 'news' ? 'active' : ''}>News & Events</Link>
             <Link to="/alumni_stories#top3" className={currentPage === 'alumni_stories' ? 'active' : ''}>Alumni Stories</Link>
             <a href="#contact" className={currentPage === 'contact' ? 'active' : ''}>Contact</a>
-            </div>
+            </div> */}
 
             <div className="HomeHeaderLogin">
               <button onClick={onLoginClick}>Login</button>

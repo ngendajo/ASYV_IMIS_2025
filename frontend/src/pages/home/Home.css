@@ -132,7 +132,7 @@ body {
     /* font */
     color: var(--green);
     font-family: Medium;
-    font-size: 50px;
+    font-size: clamp(2.5rem, 5vw, 3.5rem);
     text-align: center;
     transition: 0.2s;
     text-shadow: 2px 2px 4px var(--greyopa);
@@ -141,18 +141,15 @@ body {
     margin-top: -10px;
     margin-bottom: -60px;
 }
-.HomeBannerTitle:hover{
-    font-size: 55px;
-}
+
 .HomeBannerText{
     /* font */
     color: var(--black);
     font-family: Light;
-    font-size: 18px;
+    font-size: clamp(1rem, 2vw, 1.125rem);
     text-align: center;
     /* box */
     width: 100%;
-    margin-bottom: 50px;
 }
 
 /* 3. Home Gallery - Anushka (Aligned) */
@@ -517,6 +514,36 @@ body {
     color: var(--brown);
     text-decoration: underline;
 }
+
+.login-cta-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: auto;
+  margin-bottom: 50px;
+  max-width: 600px;
+  text-align: center;
+}
+
+
+.login-cta-button {
+  font-family: Bold;
+  font-size: 20px;
+  padding: 0.75rem 2rem;
+  color: var(--orange);
+  border: 2px solid var(--orange);
+  background: none;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  box-shadow: 0 2px 6px rgba(165, 107, 0, 0.4);
+}
+
+.login-cta-button:hover {
+  background-color: var(--orange);
+  color: var(--white);
+}
+
 
 
 @media (max-width: 768px) {
