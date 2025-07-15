@@ -2992,6 +2992,12 @@ def get_student_information(request, user_id):
                 combinations = []
                 try:
                     kid_academics = KidAcademics.objects.select_related('combination').filter(kid=kid)
+                    YEAR_ORDER = {
+                        'S6': 0,
+                        'S5': 1,
+                        'S4': 2,
+                        'EY': 3
+                    }
                     for academic in kid_academics:
                         combinations.append({
                             'id': academic.id,
@@ -3002,6 +3008,8 @@ def get_student_information(request, user_id):
                             # 'combination_abbreviation': academic.combination.abbreviation,
                             'marks': academic.marks,
                         })
+
+                    combinations.sort(key=lambda x: YEAR_ORDER.get(x['level'], float('inf')))
                 except Exception as e:
                     logger.error(f"Error retrieving combinations for user_id {user_id}: {str(e)}")
                     combinations = [{'error': 'Error retrieving academic combinations'}]
@@ -3104,9 +3112,25 @@ def get_student_information(request, user_id):
 
                     kid.save()
 
+                    level_offsets = {
+                        'S6': 0,
+                        'S5': -1,
+                        'S4': -2,
+                        'EY': -3,  # Adjust if needed
+                    }
+                    graduation_year = None
+
+                    if hasattr(kid, 'family') and kid.family:
+                        if hasattr(kid.family, 'grade') and kid.family.grade:
+                            graduation_year = kid.family.grade.graduation_year_to_asyv
+
+                    def calculate_academic_year(level, grad_year):
+                        if grad_year is None or level not in level_offsets:
+                            return None
+                        return grad_year + level_offsets[level]
+
                     academic_combinations_dict = data.get('academic_combinations', [])
 
-                    # Convert dict with numeric keys to a list (if needed)
                     if isinstance(academic_combinations_dict, dict):
                         academic_combinations = [academic_combinations_dict[key] for key in sorted(academic_combinations_dict, key=int)]
                     else:
@@ -3115,9 +3139,13 @@ def get_student_information(request, user_id):
                     for ac in academic_combinations:
                         kid_academic_id = ac.get('id')
                         combination_id = ac.get('combination_id')
-                        academic_year = ac.get('academic_year')
                         level = ac.get('level')
                         marks = ac.get('marks')
+                        if marks is None:
+                            marks = 0
+
+                        academic_year = calculate_academic_year(level, graduation_year)
+                        print(academic_year)
 
                         if combination_id is not None:
                             try:
@@ -3125,18 +3153,16 @@ def get_student_information(request, user_id):
                                 combination = get_object_or_404(Combination, id=combination_id)
 
                                 if kid_academic_id:
-                                    # Try to update existing record
                                     try:
                                         kid_academic = KidAcademics.objects.get(id=kid_academic_id, kid=kid)
                                         kid_academic.combination = combination
-                                        kid_academic.academic_year = academic_year
+                                        # kid_academic.academic_year = academic_year
                                         kid_academic.level = level
                                         kid_academic.marks = marks
                                         kid_academic.save()
                                     except KidAcademics.DoesNotExist:
-                                        pass  # Record not found; skip or handle
+                                        pass
                                 else:
-                                    # Create new record
                                     KidAcademics.objects.create(
                                         kid=kid,
                                         combination=combination,
@@ -3144,11 +3170,8 @@ def get_student_information(request, user_id):
                                         level=level,
                                         marks=marks
                                     )
-
-                            except (ValueError, Combination.DoesNotExist):
-                                pass  # Handle error if combination_id isn't valid
-
-
+                            except ValueError:
+                                pass
                     return Response({'message': 'Student profile updated successfully.'}, status=status.HTTP_200_OK)
 
                 except Exception as e:

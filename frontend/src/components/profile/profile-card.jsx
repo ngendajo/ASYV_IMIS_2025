@@ -19,6 +19,7 @@ import {
   getAsyvIdentityFields,
   getAsyvAcademicFields,
   getLeapProgramFields,
+  getCombinationFieldsByYear,
   academicFields,
   employmentFields
 } from './fieldConfigs';
@@ -41,6 +42,25 @@ const ProfileCard = ({ propId }) => {
     grades: [], leaps: [], families: [], industries: [], status: [], employment_status: [], scholarship: []
   });
   
+  const normalizeAcademicCombinations = (combinations) => {
+    const levelOrder = ['S6', 'S5', 'S4', 'EY'];
+  
+    const levelMap = {
+      S6: { level: 'S6', combination_id: '' },
+      S5: { level: 'S5', combination_id: '' },
+      S4: { level: 'S4', combination_id: '' },
+      EY: { level: 'EY', combination_id: '' }
+    };
+  
+    combinations.forEach(c => {
+      if (levelMap[c.level]) {
+        levelMap[c.level] = { ...c };
+      }
+    });
+  
+    return levelOrder.map(level => levelMap[level]);
+  };
+  
 
   const fetchUserData = async () => {
     try {
@@ -55,8 +75,13 @@ const ProfileCard = ({ propId }) => {
         })
       ]);
 
-      setUser(userRes.data);
-      setOriginalUser(userRes.data);
+      const normalizedUser = {
+        ...userRes.data,
+        academic_combinations: normalizeAcademicCombinations(userRes.data.academic_combinations || [])
+      };
+  
+      setUser(normalizedUser);
+      setOriginalUser(normalizedUser);
       setDropdownOptions(dropdownRes.data);
     } catch (err) {
       console.error(err);
@@ -97,6 +122,7 @@ const ProfileCard = ({ propId }) => {
   };
 
   const saveKidInfo = async () => {
+    console.log("updated user info", user);
     try {
       await axios.put(`${baseUrl}/kid/${userId}/`, user, {
         headers: { Authorization: 'Bearer ' + auth.accessToken }
@@ -143,8 +169,15 @@ const ProfileCard = ({ propId }) => {
   useEffect(() => {
     if (userId) {
       fetchUserData();
-      fetchStudy();
-      fetchEmployment();
+      if (user && user.personal_status.graduation_status === 'graduated') {
+        fetchStudy();
+        fetchEmployment();
+      } else {
+        setStudy([]);  // clear if not graduated
+        setOriginalStudy([]);
+        setEmployment([]); 
+        setOriginalEmployment([]);
+      }
     }
   }, [userId]);
 
@@ -197,11 +230,28 @@ const ProfileCard = ({ propId }) => {
         canEdit={auth.user?.is_superuser}
         isEditing={editState.asyv}
         onToggleEdit={() => {
-          if (editState.asyv) saveKidInfo();
+          if (editState.asyv) {
+            saveKidInfo();
+          } else {
+            // Ensure academic_combinations has 4 entries (for EY, S4, S5, S6)
+            setUser(prev => {
+              const updated = { ...prev };
+              updated.academic_combinations = Array.isArray(updated.academic_combinations)
+                ? [...updated.academic_combinations]
+                : [];
+        
+              while (updated.academic_combinations.length < 4) {
+                updated.academic_combinations.unshift({ combination_id: '' });
+              }
+        
+              return updated;
+            });
+          }
+        
           setEditState(prev => ({ ...prev, asyv: !prev.asyv }));
         }}
         onCancelEdit={() => {
-          setUser(originalUser);
+          setUser(originalUser); // reset to last saved state
           setEditState(prev => ({ ...prev, asyv: false }));
         }}
       >
@@ -213,6 +263,11 @@ const ProfileCard = ({ propId }) => {
         <FieldRenderer
           data={[user]} setData={arr => setUser(arr[0])}
           fields={getAsyvAcademicFields(user)} editing={editState.asyv}
+          dropdownOptions={dropdownOptions}
+        />
+        <FieldRenderer
+          data={[user]} setData={arr => setUser(arr[0])}
+          fields={getCombinationFieldsByYear()} editing={editState.asyv}
           dropdownOptions={dropdownOptions}
         />
         <FieldRenderer
