@@ -23,7 +23,14 @@ export const getCurrentInfoFields = () => [
 export const getAsyvIdentityFields = () => [
   { label: 'Grade', path: 'affiliation.grade_info.grade_id', dropdownKey: 'grades' },
   { label: 'Family', path: 'affiliation.family_id', dropdownKey: 'families' },
-  { label: 'Combination', path: 'academic_combinations.0.combination_id', dropdownKey: 'combinations' }
+  // { label: 'Combination', path: 'academic_combinations.0.combination_id', dropdownKey: 'combinations' }
+];
+
+export const getCombinationFieldsByYear = () => [
+  { label: 'EY Combination', path: 'academic_combinations.3.combination_id', dropdownKey: 'combinations' },
+  { label: 'S4 Combination', path: 'academic_combinations.2.combination_id', dropdownKey: 'combinations' },
+  { label: 'S5 Combination', path: 'academic_combinations.1.combination_id', dropdownKey: 'combinations' },
+  { label: 'S6 Combination', path: 'academic_combinations.0.combination_id', dropdownKey: 'combinations' }
 ];
 
 export const getAsyvAcademicFields = () => [

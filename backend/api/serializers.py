@@ -193,12 +193,11 @@ class AlumniListSerializer(serializers.ModelSerializer):
         return obj.user.is_alumni if obj.user else False
 
     def get_combination(self, obj):
-        academic = KidAcademics.objects.filter(kid=obj).first()
-        if academic and academic.combination:
-            return CombinationSerializer(academic.combination).data
+        most_recent = KidAcademics.objects.filter(kid=obj).order_by('-academic_year').first()
+        if most_recent and most_recent.combination:
+            return CombinationSerializer(most_recent.combination).data
         return None
     
-
 #User crud serialisers
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
