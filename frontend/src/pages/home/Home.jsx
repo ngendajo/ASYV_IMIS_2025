@@ -78,6 +78,10 @@ export default function Home() {
         
         {/* 2. banner: */}
         <HomeBanner/>
+
+        <div className="login-cta-container">
+            <button className="login-cta-button" onClick={toggleLoginPopup}>Login</button>
+        </div>
         
         {/* 3. gallery: */}
         <div className="gallery container flex-col center">
@@ -95,7 +99,7 @@ export default function Home() {
         
         {/* 4. gender: */}
         {/* 5. combination: */}
-        <div className="charts container flex-col center">
+        {/* <div className="charts container flex-col center">
         <GenderChart/>
         <CombinationChart />
         <div className="Mission">
@@ -105,7 +109,7 @@ export default function Home() {
         </div>
         </div>
 
-        {/* 6. news: */}
+        ###6. news: 
         <div className="cards">
             <section className="cards-title">
                 <h1>News & Events</h1>
@@ -139,7 +143,7 @@ export default function Home() {
             </div>
         </div>
 
-        {/* 7. alumni: */}
+        ###7. alumni:
         <div className="cards">
             <section className="cards-title">
                 <h1>Alumni Stories</h1>
@@ -174,7 +178,7 @@ export default function Home() {
             <div className="view-button-alumni">
                 <Link to="/alumni_stories#top3" className="ViewMore">View More</Link>
             </div>
-        </div>
+        </div> */}
 
         {/* 8. footer: */}
         <HomeFooter/>
