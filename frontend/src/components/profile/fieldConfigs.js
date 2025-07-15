@@ -35,32 +35,41 @@ export const getCombinationFieldsByYear = () => [
 
 export const getAsyvAcademicFields = () => [
   {
+    label: 'EY Grade',
+    path: 'academic_combinations.3.marks',
+    type: 'number',
+    suffix: '%',
+    editable: true,
+  },
+  {
     label: 'S4 Grade',
-    value: (u) => u?.academic_combinations?.[2]?.marks
-      ? `${u.academic_combinations[2].marks}%`
-      : 'N/A'
+    path: 'academic_combinations.2.marks',
+    type: 'number',
+    suffix: '%',
+    editable: true,
   },
   {
     label: 'S5 Grade',
-    value: (u) => u?.academic_combinations?.[1]?.marks
-      ? `${u.academic_combinations[1].marks}%`
-      : 'N/A'
+    path: 'academic_combinations.1.marks',
+    type: 'number',
+    suffix: '%',
+    editable: true,
   },
   {
     label: 'S6 Grade',
-    value: (u) => u?.academic_combinations?.[0]?.marks
-      ? `${u.academic_combinations[0].marks}%`
-      : 'N/A'
+    path: 'academic_combinations.0.marks',
+    type: 'number',
+    suffix: '%',
+    editable: true,
   },
   {
     label: 'National Exam Score',
-    value: (u) => {
-      const res = u?.national_exam_results;
-      return res
-        ? `${res.points_achieved ?? '-'} / ${res.maximum_points ?? '-'} (${res.mention ?? 'N/A'})`
-        : 'N/A';
-    }
-  }
+    value: (u) => u?.national_exam_results_text ?? '',
+    path: 'national_exam_results_text',
+    type: 'text',
+    editable: true,
+    dropdownKey: null,
+  },
 ];
 
 export const getLeapProgramFields = () => [

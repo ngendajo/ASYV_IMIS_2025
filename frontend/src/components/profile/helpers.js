@@ -35,15 +35,17 @@ export function getNestedValue(obj, path) {
   return path.reduce((acc, key) => acc && acc[key], obj);
 }
 
-export function setNestedValueImmutable(obj, path, value) {
-  if (typeof path === 'string') path = path.split('.');
-  if (path.length === 0) return value;
+export const setNestedValueImmutable = (obj, path, value) => {
+  const keys = path.replace(/\[(\d+)\]/g, '.$1').split('.');
+  const lastKey = keys.pop();
+  const deepClone = JSON.parse(JSON.stringify(obj));
 
-  const [key, ...rest] = path;
-  return {
-    ...obj,
-    [key]: rest.length === 0 
-      ? value 
-      : setNestedValueImmutable(obj?.[key] ?? {}, rest, value)
-  };
-}
+  let current = deepClone;
+  for (const key of keys) {
+    if (!(key in current)) current[key] = {};
+    current = current[key];
+  }
+
+  current[lastKey] = value;
+  return deepClone;
+};

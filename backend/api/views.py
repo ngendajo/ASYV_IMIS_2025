@@ -3109,6 +3109,16 @@ def get_student_information(request, user_id):
                             grade = get_object_or_404(Grade, id=grade_id)
                             family.grade = grade
                             family.save()
+                    
+                    # National Exam
+                    national_exam = data.get('national_exam_results', {})
+                    points = national_exam.get('points_achieved')
+                    maximum = national_exam.get('maximum_points')
+                    mention = national_exam.get('mention')
+
+                    kid.points_in_national_exam = points if points is not None else None
+                    kid.maximum_points_in_national_exam = maximum if maximum is not None else None
+                    kid.mention = mention
 
                     kid.save()
 
