@@ -199,31 +199,38 @@ const ProfileCard = ({ propId }) => {
     }
   };
 
+  const handleDeleteAcademic = async (id) => {
+    try {
+      await axios.delete(`${baseUrl}/alumni-academic/?academic_id=${id}`, {
+        headers: { Authorization: 'Bearer ' + auth.accessToken }
+      });
+      return true;
+    } catch (err) {
+      console.error("Failed to delete academic record", err);
+      return false;
+    }
+  };
+  
+  const handleDeleteEmployment = async (id) => {
+    try {
+      await axios.delete(`${baseUrl}/alumni-employment/?employment_id=${id}`, {
+        headers: { Authorization: 'Bearer ' + auth.accessToken }
+      });
+      return true;
+    } catch (err) {
+      console.error("Failed to delete employment record", err);
+      return false;
+    }
+  };
+  
+
   const collegeLookup = Object.fromEntries(dropdownOptions.colleges.map(c => [c.value, c.location]));
 
   useEffect(() => {
-    if (userId) {
       fetchUserData();
-      if (user) {
-        const res = user.national_exam_results || {};
-        const text = res.points_achieved != null && res.maximum_points != null && res.mention
-          ? `${res.points_achieved} / ${res.maximum_points} (${res.mention})`
-          : '';
-        setUser(prev => ({
-          ...prev,
-          national_exam_results_text: text,
-        }));
-      }
-      if (user && user.personal_status.graduation_status === 'graduated') {
-        fetchStudy();
-        fetchEmployment();
-      } else {
-        setStudy([]);  // clear if not graduated
-        setOriginalStudy([]);
-        setEmployment([]); 
-        setOriginalEmployment([]);
-      }
-    }
+      fetchStudy();
+      fetchEmployment();
+     
   }, [userId]);
 
   const isStaff = auth.user?.is_staff || auth.user?.is_superuser;
@@ -345,6 +352,7 @@ const ProfileCard = ({ propId }) => {
           isAcademicSection={true}
           collegeLookup={collegeLookup}
           isStaff={auth.user?.is_staff || auth.user?.is_superuser}
+          onDelete={handleDeleteAcademic}
         />
       </ProfileCardSection>
 
@@ -368,6 +376,7 @@ const ProfileCard = ({ propId }) => {
           dropdownOptions={dropdownOptions}
           isEmploymentSection={true}
           isStaff={auth.user?.is_staff || auth.user?.is_superuser}
+          onDelete={handleDeleteEmployment}
         />
       </ProfileCardSection>
 

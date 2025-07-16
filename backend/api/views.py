@@ -3335,7 +3335,20 @@ class AlumniEmploymentView(APIView):
                     return Response({'error': str(e)}, status=500)
         
         return Response({'message': 'Employment record created/updated', 'updated_ids': updated_ids}, status=200)
-    
+   
+    #DELETE employment record 
+    def delete(self, request):
+        emp_id = request.query_params.get('employment_id') or request.data.get('employment_id')
+        if not emp_id:
+            return Response({'error': 'Missing employment ID'}, status=400)
+
+        try:
+            employment = Employment.objects.get(id=emp_id)
+            employment.delete()
+            return Response({'message': f'Employment record {emp_id} deleted.'}, status=204)
+        except Employment.DoesNotExist:
+            return Response({'error': f'Employment record {emp_id} not found.'}, status=404)
+        
 class AlumniAcademicView(APIView):
     #permission_classes = [IsAuthenticated]
 
@@ -3397,7 +3410,20 @@ class AlumniAcademicView(APIView):
                     return Response(serializer.errors, status=400)
                         
         return Response({'message': 'FurtherEducation record created/updated', 'updated_ids': updated_ids}, status=200)
+    
+    #DELETE academic record 
+    def delete(self, request):
+        academic_id = request.query_params.get('academic_id')
+        if not academic_id:
+            return Response({'error': 'Missing academic_id parameter'}, status=400)
 
+        try:
+            academic = FurtherEducation.objects.get(id=academic_id)
+            academic.delete()
+            return Response({'message': f'Academic record {academic_id} deleted successfully.'}, status=200)
+        except FurtherEducation.DoesNotExist:
+            return Response({'error': 'Academic record not found'}, status=404)
+        
 #current student directory api 
 class CurrentStudentDirectoryView(APIView):
     def get_all_filter_options(self):
