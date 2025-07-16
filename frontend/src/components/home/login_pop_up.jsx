@@ -61,6 +61,16 @@ export default function LoginPopUp({showLogin, toggleLoginPopup}) {
                 // since it includes: first_name, rwandan_name, email, phone, is_superuser, etc
 
                 setAuth({ user, accessToken: access, refresh });
+
+                // Check user roles before proceeding
+                if (!user.is_alumni && !user.is_staff) {
+                    alert("You don't have access to this website yet.");
+                    // Optionally, clear auth and tokens:
+                    setAuth({});
+                    setAccessToken('');
+                    // Do not navigate
+                    return;
+                }
                 const currentPwd = pwd;
                 setEmail('');
                 setPwd('');

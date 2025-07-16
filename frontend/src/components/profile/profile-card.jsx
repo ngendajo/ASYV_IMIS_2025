@@ -5,6 +5,7 @@ import useAuth from '../../hooks/useAuth';
 import './profile-card.css';
 
 import ChangePasswordFlow from './ChangePasswordFlow';
+import ResetPasswordButton from './ResetPasswordFlow';
 import FieldRenderer from './FieldRenderer';
 import ProfileCardSection from './ProfileCardSection';
 import {
@@ -374,13 +375,7 @@ const ProfileCard = ({ propId }) => {
       {isOwnProfile ? (
         <ChangePasswordFlow />
       ) : isStaff ? (
-        <button
-          type="button"
-          className="reset-password-button"
-          onClick={() => alert("Reset password functionality not implemented yet.")}
-        >
-          Reset Password
-        </button>
+        <ResetPasswordButton userId={userId} />
       ) : null}
     </div>
   );

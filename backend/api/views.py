@@ -46,6 +46,7 @@ from rest_framework.generics import RetrieveAPIView
 from rest_framework.generics import RetrieveUpdateAPIView
 from django.db.models import Count
 from django.db.models import Max
+from rest_framework import status, permissions
 
 
 logger = logging.getLogger(__name__)
@@ -399,6 +400,24 @@ class ChangePasswordView(APIView):
         request.user.set_password(serializer.validated_data['new_password'])
         request.user.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+DEFAULT_PASSWORD = 'Amahoro@1'
+@api_view(['POST'])
+@permission_classes([permissions.IsAdminUser])  # Only allow staff/admins
+def reset_user_password(request, user_id):
+    try:
+        user = get_object_or_404(User, id=user_id)
+        user.set_password(DEFAULT_PASSWORD)
+        User.objects.filter(id=user_id).update(password=user.password)
+        return Response(
+            {'message': f"Password for user {user.username} has been reset."},
+            status=status.HTTP_200_OK
+        )
+    except Exception as e:
+        return Response(
+            {'error': 'Failed to reset password', 'details': str(e)},
+            status=status.HTTP_400_BAD_REQUEST
+        )
     
 class PasswordReset(generics.GenericAPIView):
     permission_classes = [IsAuthenticated, ]
