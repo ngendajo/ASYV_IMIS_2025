@@ -182,7 +182,10 @@ button {
   font-weight: 500;
   cursor: pointer;
   background: var(--green);
-  color: var(--white)
+  color: var(--white);
+  width: auto;
+  display: inline-block;
+  white-space: nowrap;
 }
 
 /* Responsive: show/hide desktop/mobile views */
@@ -220,3 +223,4 @@ button {
   }
 
 }
+

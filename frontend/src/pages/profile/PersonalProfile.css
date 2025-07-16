@@ -7,16 +7,35 @@
 }
 
 .toResume {
-  margin-top: 40px;
-  padding: 10px 20px;
-  background-color: var(--orange);
-  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  background: var(--green);
+  color: var(--white);
+  width: auto;
+  display: inline-block;
+  white-space: nowrap;
+  max-width: fit-content;
   text-decoration: none;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: background-color 0.3s ease;
 }
 
 .toResume:hover {
   background-color: var(--brown);
+}
+button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  background: var(--green);
+  color: var(--white);
+  width: auto;
+  display: inline-block;
+  white-space: nowrap;
+  max-width: fit-content;
 }
