@@ -5,6 +5,7 @@ import useAuth from '../../hooks/useAuth';
 import './profile-card.css';
 
 import ChangePasswordFlow from './ChangePasswordFlow';
+import ResetPasswordButton from './ResetPasswordFlow';
 import FieldRenderer from './FieldRenderer';
 import ProfileCardSection from './ProfileCardSection';
 import {
@@ -88,6 +89,7 @@ const ProfileCard = ({ propId }) => {
       setUser(normalizedUser);
       setOriginalUser(normalizedUser);
       setDropdownOptions(dropdownRes.data);
+      console.log("leap dropdowns", dropdownOptions.leaps)
     } catch (err) {
       console.error(err);
     }
@@ -317,7 +319,7 @@ const ProfileCard = ({ propId }) => {
         />
         <FieldRenderer
           data={[user]} setData={arr => setUser(arr[0])}
-          fields={getLeapProgramFields(user)} editing={editState.asyv}
+          fields={getLeapProgramFields(user, dropdownOptions)} editing={editState.asyv}
           dropdownOptions={dropdownOptions}
         />
       </ProfileCardSection>
@@ -373,13 +375,7 @@ const ProfileCard = ({ propId }) => {
       {isOwnProfile ? (
         <ChangePasswordFlow />
       ) : isStaff ? (
-        <button
-          type="button"
-          className="reset-password-button"
-          onClick={() => alert("Reset password functionality not implemented yet.")}
-        >
-          Reset Password
-        </button>
+        <ResetPasswordButton userId={userId} />
       ) : null}
     </div>
   );

@@ -36,7 +36,7 @@ urlpatterns = [
          name="reset-password",
     ), 
     path('password-reset/', views.PasswordReset.as_view(), name="password-reset"),
-    
+    path('users/<int:user_id>/reset-password/', views.reset_user_password, name='reset-user-password'),
     path('updateuserimage/<str:pk>', views.update_user_image, name='update-userimage'),
     
     path('logout/', views.LogoutView.as_view(), name='logout'),
