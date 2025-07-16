@@ -21,15 +21,34 @@ const FieldRenderer = ({
   isAcademicSection = false,
   collegeLookup = {},
   isStaff = false,
+  onDelete,
 }) => {
   // Determine if delete button should show
   const canDelete = editing && isStaff && (isAcademicSection || isEmploymentSection);
 
   // Handler for deleting a row
-  const handleDelete = (index) => {
-    const newData = [...data];
-    newData.splice(index, 1);
-    setData(newData);
+  const handleDelete = async (index) => {
+    const itemToDelete = data[index];
+  
+    console.log("id of record", itemToDelete.id)
+    if (itemToDelete.id && typeof onDelete === 'function') {
+      const confirmed = window.confirm("Are you sure you want to delete this entry?");
+      if (!confirmed) return;
+  
+      const success = await onDelete(itemToDelete.id);
+      if (success) {
+        const newData = [...data];
+        newData.splice(index, 1);
+        setData(newData);
+      } else {
+        alert("Failed to delete entry.");
+      }
+    } else {
+      // Unsaved new row, remove locally
+      const newData = [...data];
+      newData.splice(index, 1);
+      setData(newData);
+    }
   };
 
   return (
@@ -50,9 +69,6 @@ const FieldRenderer = ({
                   let val = f.getValue ? f.getValue(item) : (
                     f.path ? getNestedValue(item, f.path) : (typeof f.value === 'function' ? f.value(item) : item[f.value])
                   );
-
-                  console.log('Raw val:', val, 'typeof val:', typeof val, 'Array.isArray:', Array.isArray(val));
-
                 
                   if (typeof val === 'boolean') val = val ? 'Yes' : 'No';
 
@@ -74,16 +90,9 @@ const FieldRenderer = ({
                             return normalized;
                           })
                         : [];
-
-                      console.log('🎯 Multi-select rendering for', f.label);
-                      console.log('Raw val:', val);
-                      console.log('Normalized valueArray:', valueArray);
-                      console.log('Dropdown options (normalized):', normalizedOptions);
-
+    
                       // Filter selected options based on normalized values
                       const selectedOptions = normalizedOptions.filter(opt => valueArray.includes(opt.value));
-
-                      console.log('Selected options:', selectedOptions);
 
                       return (
                         <Select
