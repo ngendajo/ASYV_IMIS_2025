@@ -88,6 +88,7 @@ const ProfileCard = ({ propId }) => {
       setUser(normalizedUser);
       setOriginalUser(normalizedUser);
       setDropdownOptions(dropdownRes.data);
+      console.log("leap dropdowns", dropdownOptions.leaps)
     } catch (err) {
       console.error(err);
     }
@@ -317,7 +318,7 @@ const ProfileCard = ({ propId }) => {
         />
         <FieldRenderer
           data={[user]} setData={arr => setUser(arr[0])}
-          fields={getLeapProgramFields(user)} editing={editState.asyv}
+          fields={getLeapProgramFields(user, dropdownOptions)} editing={editState.asyv}
           dropdownOptions={dropdownOptions}
         />
       </ProfileCardSection>

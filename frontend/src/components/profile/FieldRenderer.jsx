@@ -1,4 +1,6 @@
 import React from 'react';
+import Select from 'react-select';
+
 import {
   getNestedValue,
   setNestedValueImmutable,
@@ -45,17 +47,67 @@ const FieldRenderer = ({
             {data.map((item, i) => (
               <tr key={i}>
                 {fields.map((f, j) => {
-                  let val = f.path
-                    ? getNestedValue(item, f.path)
-                    : typeof f.value === 'function'
-                      ? f.value(item)
-                      : item[f.value];
+                  let val = f.getValue ? f.getValue(item) : (
+                    f.path ? getNestedValue(item, f.path) : (typeof f.value === 'function' ? f.value(item) : item[f.value])
+                  );
 
+                  console.log('Raw val:', val, 'typeof val:', typeof val, 'Array.isArray:', Array.isArray(val));
+
+                
                   if (typeof val === 'boolean') val = val ? 'Yes' : 'No';
 
                   if (editing && f.dropdownKey && dropdownOptions[f.dropdownKey]) {
                     return (
                       <td key={j}>
+
+                    {f.isMulti ? (() => {
+                      // Normalize options values to numbers if needed
+                      const normalizedOptions = (dropdownOptions[f.dropdownKey] || []).map(opt => ({
+                        ...opt,
+                        value: typeof opt.value === 'string' ? Number(opt.value) : opt.value,
+                      }));
+
+                      // Normalize current value array to numbers too
+                      const valueArray = Array.isArray(val)
+                        ? val.map(v => {
+                            const normalized = typeof v === 'string' ? Number(v) : v;
+                            return normalized;
+                          })
+                        : [];
+
+                      console.log('🎯 Multi-select rendering for', f.label);
+                      console.log('Raw val:', val);
+                      console.log('Normalized valueArray:', valueArray);
+                      console.log('Dropdown options (normalized):', normalizedOptions);
+
+                      // Filter selected options based on normalized values
+                      const selectedOptions = normalizedOptions.filter(opt => valueArray.includes(opt.value));
+
+                      console.log('Selected options:', selectedOptions);
+
+                      return (
+                        <Select
+                          isMulti
+                          options={normalizedOptions}
+                          value={selectedOptions}
+                          onChange={(selected) => {
+                            const selectedValues = selected ? selected.map(opt => opt.value) : [];
+                            console.log('📝 Selected values from onChange:', selectedValues);
+
+                            const updatedItem = f.setValue
+                              ? f.setValue(item, selectedValues)
+                              : { ...item, [f.value]: selectedValues };
+
+                            console.log('Updated item:', updatedItem);
+
+                            const updatedData = [...data];
+                            updatedData[i] = updatedItem;
+                            setData(updatedData);
+                          }}
+                          placeholder="Select..."
+                        />
+                      );
+                    })() : (
                         <select
                           value={String(val ?? "")}
                           onChange={(e) => {
@@ -79,6 +131,7 @@ const FieldRenderer = ({
                             <option key={opt.value} value={opt.value}>{opt.label}</option>
                           ))}
                         </select>
+                      )}
                       </td>
                     );
                   }
@@ -124,8 +177,18 @@ const FieldRenderer = ({
                       ) : isAcademicSection && f.value === 'scholarship' ? (
                         getScholarshipLabel(val)
                       ) : (
-                        f.dropdownKey && dropdownOptions[f.dropdownKey]
-                          ? dropdownOptions[f.dropdownKey].find(opt => String(opt.value) === String(val))?.label ?? safeValue(val)
+                       // 🧠 Final fallback for dropdown/multi-select
+                          f.dropdownKey && dropdownOptions[f.dropdownKey]
+                          ? Array.isArray(val)
+                            ? val
+                                .map(v => {
+                                  const match = dropdownOptions[f.dropdownKey].find(
+                                    opt => Number(opt.value) === Number(v)
+                                  );
+                                  return match ? match.label : v;
+                                })
+                                .join(', ')
+                            : dropdownOptions[f.dropdownKey].find(opt => String(opt.value) === String(val))?.label ?? safeValue(val)
                           : f.suffix
                           ? `${typeof val === 'number' ? val.toFixed(2) : safeValue(val)}${f.suffix}`
                           : safeValue(val)

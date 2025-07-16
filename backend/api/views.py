@@ -3020,7 +3020,7 @@ def get_student_information(request, user_id):
                     kid_leaps = KidLeap.objects.select_related('leap').filter(kid=kid)
                     for kid_leap in kid_leaps:
                         leap_activities.append({
-                            'leap_name': kid_leap.leap.ep,
+                            'leap_name': kid_leap.leap.id,
                             # 'category': kid_leap.leap.leap_category,
                             # 'is_approved': kid_leap.is_approved,
                             # 'approved_at': kid_leap.approved_at.isoformat() if kid_leap.approved_at else None,
@@ -3110,7 +3110,7 @@ def get_student_information(request, user_id):
                             family.grade = grade
                             family.save()
                     
-                    # National Exam
+                    # ✅ National Exam
                     national_exam = data.get('national_exam_results', {})
                     points = national_exam.get('points_achieved')
                     maximum = national_exam.get('maximum_points')
@@ -3139,6 +3139,7 @@ def get_student_information(request, user_id):
                             return None
                         return grad_year + level_offsets[level]
 
+                    # ✅ Academic Combinations
                     academic_combinations_dict = data.get('academic_combinations', [])
 
                     if isinstance(academic_combinations_dict, dict):
@@ -3182,6 +3183,35 @@ def get_student_information(request, user_id):
                                     )
                             except ValueError:
                                 pass
+                    # ✅ Update LEAP Activities
+                    leap_activities_data = data.get('leap_activities', [])
+                    existing_leap_ids = set(KidLeap.objects.filter(kid=kid).values_list('leap_id', flat=True))
+                    submitted_leap_ids = set()
+
+                    for leap_entry in leap_activities_data:
+                        leap_id = leap_entry.get('leap_name')
+                        if not leap_id:
+                            continue
+
+                        try:
+                            leap = Leap.objects.get(id=int(leap_id))
+                            submitted_leap_ids.add(leap.id)
+                            
+                            # Only create if not already existing
+                            KidLeap.objects.get_or_create(
+                                kid=kid,
+                                leap=leap,
+                                defaults={'recorded_by': request.user}
+                            )
+                        except (Leap.DoesNotExist, ValueError) as e:
+                            logger.warning(f"Invalid leap ID in submission: {leap_id} — {str(e)}")
+                            continue
+
+                    # Optional: remove KidLeap entries not in the submitted list
+                    to_remove_ids = existing_leap_ids - submitted_leap_ids
+                    if to_remove_ids:
+                        KidLeap.objects.filter(kid=kid, leap_id__in=to_remove_ids).delete()
+
                     return Response({'message': 'Student profile updated successfully.'}, status=status.HTTP_200_OK)
 
                 except Exception as e:
@@ -5722,6 +5752,7 @@ def graduate_kids_by_grade(request, grade_id):
         updated_users_count = User.objects.filter(id__in=user_ids).update(is_alumni=True)
         
         return Response({
+            'message': f"Successfully graduated {updated_kids_count} kid(s) and updated {updated_users_count} user(s) to alumni.",
             'updated_kids_count': updated_kids_count,
             'updated_users_count': updated_users_count,
         }, status=status.HTTP_200_OK)
