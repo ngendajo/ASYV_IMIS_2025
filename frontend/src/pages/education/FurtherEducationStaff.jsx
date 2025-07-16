@@ -1,27 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import TabbedCardPage from '../../components/opportunities/tabbed-card-page';
 import OpportunityCard from '../../components/opportunities/opportunity-card';
-import SupportRequestTable from '../../components/opportunities/support-request-table';
+// import SupportRequestTable from '../../components/opportunities/support-request-table';
 import OpportunityModal from '../../components/opportunities/opportunity-modal';
 import axios from 'axios';
 import useAuth from "../../hooks/useAuth";
 import baseUrl from '../../api/baseUrl';
-//const  baseUrl='https://backend.asyv.ac.rw/api';
 
 const FurtherEducationStaff = () => {
   const { auth } = useAuth();
-  const [activeTab, setActiveTab] = useState('Support Requests');
+  const [activeTab, setActiveTab] = useState('Courses');
   const [opportunities, setOpportunities] = useState([]);
-  const [supportRequests, setSupportRequests] = useState([]);
+  // const [supportRequests, setSupportRequests] = useState([]);
   const [editingOpportunity, setEditingOpportunity] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [creatingNew, setCreatingNew] = useState(false);
 
-  const TABS = ['Support Requests', 'Courses', 'Programs'];
+  // const TABS = ['Support Requests', 'Courses', 'Programs'];
+  const TABS = ['Courses', 'Programs'];
 
   useEffect(() => {
     fetchOpportunities();
-    fetchSupportRequests();
+    // fetchSupportRequests();
   }, []);
 
   const fetchOpportunities = async () => {
@@ -35,14 +35,14 @@ const FurtherEducationStaff = () => {
     }
   };
 
-  const fetchSupportRequests = async () => {
-    try {
-      const res = await axios.get(baseUrl + '/support-request/get/');
-      setSupportRequests(res.data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  // const fetchSupportRequests = async () => {
+  //   try {
+  //     const res = await axios.get(baseUrl + '/support-request/get/');
+  //     setSupportRequests(res.data);
+  //   } catch (err) {
+  //     console.error(err);
+  //   }
+  // };
 
   const handlePostToggle = async (id, approved) => {
     try {
@@ -154,14 +154,14 @@ const FurtherEducationStaff = () => {
     });
   };
 
-  const renderSupportRequests = () => (
-    <SupportRequestTable
-      requests={supportRequests.map(r => ({
-        ...r,
-        alumni: r.alumni || "Unknown"
-      }))}
-    />
-  );
+  // const renderSupportRequests = () => (
+  //   <SupportRequestTable
+  //     requests={supportRequests.map(r => ({
+  //       ...r,
+  //       alumni: r.alumni || "Unknown"
+  //     }))}
+  //   />
+  // );
 
   return (
     <>
@@ -170,8 +170,8 @@ const FurtherEducationStaff = () => {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         renderCards={renderCards}
-        renderFinalTab={renderSupportRequests}
-        showCreateButton={activeTab !== "Support Requests"}
+        // renderFinalTab={renderSupportRequests}
+        showCreateButton={true}
         onCreateClick={handleCreateClick}
       />
 

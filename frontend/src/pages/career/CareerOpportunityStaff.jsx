@@ -1,24 +1,24 @@
-// src/pages/opportunities/CareerOpportunityStaff.jsx
 import React, { useState, useEffect } from 'react';
 import TabbedCardPage from '../../components/opportunities/tabbed-card-page';
 import OpportunityCard from '../../components/opportunities/opportunity-card';
-import SupportRequestTable from '../../components/opportunities/support-request-table';
+// import SupportRequestTable from '../../components/opportunities/support-request-table';
 import OpportunityModal from '../../components/opportunities/opportunity-modal';
 import axios from 'axios';
 import useAuth from "../../hooks/useAuth";
 import baseUrl from '../../api/baseUrl';
-//const  baseUrl='https://backend.asyv.ac.rw/api';
 
 const CareerOpportunityStaff = () => {
   const { auth } = useAuth();
-  const [activeTab, setActiveTab] = useState('Support Requests');
+  // const [activeTab, setActiveTab] = useState('Support Requests');
+  const [activeTab, setActiveTab] = useState('Full Time');
   const [opportunities, setOpportunities] = useState([]);
-  const [supportRequests, setSupportRequests] = useState([]);
+  // const [supportRequests, setSupportRequests] = useState([]);
   const [editingOpportunity, setEditingOpportunity] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [creatingNew, setCreatingNew] = useState(false);
 
-  const TABS = ['Support Requests', 'Full Time', 'Part Time', 'Internship', 'Volunteer', 'Professional'];
+  // const TABS = ['Support Requests', 'Full Time', 'Part Time', 'Internship', 'Volunteer', 'Professional'];
+  const TABS = ['Full Time', 'Part Time', 'Internship', 'Volunteer'];
 
   useEffect(() => {
     fetchOpportunities();
@@ -27,7 +27,7 @@ const CareerOpportunityStaff = () => {
   const fetchOpportunities = async () => {
     try {
       const res = await axios.get(baseUrl + '/opportunity');
-      const sorted = res.data.sort((a, b) => a.approved - b.approved); // Show drafts first
+      const sorted = res.data.sort((a, b) => a.approved - b.approved);
       setOpportunities(sorted);
     } catch (err) {
       console.error(err);
@@ -77,20 +77,20 @@ const CareerOpportunityStaff = () => {
     }
   };
 
-  const handleRequestSupport = (op) => {
-    const timestamp = new Date().toLocaleString();
-    setSupportRequests(prev => [
-      ...prev,
-      {
-        title: op.title,
-        company: op.organization,
-        type: op.op_type,
-        timestamp,
-        status: 'Pending',
-        alumni: "John Doe" // Placeholder for real alumni data
-      }
-    ]);
-  };
+  // const handleRequestSupport = (op) => {
+  //   const timestamp = new Date().toLocaleString();
+  //   setSupportRequests(prev => [
+  //     ...prev,
+  //     {
+  //       title: op.title,
+  //       company: op.organization,
+  //       type: op.op_type,
+  //       timestamp,
+  //       status: 'Pending',
+  //       alumni: "John Doe" // Placeholder for real alumni data
+  //     }
+  //   ]);
+  // };
 
   const renderCards = () => {
     const filtered = opportunities.filter(op => op.op_type === activeTab);
@@ -140,14 +140,14 @@ const CareerOpportunityStaff = () => {
     });
   };
 
-  const renderSupportRequests = () => (
-    <SupportRequestTable
-      requests={supportRequests.map(r => ({
-        ...r,
-        alumni: r.alumni || "Unknown"
-      }))}
-    />
-  );
+  // const renderSupportRequests = () => (
+  //   <SupportRequestTable
+  //     requests={supportRequests.map(r => ({
+  //       ...r,
+  //       alumni: r.alumni || "Unknown"
+  //     }))}
+  //   />
+  // );
 
   const handleCreateClick = () => {
     setEditingOpportunity({
@@ -170,8 +170,8 @@ const CareerOpportunityStaff = () => {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         renderCards={renderCards}
-        renderFinalTab={renderSupportRequests}
-        showCreateButton={activeTab !== "Support Requests"}
+        // renderFinalTab={renderSupportRequests}
+        showCreateButton={true}
         onCreateClick={handleCreateClick}
       />
 

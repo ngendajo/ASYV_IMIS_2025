@@ -1,27 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import TabbedCardPage from '../../components/opportunities/tabbed-card-page';
 import OpportunityCard from '../../components/opportunities/opportunity-card';
-import SupportRequestTable from '../../components/opportunities/support-request-table';
+// import SupportRequestTable from '../../components/opportunities/support-request-table';
 import './CareerOpportunity.css';
 import axios from 'axios';
 import useAuth from "../../hooks/useAuth";
 import baseUrl from '../../api/baseUrl';
-//const  baseUrl='https://backend.asyv.ac.rw/api';
+// const baseUrl = 'https://backend.asyv.ac.rw/api';
 
 const CareerOpportunity = () => {
   const { auth } = useAuth();
 
   const [activeTab, setActiveTab] = useState('Full Time');
   const [opportunities, setOpportunities] = useState([]);
-  const [supportRequests, setSupportRequests] = useState([]);
+  // const [supportRequests, setSupportRequests] = useState([]);
 
   const TABS = [
     'Full Time',
     'Part Time',
     'Internship',
     'Volunteer',
-    'Professional',
-    'Support Requests'
+    // 'Professional',
+    // 'Support Requests'
   ];
 
   useEffect(() => {
@@ -38,20 +38,20 @@ const CareerOpportunity = () => {
     }
   };
 
-  const handleRequestSupport = (op) => {
-    const timestamp = new Date().toLocaleString();
-    setSupportRequests(prev => [
-      ...prev,
-      {
-        title: op.title,
-        company: op.organization,
-        type: op.op_type,
-        timestamp,
-        status: 'Pending'
-      }
-    ]);
-    alert("CRC support requested.");
-  };
+  // const handleRequestSupport = (op) => {
+  //   const timestamp = new Date().toLocaleString();
+  //   setSupportRequests(prev => [
+  //     ...prev,
+  //     {
+  //       title: op.title,
+  //       company: op.organization,
+  //       type: op.op_type,
+  //       timestamp,
+  //       status: 'Pending'
+  //     }
+  //   ]);
+  //   alert("CRC support requested.");
+  // };
 
   const renderCards = () => {
     return opportunities
@@ -65,20 +65,20 @@ const CareerOpportunity = () => {
           link={job.link}
           type={job.op_type}
           company={job.organization}
-          onSupportRequest={handleRequestSupport}
+          // onSupportRequest={handleRequestSupport}
           renderActions={() => (
             <>
               <button onClick={() => window.open(job.link, "_blank")}>Apply</button>
-              <button onClick={() => handleRequestSupport(job)}>Request CRC Support</button>
+              {/* <button onClick={() => handleRequestSupport(job)}>Request CRC Support</button> */}
             </>
           )}
         />
       ));
   };
 
-  const renderFinalTab = () => (
-    <SupportRequestTable requests={supportRequests} />
-  );
+  // const renderFinalTab = () => (
+  //   <SupportRequestTable requests={supportRequests} />
+  // );
 
   return (
     <TabbedCardPage
@@ -86,7 +86,7 @@ const CareerOpportunity = () => {
       activeTab={activeTab}
       setActiveTab={setActiveTab}
       renderCards={renderCards}
-      renderFinalTab={renderFinalTab}
+      // renderFinalTab={renderFinalTab}
     />
   );
 };

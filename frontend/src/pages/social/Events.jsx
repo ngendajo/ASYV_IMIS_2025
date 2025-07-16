@@ -1,4 +1,4 @@
-import React, { useEffect, useState }  from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import SearchBar from '../../components/dashboard/search-bar';
 import { Event } from '../../components/social/events-cards';
@@ -7,7 +7,7 @@ import axios from "axios";
 import useAuth from "../../hooks/useAuth";
 
 import baseUrl from "../../api/baseUrl";
-//const  baseUrl='https://backend.asyv.ac.rw/api';
+// const baseUrl='https://backend.asyv.ac.rw/api';
 
 const Events = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -26,47 +26,46 @@ const Events = () => {
 
   const fetchEvents = async () => {
     try {
-      const response = await axios.get(baseUrl+'/events/',{
+      const response = await axios.get(baseUrl + '/events/', {
         // headers: {
         //   "Authorization": 'Bearer ' + String(auth.accessToken),
         //   "Content-Type": 'multipart/form-data'
         // },
-        // withCredentials:true
+        // withCredentials: true
       });
-      setEvent(response.data); 
+      setEvent(response.data);
       console.log(response.data)
-    } catch(err) {
+    } catch (err) {
       console.log(err);
     }
   };
 
-  const [userRsvps, setUserRsvps] = useState({}); // key: event_id, value: true/false
+  // const [userRsvps, setUserRsvps] = useState({}); // key: event_id, value: true/false
 
-  const fetchUserRsvps = async () => {
-    try {
-      const res = await axios.get(`${baseUrl}/rsvps/?alumni=${auth.user.id}`, {
-        headers: {
-          Authorization: `Bearer ${auth.accessToken}`,
-        },
-      });
-      // Map RSVPs into an object for quick lookup by event_id
-      const rsvpMap = {};
-      res.data.forEach(rsvp => {
-        rsvpMap[rsvp.event.id] = true;  // user has RSVPed this event
-      });
-      setUserRsvps(rsvpMap);
-    } catch (err) {
-      console.error("Failed to fetch user RSVPs:", err);
-    }
-  };
+  // const fetchUserRsvps = async () => {
+  //   try {
+  //     const res = await axios.get(`${baseUrl}/rsvps/?alumni=${auth.user.id}`, {
+  //       headers: {
+  //         Authorization: `Bearer ${auth.accessToken}`,
+  //       },
+  //     });
+  //     // Map RSVPs into an object for quick lookup by event_id
+  //     const rsvpMap = {};
+  //     res.data.forEach(rsvp => {
+  //       rsvpMap[rsvp.event.id] = true;  // user has RSVPed this event
+  //     });
+  //     setUserRsvps(rsvpMap);
+  //   } catch (err) {
+  //     console.error("Failed to fetch user RSVPs:", err);
+  //   }
+  // };
 
-  useEffect(() =>{
+  useEffect(() => {
     fetchEvents();
-    if (auth.user && auth.accessToken) {
-      fetchUserRsvps();
-    }
+    // if (auth.user && auth.accessToken) {
+    //   fetchUserRsvps();
+    // }
   }, [auth]);
-
 
   const eventsData = event;
 
@@ -122,11 +121,12 @@ const Events = () => {
       console.log(error);
     }
   };
+
   const handleDelete = async (eventId) => {
     const confirmed = window.confirm('Are you sure you want to delete this event?');
-        if (!confirmed) {
-            return;
-        }
+    if (!confirmed) {
+      return;
+    }
     try {
       await axios.delete(baseUrl + "/events/" + eventId + "/", {
         headers: {
@@ -151,17 +151,18 @@ const Events = () => {
         <button onClick={() => setCreatingNew(true)} className="add-new-event">Add Event</button>
       )}
       <div className="CardsWrapper">
-      {creatingNew && (
-        <Event
-          alumni='false'
-          title=""
-          e_datetime=""
-          location=""
-          description=""
-          image_url={null}
-          link={() => handleDetail(event)}
-          onSave={(x) => handleCreateNew(x)}
-          isNew={true}
+        {creatingNew && (
+          <Event
+            alumni='false'
+            title=""
+            e_datetime=""
+            location=""
+            description=""
+            image_url={null}
+            link={() => handleDetail(event)}
+            onSave={(x) => handleCreateNew(x)}
+            isNew={true}
+            timeFunction={(x) => getDateFromDateISOString(x)}
           />
         )}
         {auth.user.is_alumni && (
@@ -169,9 +170,12 @@ const Events = () => {
             <Event
               key={event.id}
               alumni='true'
-              rsvped={!!userRsvps[event.id]}
+              // rsvped={!!userRsvps[event.id]}
               title={event.title}
               e_datetime={event.e_datetime}
+              location={event.location}
+              description={event.description}
+              image_url={event.image_url}
               buttonText={event.buttonText}
               link={() => handleDetail(event)}
               timeFunction={(x) => getDateFromDateISOString(x)}
@@ -184,7 +188,7 @@ const Events = () => {
               key={event.id}
               event_id={event.id}
               alumni='false'
-              rsvped={!!userRsvps[event.id]}
+              // rsvped={!!userRsvps[event.id]}
               title={event.title}
               e_datetime={event.e_datetime}
               location={event.location}
