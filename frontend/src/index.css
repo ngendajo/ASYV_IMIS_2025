@@ -157,9 +157,7 @@ html, body, .app-layout {
 /* Main content should leave space for sidebar */
 .MarginContainer {
   flex: 1;
-  padding: 1rem;
   padding-top: 100px; /* Header height */
-  margin-left: 264px; /* Sidebar width */
   box-sizing: border-box;
 }
 
@@ -172,5 +170,6 @@ html, body, .app-layout {
   .MarginContainer {
     margin-left: 0;
     padding-top: 100px;
+    padding: 100px 1rem 0 1rem;
   }
 }
