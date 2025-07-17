@@ -77,10 +77,11 @@ const AlumniDashboard = () => {
         <h2>Upcoming Events</h2>
         <div className="scroll-wrapper">
           <div className="scroll-row">
-            {events.map((event) => (
+          {[...events]
+            .sort((a, b) => new Date(a.e_datetime) - new Date(b.e_datetime))
+            .map((event) => (
               <div className="card-item" key={event.id}>
                 <Event
-                  key={event.id}
                   event_id={event.id}
                   alumni="true"
                   title={event.title}
@@ -93,7 +94,7 @@ const AlumniDashboard = () => {
                   timeFunction={(x) => new Date(x).toLocaleDateString()}
                 />
               </div>
-            ))}
+          ))}
           </div>
         </div>
       </div>

@@ -70,9 +70,11 @@ const Events = () => {
   const eventsData = event;
 
   // Filter events based on search query
-  const filteredEvents = eventsData.filter(event =>
+const filteredEvents = eventsData
+  .filter(event =>
     event.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  )
+  .sort((a, b) => new Date(a.e_datetime) - new Date(b.e_datetime));
 
   const handleDetail = (event) => {
     navigate('/events-detail', { state: { event } });

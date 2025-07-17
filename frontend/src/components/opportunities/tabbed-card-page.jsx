@@ -11,22 +11,23 @@ const TabbedCardPage = ({
   showCreateButton = false,
   onCreateClick
 }) => {
-  const [prevTab, setPrevTab] = useState(tabs.find(t => t !== "Support Requests"));
+  // const [prevTab, setPrevTab] = useState(tabs.find(t => t !== "Support Requests"));
 
-  // Track last non-support tab to return from Support Requests
-  useEffect(() => {
-    if (activeTab !== "Support Requests") {
-      setPrevTab(activeTab);
-    }
-  }, [activeTab]);
+  // useEffect(() => {
+  //   if (activeTab !== "Support Requests") {
+  //     setPrevTab(activeTab);
+  //   }
+  // }, [activeTab]);
 
   const handleSelectChange = (e) => {
     setActiveTab(e.target.value);
   };
 
-  const content = activeTab === "Support Requests"
-    ? renderFinalTab()
-    : renderCards();
+  // const content = activeTab === "Support Requests"
+  //   ? renderFinalTab()
+  //   : renderCards();
+
+  const content = renderCards();
 
   return (
     <div className="opportunity-page">
@@ -46,32 +47,29 @@ const TabbedCardPage = ({
 
         {/* Mobile Tabs */}
         <div className="mobile-tabs">
-          {activeTab !== "Support Requests" ? (
-            <div className="mobile-tab-controls-row">
-              <button
-                className="support-tab"
-                onClick={() => setActiveTab("Support Requests")}
-              >
-                Support Requests
-              </button>
-              <select value={activeTab} onChange={handleSelectChange}>
-                {tabs.filter(tab => tab !== "Support Requests").map(tab => (
-                  <option key={tab} value={tab}>{tab}</option>
-                ))}
-              </select>
-            </div>
-          ) : (
+          {/* Removed Support Requests button */}
+          <div className="mobile-tab-controls-row">
+            {/* 
             <button
-              className="back-tab-button"
-              onClick={() => setActiveTab(prevTab)}
+              className="support-tab"
+              onClick={() => setActiveTab("Support Requests")}
             >
-              ← Back to {prevTab}
-            </button>
-          )}
+              Support Requests
+            </button> 
+            */}
+            <select value={activeTab} onChange={handleSelectChange}>
+              {tabs
+                // .filter(tab => tab !== "Support Requests")
+                .map(tab => (
+                  <option key={tab} value={tab}>
+                    {tab}
+                  </option>
+                ))}
+            </select>
+          </div>
         </div>
       </div>
 
-      {/* Button now always BELOW the tabs */}
       {showCreateButton && activeTab !== "Support Requests" && (
         <div className="create-button-wrapper">
           <button className="create-new-button" onClick={onCreateClick}>
@@ -80,6 +78,7 @@ const TabbedCardPage = ({
         </div>
       )}
 
+      {/* 
       {activeTab === "Support Requests" ? (
         <div className="support-requests-container">
           {content}
@@ -89,6 +88,10 @@ const TabbedCardPage = ({
           {content}
         </div>
       )}
+      */}
+      <div className="opportunity-cards-container">
+        {content}
+      </div>
     </div>
   );
 };

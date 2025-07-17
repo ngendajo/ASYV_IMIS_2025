@@ -8,14 +8,14 @@ import '../../pages/home/Home.css';
 
 export default function HomeHeader({ onLoginClick, currentPage }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 1025);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1023);
 
   const toggleMenu = () => setMenuOpen(prev => !prev);
 
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 1025);
-      if (window.innerWidth >= 1024) setMenuOpen(false);
+      setIsMobile(window.innerWidth < 1023);
+      if (window.innerWidth >= 1025) setMenuOpen(false);
     };
 
     window.addEventListener('resize', handleResize);
@@ -33,9 +33,9 @@ export default function HomeHeader({ onLoginClick, currentPage }) {
         {isMobile ? (
           <div className="HomeHeaderRightCompact">
             <button className="HomeHeaderLoginCompact" onClick={onLoginClick}>Login</button>
-            <button className="HomeHeaderHamburger" onClick={toggleMenu}>
+            {/* <button className="HomeHeaderHamburger" onClick={toggleMenu}>
               {menuOpen ? <AiOutlineClose /> : <AiOutlineMenu />}
-            </button>
+            </button> */}
           </div>
         ) : (
           <div className="HomeHeaderRight">
