@@ -83,6 +83,9 @@ export default function LoginPopUp({showLogin, toggleLoginPopup}) {
             } catch (err) {
                 if (!err?.response) {
                     setErrMsg("No response from server. Please check your internet connection.");
+                } 
+                else if (err.response.status === 400) {
+                    setErrMsg('Incorrect email or password.');
                 } else if (err.response.status === 401) {
                     setErrMsg('Unauthorized: Incorrect email or password.');
                 } else if (err.response.status === 403) {

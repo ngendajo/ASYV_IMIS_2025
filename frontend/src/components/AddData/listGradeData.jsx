@@ -179,7 +179,7 @@ const GradeList = () => {
                         ) : (
                           <>
                             {family.family_name}
-                            <button onClick={() => handleFamilyEditClick(family)}>Edit</button>
+                            <button className="family-edit" onClick={() => handleFamilyEditClick(family)}>Edit</button>
                           </>
                         )}
                       </li>

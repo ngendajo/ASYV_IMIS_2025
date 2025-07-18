@@ -10,7 +10,8 @@ import './dashboard-header.css';
 
 export default function DashboardHeader({ onToggleSidebar, isSidebarVisible }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+  const MOBILE_BREAKPOINT = 1024;
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= MOBILE_BREAKPOINT);
   const navigate = useNavigate();
   const logout = useLogout();
   const { auth } = useAuth();
@@ -24,14 +25,15 @@ export default function DashboardHeader({ onToggleSidebar, isSidebarVisible }) {
     navigate('/home');
   };
 
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 1024);
-      if (window.innerWidth >= 1024) setMenuOpen(false);
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+useEffect(() => {
+  const handleResize = () => {
+    const width = window.innerWidth;
+    setIsMobile(width <= MOBILE_BREAKPOINT);
+    if (width > MOBILE_BREAKPOINT) setMenuOpen(false);
+  };
+  window.addEventListener('resize', handleResize);
+  return () => window.removeEventListener('resize', handleResize);
+}, []);
 
   return (
     <div className="DashboardHeader">

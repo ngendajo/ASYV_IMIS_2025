@@ -5,7 +5,7 @@ import "./opportunity-modal.css";
 const OpportunityModal = ({
   opportunity,
   onClose,
-  onSupportRequest,
+  // onSupportRequest,
   editMode = false,
   onSave,
   onDelete,
@@ -94,9 +94,9 @@ const OpportunityModal = ({
               ) : (
                 <>
                   <button onClick={() => window.open(opportunity.link, "_blank")}>Apply</button>
-                  <button className="support" onClick={() => onSupportRequest(opportunity)}>
+                  {/* <button className="support" onClick={() => onSupportRequest(opportunity)}>
                     Request CRC Support
-                  </button>
+                  </button> */}
                 </>
               )}
             </div>

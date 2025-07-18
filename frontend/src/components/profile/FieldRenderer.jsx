@@ -114,6 +114,9 @@ const FieldRenderer = ({
                             setData(updatedData);
                           }}
                           placeholder="Select..."
+                          menuPortalTarget={document.body} // ⬅️ This ensures it's rendered in the body
+                          menuPosition="absolute"          // ⬅️ Required for proper absolute positioning
+                          styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
                         />
                       );
                     })() : (
