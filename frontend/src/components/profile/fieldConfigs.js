@@ -113,7 +113,7 @@ export const getLeapProgramFields = (user, dropdownOptions = {}) => [
 
 export const academicFields = [
   { label: 'Level', value: 'level', dropdownKey: 'levels' },
-  { label: 'Degree', value: 'degree' },
+  { label: 'Major', value: 'degree' },
   { label: 'University', value: 'college', dropdownKey: 'colleges' },
   { label: 'Location', value: 'country' },
   { label: 'Scholarship', value: 'scholarship', dropdownKey: 'scholarship' },
