@@ -3281,7 +3281,7 @@ class AlumniEmploymentView(APIView):
         try:
             # Get the graduated Kid linked to this User
             print(user_id)
-            kid = Kid.objects.get(user__id=user_id, graduation_status = "graduated")
+            kid = Kid.objects.get(user__id=user_id)
         except Kid.DoesNotExist:
             return Response({'error': 'Graduated Kid not found for this user'}, status=404)
 
@@ -3296,7 +3296,7 @@ class AlumniEmploymentView(APIView):
             return Response({'error': 'Missing user ID'}, status=400)
 
         try:
-            kid = Kid.objects.get(user__id=user_id, graduation_status="graduated")
+            kid = Kid.objects.get(user__id=user_id)
         except Kid.DoesNotExist:
             return Response({'error': 'Graduated Kid not found for this user'}, status=404)
 
@@ -3360,7 +3360,7 @@ class AlumniAcademicView(APIView):
         try:
             # Get the graduated Kid linked to this User
             print(user_id)
-            kid = Kid.objects.get(user__id=user_id, graduation_status = "graduated")
+            kid = Kid.objects.get(user__id=user_id)
         except Kid.DoesNotExist:
             return Response({'error': 'No graduated kid found for this user'}, status=404)
 
@@ -3375,7 +3375,7 @@ class AlumniAcademicView(APIView):
             return Response({'error': 'Missing user ID'}, status=400)
 
         try:
-            kid = Kid.objects.get(user__id=user_id, graduation_status="graduated")
+            kid = Kid.objects.get(user__id=user_id)
         except Kid.DoesNotExist:
             return Response({'error': 'Graduated Kid not found for this user'}, status=404)
 

@@ -2,14 +2,28 @@ export const getPersonalFields = (user) => [
   { label: 'First Name', path: 'basic_information.first_name' },
   { label: 'Rwandan Name', path: 'basic_information.rwandan_name' },
   { label: 'Gender', path: 'basic_information.gender' },
-  { label: 'Date of Birth', path: 'basic_information.date_of_birth' },
+  { label: 'Date of Birth', path: 'basic_information.date_of_birth', type: 
+  'date'
+   },
+  // {
+  //   label: 'Place of Birth',
+  //   value: (u) => {
+  //     const district = u?.place_of_birth?.origin_district || 'Unknown District';
+  //     const sector = u?.place_of_birth?.origin_sector || 'Unknown Sector';
+  //     return `${district}, ${sector}`;
+  //   }
+  // }, 
   {
-    label: 'Place of Birth',
-    value: (u) => {
-      const district = u?.place_of_birth?.origin_district || 'Unknown District';
-      const sector = u?.place_of_birth?.origin_sector || 'Unknown Sector';
-      return `${district}, ${sector}`;
-    }
+    label: 'District of Birth',
+    path: 'place_of_birth.origin_district',
+    type: 'text',
+    editable: true,
+  },
+  {
+    label: 'Sector of Birth',
+    path: 'place_of_birth.origin_sector',
+    type: 'text',
+    editable: true,
   }
 ];
 
@@ -115,7 +129,7 @@ export const academicFields = [
   { label: 'Level', value: 'level', dropdownKey: 'levels' },
   { label: 'Degree', value: 'degree' },
   { label: 'University', value: 'college', dropdownKey: 'colleges' },
-  { label: 'Location', value: 'country' },
+  { label: 'Location', value: 'location' },
   { label: 'Scholarship', value: 'scholarship', dropdownKey: 'scholarship' },
   { label: 'Scholarship Details', value: 'scholarship_details' },
   { label: 'Status', value: 'status', dropdownKey: 'status' }

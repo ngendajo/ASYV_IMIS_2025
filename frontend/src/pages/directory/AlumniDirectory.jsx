@@ -137,6 +137,11 @@ const [appliedFilters, setAppliedFilters] = useState({
     fetchAlumni();
   }, [auth, pagination.current_page, pagination.page_size, searchTerm, appliedFilters]);
 
+  useEffect(() => {
+    setPagination((prev) => ({ ...prev, current_page: 1 }));
+    setAlumniData([]); // clear existing results so new ones will replace them
+  }, [searchTerm]);
+
 useEffect(() => {
     const isDesktop = window.innerWidth >= 768; // adjust breakpoint if needed
   
