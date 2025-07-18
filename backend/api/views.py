@@ -5932,25 +5932,25 @@ class DeleteOpportunityView(APIView):
         return Response({'msg': 'Opportunity deleted successfully'}, status=status.HTTP_200_OK)
 
 
-# class UpdateOpportunityView(RetrieveUpdateAPIView):
-#     queryset = Opportunity.objects.all()
-#     serializer_class = UpdateOpportunitySerializer
-#     lookup_field = 'pk'
+class UpdateOpportunityView(RetrieveUpdateAPIView):
+    queryset = Opportunity.objects.all()
+    serializer_class = UpdateOpportunitySerializer
+    lookup_field = 'pk'
 
-#     def update(self, request, *args, **kwargs):
-#         instance = self.get_object()
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
 
-#         # check is user is alumni
-#         if request.user.is_authenticated and request.user.is_alumni:
-#             raise PermissionDenied("Opportunity has been approved so cannot modify.")
+        # check is user is alumni
+        if request.user.is_authenticated and request.user.is_alumni:
+            raise PermissionDenied("Opportunity has been approved so cannot modify.")
 
-#         # update
-#         partial = kwargs.pop('partial', False)
-#         serializer = self.get_serializer(instance, data=request.data, partial=partial)
-#         serializer.is_valid(raise_exception=True)
-#         self.perform_update(serializer)
+        # update
+        partial = kwargs.pop('partial', False)
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
 
-#         return Response(serializer.data)
+        return Response(serializer.data)
 
 
 class ApproveOpportunityView(RetrieveUpdateAPIView):
