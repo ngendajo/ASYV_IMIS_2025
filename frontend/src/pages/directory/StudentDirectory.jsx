@@ -125,17 +125,21 @@ const [appliedFilters, setAppliedFilters] = useState({
   }, [auth, pagination.current_page, pagination.page_size, searchTerm, appliedFilters]);
 
   useEffect(() => {
-      const isDesktop = window.innerWidth >= 768; // adjust breakpoint if needed
-    
-      const scrollContainer = isDesktop 
-        ? document.querySelector('.desktop-table-wrapper') 
-        : window;
-    
-      if (!scrollContainer) return;
-    
-      const onScroll = () => {
+    const isDesktop = window.innerWidth >= 768;
+    const scrollContainer = isDesktop 
+      ? document.querySelector('.desktop-table-wrapper') 
+      : window;
+  
+    if (!scrollContainer) return;
+  
+    let throttleTimeout = null;
+  
+    const onScroll = () => {
+      if (throttleTimeout) return;
+  
+      throttleTimeout = setTimeout(() => {
         let scrollTop, clientHeight, scrollHeight;
-    
+  
         if (scrollContainer === window) {
           scrollTop = window.scrollY || document.documentElement.scrollTop;
           clientHeight = window.innerHeight;
@@ -145,21 +149,21 @@ const [appliedFilters, setAppliedFilters] = useState({
           clientHeight = scrollContainer.clientHeight;
           scrollHeight = scrollContainer.scrollHeight;
         }
-    
+  
         if (scrollTop + clientHeight >= scrollHeight - 20) {
           if (pagination.has_next && !loading) {
-            setPagination((prev) => ({ ...prev, current_page: prev.current_page + 1 }));
+            setPagination(prev => ({ ...prev, current_page: prev.current_page + 1 }));
           }
         }
-      };
-    
-      scrollContainer.addEventListener('scroll', onScroll);
-    
-      return () => {
-        scrollContainer.removeEventListener('scroll', onScroll);
-      };
-    }, [pagination.has_next, loading]);
-    
+  
+        throttleTimeout = null;
+      }, 250); // 250ms throttle
+    };
+  
+    scrollContainer.addEventListener('scroll', onScroll);
+    return () => scrollContainer.removeEventListener('scroll', onScroll);
+  }, [pagination.has_next, loading]);
+  
   
 
 const handleDownload = async () => {

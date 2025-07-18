@@ -142,43 +142,46 @@ const [appliedFilters, setAppliedFilters] = useState({
     setAlumniData([]); // clear existing results so new ones will replace them
   }, [searchTerm]);
 
-useEffect(() => {
-    const isDesktop = window.innerWidth >= 768; // adjust breakpoint if needed
-  
+  useEffect(() => {
+    const isDesktop = window.innerWidth >= 768;
     const scrollContainer = isDesktop 
       ? document.querySelector('.desktop-table-wrapper') 
       : window;
   
     if (!scrollContainer) return;
   
+    let throttleTimeout = null;
+  
     const onScroll = () => {
-      let scrollTop, clientHeight, scrollHeight;
+      if (throttleTimeout) return;
   
-      if (scrollContainer === window) {
-        scrollTop = window.scrollY || document.documentElement.scrollTop;
-        clientHeight = window.innerHeight;
-        scrollHeight = document.documentElement.scrollHeight;
-      } else {
-        scrollTop = scrollContainer.scrollTop;
-        clientHeight = scrollContainer.clientHeight;
-        scrollHeight = scrollContainer.scrollHeight;
-      }
+      throttleTimeout = setTimeout(() => {
+        let scrollTop, clientHeight, scrollHeight;
   
-      if (scrollTop + clientHeight >= scrollHeight - 20) {
-        if (pagination.has_next && !loading) {
-          setPagination((prev) => ({ ...prev, current_page: prev.current_page + 1 }));
+        if (scrollContainer === window) {
+          scrollTop = window.scrollY || document.documentElement.scrollTop;
+          clientHeight = window.innerHeight;
+          scrollHeight = document.documentElement.scrollHeight;
+        } else {
+          scrollTop = scrollContainer.scrollTop;
+          clientHeight = scrollContainer.clientHeight;
+          scrollHeight = scrollContainer.scrollHeight;
         }
-      }
+  
+        if (scrollTop + clientHeight >= scrollHeight - 20) {
+          if (pagination.has_next && !loading) {
+            setPagination(prev => ({ ...prev, current_page: prev.current_page + 1 }));
+          }
+        }
+  
+        throttleTimeout = null;
+      }, 250); // 250ms throttle
     };
   
     scrollContainer.addEventListener('scroll', onScroll);
-  
-    return () => {
-      scrollContainer.removeEventListener('scroll', onScroll);
-    };
+    return () => scrollContainer.removeEventListener('scroll', onScroll);
   }, [pagination.has_next, loading]);
   
-
 const handleDownload = async () => {
     try {
       const params = {
