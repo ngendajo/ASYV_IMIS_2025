@@ -7,6 +7,7 @@ import { Event } from '../social/events-cards';
 import OpportunityCard from '../opportunities/opportunity-card';
 import axios from 'axios';
 import baseUrl from '../../api/baseUrl';
+import { useNavigate } from 'react-router-dom';
 //const  baseUrl='https://backend.asyv.ac.rw/api';
 
 
@@ -55,6 +56,8 @@ const AlumniDashboard = () => {
     alert("CRC support requested.");
   };
 
+  const navigate = useNavigate();
+  
   return (
     <div>
       <div className="welcome-banner">
@@ -64,7 +67,7 @@ const AlumniDashboard = () => {
         </div>
         <button
           className="update-profile-btn"
-          onClick={() => window.location.href = '/personal_profile'}
+          onClick={() => navigate('/personal_profile')}
         >
           Update Profile
         </button>
@@ -74,18 +77,24 @@ const AlumniDashboard = () => {
         <h2>Upcoming Events</h2>
         <div className="scroll-wrapper">
           <div className="scroll-row">
-            {events.map((event) => (
+          {[...events]
+            .sort((a, b) => new Date(a.e_datetime) - new Date(b.e_datetime))
+            .map((event) => (
               <div className="card-item" key={event.id}>
                 <Event
+                  event_id={event.id}
                   alumni="true"
                   title={event.title}
                   e_datetime={event.e_datetime}
+                  location={event.location}
+                  description={event.description}
+                  image_url={event.image_url}
                   buttonText={event.buttonText}
                   link={() => window.location.href = '/events-detail'}
                   timeFunction={(x) => new Date(x).toLocaleDateString()}
                 />
               </div>
-            ))}
+          ))}
           </div>
         </div>
       </div>
@@ -107,8 +116,7 @@ const AlumniDashboard = () => {
                   renderActions={() => (
                     <>
                       <button onClick={() => window.open(job.link, '_blank')}>Apply</button>
-                      <button onClick={() => requestSupport(job)}>Request CRC Support</button>
-                    </>
+                   </>
                   )}
                 />
               </div>
@@ -134,7 +142,6 @@ const AlumniDashboard = () => {
                   renderActions={() => (
                     <>
                       <button onClick={() => window.open(edu.link, '_blank')}>Learn More</button>
-                      <button onClick={() => requestSupport(edu)}>Request CRC Support</button>
                     </>
                   )}
                   labelOverrides={{

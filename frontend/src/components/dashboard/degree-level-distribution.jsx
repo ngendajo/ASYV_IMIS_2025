@@ -43,7 +43,7 @@ const DegreeLevelDistribution = ({ distribution }) => {
             nameKey="name"
             cx="50%"
             cy="50%"
-            outerRadius={90}
+            outerRadius={80}
             label={({ name, percent }) => `${name}: ${percent}%`}
           >
             {dataWithPercent.map((entry, index) => (

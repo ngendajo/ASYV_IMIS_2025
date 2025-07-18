@@ -10,10 +10,10 @@ export default function HomeBanner() {
             <div className="HomeBannerTitle">
                 <p>Welcome to ASYV Alumni Platform</p>
             </div>
-            <div className="HomeBannerText">
+            {/* <div className="HomeBannerText">
                 <p>Explore the inspiring journeys of ASYV alumni, from global internships to community empowerment projects.<br />
                 Connect, engage, and bring ASYV alumni to your community.</p>
-            </div>
+            </div> */}
         </div>
     );
 }

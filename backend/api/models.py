@@ -101,6 +101,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def clean(self):
         super().clean()
+        if getattr(self, '_skip_unique_fields_check', False):
+            return
 
         # Ensure no duplicate values across multiple fields
         fields = [self.email, self.email1, self.phone, self.phone1, self.username, self.reg_number]
@@ -365,7 +367,8 @@ class Employment(models.Model):
         related_name='related_employments'
     )
     start_date = models.CharField(max_length=100, default="")
-    end_date = models.CharField(max_length=100, default="")
+    end_date = models.CharField(max_length=100, default="", null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.title
@@ -422,6 +425,7 @@ class FurtherEducation(models.Model):
     )
     status = models.CharField(max_length=3, choices=STATUS_CHOICES)
     crc_support = models.BooleanField(default=False)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return str(self.alumn.user.first_name + ' - ' + self.college.college_name)
@@ -547,6 +551,24 @@ class Event(models.Model):
     def __str__(self):
         return str(self.title)
 
+class RSVP(models.Model):
+    ATTENDING_CHOICES = [
+        ('yes', 'Yes'),
+        ('no', 'No'),
+        ('maybe', 'Maybe'),
+    ]
+
+    alumni = models.ForeignKey(User, on_delete=models.CASCADE, related_name='rsvps')
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='rsvps')
+    response = models.CharField(max_length=5, choices=ATTENDING_CHOICES, default='no')
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('alumni', 'event')  # Prevent duplicate RSVPs by same alumni for same event
+
+    def __str__(self):
+        return f"{self.alumni} RSVP’d {self.response} for {self.event}"
+
 
     # Opportunity model
 class Opportunity(models.Model):
@@ -554,9 +576,11 @@ class Opportunity(models.Model):
     title = models.CharField(max_length=5000)
     op_type = models.CharField(max_length=100, default="Full Time")
     description = models.CharField(max_length=1000)
-    deadline = models.CharField(max_length=1000, default="2024-08-23")
+    deadline = models.CharField(max_length=1000, blank=True)
     link = models.CharField(max_length=200, default="asyv.ac.rw")
     approved = models.BooleanField(default=False)
+    organization = models.CharField(max_length=500, default="ASYV")
+    location = models.CharField(max_length=500, default="Kigali, Rwanda")
 
     post_time = models.CharField(default=timezone.now)
 

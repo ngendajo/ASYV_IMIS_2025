@@ -1,25 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import TabbedCardPage from '../../components/opportunities/tabbed-card-page';
 import OpportunityCard from '../../components/opportunities/opportunity-card';
-import SupportRequestTable from '../../components/opportunities/support-request-table';
+// import SupportRequestTable from '../../components/opportunities/support-request-table';
 import './FurtherEducation.css';
 import axios from 'axios';
 import useAuth from "../../hooks/useAuth";
 import baseUrl from '../../api/baseUrl';
-//const  baseUrl='https://backend.asyv.ac.rw/api';
+// const baseUrl = 'https://backend.asyv.ac.rw/api';
 
 const FurtherEducation = () => {
   const { auth } = useAuth();
 
   const [activeTab, setActiveTab] = useState('Courses');
   const [opportunities, setOpportunities] = useState([]);
-  const [supportRequests, setSupportRequests] = useState([]);
+  // const [supportRequests, setSupportRequests] = useState([]);
 
-  const TABS = ['Courses', 'Programs', 'Support Requests'];
+  const TABS = ['Courses', 'Programs'/*, 'Support Requests' */];
 
   useEffect(() => {
     fetchOpportunities();
-    fetchSupportRequests();
+    // fetchSupportRequests();
   }, []);
 
   const fetchOpportunities = async () => {
@@ -36,32 +36,32 @@ const FurtherEducation = () => {
     }
   };
 
-  const fetchSupportRequests = async () => {
-    try {
-      const response = await axios.get(baseUrl + '/support-request/get/');
-      const userRequests = response.data.filter(
-        (r) => r.alumni === auth.user.alumni_id
-      );
-      setSupportRequests(userRequests);
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  // const fetchSupportRequests = async () => {
+  //   try {
+  //     const response = await axios.get(baseUrl + '/support-request/get/');
+  //     const userRequests = response.data.filter(
+  //       (r) => r.alumni === auth.user.alumni_id
+  //     );
+  //     setSupportRequests(userRequests);
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  // };
 
-  const handleRequestSupport = (op) => {
-    const timestamp = new Date().toLocaleString();
-    setSupportRequests(prev => [
-      ...prev,
-      {
-        title: op.title,
-        company: op.organization,
-        type: op.op_type,
-        timestamp,
-        status: 'Pending'
-      }
-    ]);
-    alert("CRC support requested.");
-  };
+  // const handleRequestSupport = (op) => {
+  //   const timestamp = new Date().toLocaleString();
+  //   setSupportRequests(prev => [
+  //     ...prev,
+  //     {
+  //       title: op.title,
+  //       company: op.organization,
+  //       type: op.op_type,
+  //       timestamp,
+  //       status: 'Pending'
+  //     }
+  //   ]);
+  //   alert("CRC support requested.");
+  // };
 
   const renderCards = () => {
     return opportunities
@@ -75,11 +75,11 @@ const FurtherEducation = () => {
           link={edu.link}
           type={edu.op_type}
           company={edu.organization}
-          onSupportRequest={() => handleRequestSupport(edu)}
+          // onSupportRequest={() => handleRequestSupport(edu)}
           renderActions={() => (
             <>
               <button onClick={() => window.open(edu.link, "_blank")}>Learn More</button>
-              <button onClick={() => handleRequestSupport(edu)}>Request CRC Support</button>
+              {/* <button onClick={() => handleRequestSupport(edu)}>Request CRC Support</button> */}
             </>
           )}
           labelOverrides={{
@@ -93,9 +93,9 @@ const FurtherEducation = () => {
       ));
   };
 
-  const renderFinalTab = () => (
-    <SupportRequestTable requests={supportRequests} />
-  );
+  // const renderFinalTab = () => (
+  //   <SupportRequestTable requests={supportRequests} />
+  // );
 
   return (
     <TabbedCardPage
@@ -103,7 +103,7 @@ const FurtherEducation = () => {
       activeTab={activeTab}
       setActiveTab={setActiveTab}
       renderCards={renderCards}
-      renderFinalTab={renderFinalTab}
+      // renderFinalTab={renderFinalTab}
     />
   );
 };

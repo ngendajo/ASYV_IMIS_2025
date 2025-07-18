@@ -97,7 +97,7 @@ const GradeList = () => {
 
   const graduateKids = async (gradeId) => {
     try {
-      const res = await axios.post(`${baseUrl}/grades/${gradeId}/graduate-kids/`);
+      const res = await axios.put(`${baseUrl}/grades/${gradeId}/graduate-kids/`);
       alert(res.data.message);
       fetchGrades();
     } catch (err) {
@@ -179,7 +179,7 @@ const GradeList = () => {
                         ) : (
                           <>
                             {family.family_name}
-                            <button onClick={() => handleFamilyEditClick(family)}>Edit</button>
+                            <button className="family-edit" onClick={() => handleFamilyEditClick(family)}>Edit</button>
                           </>
                         )}
                       </li>

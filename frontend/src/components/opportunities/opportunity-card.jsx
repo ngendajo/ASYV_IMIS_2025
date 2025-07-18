@@ -10,7 +10,7 @@ const OpportunityCard = ({
   location,
   link,
   company,
-  onSupportRequest,
+  // onSupportRequest,
   renderActions,
   onClick,
   draft = false
@@ -34,14 +34,14 @@ const OpportunityCard = ({
     if (link) window.open(link, "_blank");
   };
 
-  const handleSupportRequest = (e) => {
-    e.stopPropagation();
-    if (onSupportRequest) {
-      onSupportRequest({ title, company, date, link });
-    } else {
-      alert("Support request submitted!");
-    }
-  };
+  // const handleSupportRequest = (e) => {
+  //   e.stopPropagation();
+  //   if (onSupportRequest) {
+  //     onSupportRequest({ title, company, date, link });
+  //   } else {
+  //     alert("Support request submitted!");
+  //   }
+  // };
 
   return (
     <>
@@ -61,9 +61,9 @@ const OpportunityCard = ({
           ) : (
             <>
               <button onClick={() => window.open(link, "_blank")}>Apply</button>
-              <button className="support" onClick={handleSupportRequest}>
+              {/* <button className="support" onClick={handleSupportRequest}>
                 Request CRC Support
-              </button>
+              </button> */}
             </>
           )}
         </div>
@@ -82,9 +82,9 @@ const OpportunityCard = ({
 
             <div className="modal-buttons">
               <button onClick={handleApplyClick}>Apply</button>
-              <button className="support" onClick={handleSupportRequest}>
+              {/* <button className="support" onClick={handleSupportRequest}>
                 Request CRC Support
-              </button>
+              </button> */}
             </div>
           </div>
         </div>

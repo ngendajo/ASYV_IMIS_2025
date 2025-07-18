@@ -3,14 +3,18 @@ import './filter-panel.css';
 
 const FilterPanel = ({ filters, filterUI, toggleCheckbox, applyFilters }) => {
   const [searchInputs, setSearchInputs] = useState({});
+  const [unsavedChanges, setUnsavedChanges] = useState(false);
+
 
   const clearGroup = (key) => {
     toggleCheckbox(key, '__CLEAR_ALL__');
+    setUnsavedChanges(true);
   };
 
   const clearAll = () => {
     Object.keys(filterUI).forEach(key => toggleCheckbox(key, '__CLEAR_ALL__'));
     setSearchInputs({}); // reset searches too
+    setUnsavedChanges(true);
   };
 
   const handleSearchChange = (key, value) => {
@@ -20,11 +24,23 @@ const FilterPanel = ({ filters, filterUI, toggleCheckbox, applyFilters }) => {
     }));
   };
 
+
+  const handleApplyFilters = () => {
+  applyFilters();
+  setUnsavedChanges(false);
+  };
   const renderFilterGroup = (title, items, key, labelFn, valueFn) => {
     const searchValue = searchInputs[key] || '';
     const filteredItems = items.filter(item =>
       labelFn(item).toLowerCase().includes(searchValue)
     );
+
+    const handleCheckboxChange = (key, value) => {
+      toggleCheckbox(key, value);
+      setUnsavedChanges(true);
+    };
+
+
 
     return (
       <div className="filter-group">
@@ -50,7 +66,7 @@ const FilterPanel = ({ filters, filterUI, toggleCheckbox, applyFilters }) => {
                   type="checkbox"
                   value={value}
                   checked={isChecked}
-                  onChange={() => toggleCheckbox(key, value)}
+                  onChange={() => handleCheckboxChange(key, value)}
                 />
                 {label}
               </label>
@@ -101,10 +117,15 @@ const FilterPanel = ({ filters, filterUI, toggleCheckbox, applyFilters }) => {
         )}
 
       </div>
+        {unsavedChanges && (
+          <div className="unsaved-warning">
+            Click <strong>Apply Filters</strong> to view updated list.
+          </div>
+        )}
 
       <div className="apply-button-wrapper">
         <button className="clear-all-button" onClick={clearAll}>Clear All Filters</button>
-        <button className="apply-button" onClick={applyFilters}>Apply Filters</button>
+        <button className="apply-button" onClick={handleApplyFilters}>Apply Filters</button>
       </div>
     </div>
   );

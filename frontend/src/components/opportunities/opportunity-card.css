@@ -3,12 +3,12 @@
   flex-direction: column;
   justify-content: space-between;
   background-color: var(--white);
-  border: 2px solid var(--green);
   overflow: hidden;
   border-radius: 8px;
   padding: 20px;
   cursor: pointer;
   position: relative; /* Needed for absolute-positioned apply date */
+   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 /* New: Flex row for title and apply-by date */

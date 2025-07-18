@@ -11,17 +11,22 @@
 }
 
 /* === Select input container & label === */
-.select-container {
-  max-width: 380px;
-  margin-bottom: 1.8rem;
+.filters-row {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-end; /* Align both filter blocks at the bottom */
+  flex-wrap: wrap; /* Wrap on smaller screens */
+}
+
+.filters-row .select-container {
+  flex: 1;
+  min-width: 200px;
 }
 
 .select-label {
   display: block;
-  font-weight: 600;
-  font-size: 1.1rem;
-  margin-bottom: 0.5rem;
-  color: var(--black);
+  margin-bottom: 0.4rem;
+  font-weight: 500;
 }
 
 /* React-Select styling overrides */
@@ -189,7 +194,7 @@
 /* === Lists Section === */
 .lists-section {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(515px, 1fr));
   gap: 2rem;
   margin-top: 2rem;
 }
@@ -199,7 +204,7 @@
   background: var(--white);
   border-radius: 10px;
   box-shadow: 0 3px 8px var(--blackopa);
-  padding: 1.2rem 1.5rem;
+  padding: 1rem .5rem;
   display: flex;
   flex-direction: column;
   border: 1px solid var(--palegrey);
@@ -223,6 +228,17 @@
   color: var(--black);
   max-height: 350px;
   overflow-y: auto;
+}
+.table-caption {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+.chart-description {
+  font-size: 0.95rem;
+  color: #555;
+  margin-bottom: 0.75rem;
+  line-height: 1.4;
 }
 
 /* Responsive adjustments */

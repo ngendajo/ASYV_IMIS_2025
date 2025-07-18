@@ -3,6 +3,8 @@ import React from 'react';
 import './alumni-list.css';
 
 const AlumniList = ({ alumni, onSelect }) => {
+  const hasAlumni = alumni.some(alum => alum.is_alumni);
+  console.log(hasAlumni)
   return (
     <>
       {/* Desktop Table Layout */}
@@ -16,7 +18,7 @@ const AlumniList = ({ alumni, onSelect }) => {
             <th>Grade</th>
             <th>Family</th>
             <th>Combination</th>
-            <th>Job Title</th>
+            {hasAlumni && <th>Job Title</th>}
           </tr>
         </thead>
         <tbody>
@@ -35,7 +37,7 @@ const AlumniList = ({ alumni, onSelect }) => {
               <td>{alum.gradeName}</td>
               <td>{alum.familyName}</td>
               <td>{alum.combinationName}</td>
-              <td>{alum.employment}</td>
+              <td>{alum.is_alumni ? alum.employment : ''}</td>
             </tr>
           ))}
         </tbody>
@@ -55,6 +57,9 @@ const AlumniList = ({ alumni, onSelect }) => {
               {alum.firstName} {alum.lastName}
               <br />
               ({alum.gradeName} - {alum.familyName} - {alum.combinationName})
+              {alum.is_alumni && alum.employment && (
+                <div className="alumni-job">Job: {alum.employment}</div>
+              )}
             </div>
           </div>
         ))}

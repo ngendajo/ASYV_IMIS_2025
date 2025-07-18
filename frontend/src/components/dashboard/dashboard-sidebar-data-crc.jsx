@@ -40,6 +40,11 @@ export const SidebarDataCrc = [
     title: 'FAQs',
     path: '/frequent_inquiries', 
     cName: 'nav-text'
+  },
+  {
+    title: 'Personal Profile',
+    path: '/personal_profile',
+    cName: 'nav-text'
   }
 ];
 

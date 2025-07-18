@@ -36,7 +36,7 @@ urlpatterns = [
          name="reset-password",
     ), 
     path('password-reset/', views.PasswordReset.as_view(), name="password-reset"),
-    
+    path('users/<int:user_id>/reset-password/', views.reset_user_password, name='reset-user-password'),
     path('updateuserimage/<str:pk>', views.update_user_image, name='update-userimage'),
     
     path('logout/', views.LogoutView.as_view(), name='logout'),
@@ -115,19 +115,22 @@ urlpatterns = [
     path('kid/<int:user_id>/', views.get_student_information, name='kid-info'),
     path('alumni-employment/', views.AlumniEmploymentView.as_view(), name='alumni-employment'),
     path('alumni-academic/', views.AlumniAcademicView.as_view(), name='alumni-academic'),
-    path('alumni-currentinfo/<int:kid_id>/', views.CurrentInfoUpdateView.as_view(), name ='alumni-currentinfo'),
+    
     #selection options
     path('options/all-dropdowns/', views.DropdownOptionsAPIView.as_view(), name='profile-dropdowns'),
     path('options/mamas/', views.get_mamas, name='mamas-info'),
 
-    #Updating Data
-     path('grades/<int:grade_id>/graduate-kids/', views.graduate_kids_by_grade, name='graduate_kids_by_grade'),
+    #Auto graduated kids in a grade
+    path('grades/<int:grade_id>/graduate-kids/', views.graduate_kids_by_grade, name='graduate_kids_by_grade'),
 
+    #Events / RSVP 
+    path('rsvps/', views.RSVPListCreateAPIView.as_view(), name='rsvp-list'),
+   
     # opportunity paths
     path('opportunity/create/', views.create_opportunity, name='create-opportunity'),
     path('opportunity/', views.read_opportunity, name='read-opportunity'),
     path('opportunity/<int:pk>/delete/', views.DeleteOpportunityView.as_view(), name='delete-opportunity'),
-    # path('opportunity/<int:pk>/update/', views.UpdateOpportunityView.as_view(), name='update-opportunity'),
+    path('opportunity/<int:pk>/update/', views.UpdateOpportunityView.as_view(), name='update-opportunity'),
     path('opportunity/<int:pk>/approve', views.ApproveOpportunityView.as_view(), name='approve-opportunity'),
 
 ]

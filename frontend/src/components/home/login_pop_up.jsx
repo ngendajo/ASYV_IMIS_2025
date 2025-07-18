@@ -9,6 +9,8 @@ import axios from "../../api/axios";
 import baseUrl from "../../api/baseUrl";
 import ChangePasswordModal from "./change_password";
 
+import "./login_pop_up.css";
+
 const LOGIN_URL = '/token/';
 
 export default function LoginPopUp({showLogin, toggleLoginPopup}) {
@@ -24,6 +26,8 @@ export default function LoginPopUp({showLogin, toggleLoginPopup}) {
     const [errMsg, setErrMsg] = useState('');
     const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
     const [accessToken, setAccessToken] = useState('');
+    const [showForgotMessage, setShowForgotMessage] = useState(false);
+
 
 
 
@@ -57,6 +61,16 @@ export default function LoginPopUp({showLogin, toggleLoginPopup}) {
                 // since it includes: first_name, rwandan_name, email, phone, is_superuser, etc
 
                 setAuth({ user, accessToken: access, refresh });
+
+                // Check user roles before proceeding
+                if (!user.is_alumni && !user.is_staff) {
+                    alert("You don't have access to this website yet.");
+                    // Optionally, clear auth and tokens:
+                    setAuth({});
+                    setAccessToken('');
+                    // Do not navigate
+                    return;
+                }
                 const currentPwd = pwd;
                 setEmail('');
                 setPwd('');
@@ -69,6 +83,9 @@ export default function LoginPopUp({showLogin, toggleLoginPopup}) {
             } catch (err) {
                 if (!err?.response) {
                     setErrMsg("No response from server. Please check your internet connection.");
+                } 
+                else if (err.response.status === 400) {
+                    setErrMsg('Incorrect email or password.');
                 } else if (err.response.status === 401) {
                     setErrMsg('Unauthorized: Incorrect email or password.');
                 } else if (err.response.status === 403) {
@@ -147,7 +164,19 @@ export default function LoginPopUp({showLogin, toggleLoginPopup}) {
                             <div className="ConfirmButton">
                                 <button type="submit">Login</button>
                             </div>
-                            <Link to="/home" className="ForgetPassword">Forgot Password?</Link>
+                            {showForgotMessage ? (
+                                <p className="ForgotMessage">
+                                    Please contact the CRC if you forgot your password.
+                                </p>
+                                ) : (
+                                <button
+                                    type="button"
+                                    className="ForgotPasswordLink"
+                                    onClick={() => setShowForgotMessage(true)}
+                                >
+                                    Forgot Password?
+                                </button>
+                                )}
                         </form>
                         </div>
                 </div>

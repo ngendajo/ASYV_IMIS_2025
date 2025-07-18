@@ -8,14 +8,16 @@ import '../../pages/home/Home.css';
 
 export default function HomeHeader({ onLoginClick, currentPage }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const MOBILE_BREAKPOINT = 1024;
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= MOBILE_BREAKPOINT);
 
   const toggleMenu = () => setMenuOpen(prev => !prev);
 
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-      if (window.innerWidth >= 768) setMenuOpen(false);
+      const width = window.innerWidth;
+      setIsMobile(width <= MOBILE_BREAKPOINT);
+      if (width > MOBILE_BREAKPOINT) setMenuOpen(false);
     };
 
     window.addEventListener('resize', handleResize);
@@ -33,18 +35,18 @@ export default function HomeHeader({ onLoginClick, currentPage }) {
         {isMobile ? (
           <div className="HomeHeaderRightCompact">
             <button className="HomeHeaderLoginCompact" onClick={onLoginClick}>Login</button>
-            <button className="HomeHeaderHamburger" onClick={toggleMenu}>
+            {/* <button className="HomeHeaderHamburger" onClick={toggleMenu}>
               {menuOpen ? <AiOutlineClose /> : <AiOutlineMenu />}
-            </button>
+            </button> */}
           </div>
         ) : (
           <div className="HomeHeaderRight">
-            <div className="HomeHeaderMenu">
+            {/* <div className="HomeHeaderMenu">
             <Link to="/home" className={currentPage === 'home' ? 'active' : ''}>Home</Link>
             <Link to="/news_and_events#top2" className={currentPage === 'news' ? 'active' : ''}>News & Events</Link>
             <Link to="/alumni_stories#top3" className={currentPage === 'alumni_stories' ? 'active' : ''}>Alumni Stories</Link>
             <a href="#contact" className={currentPage === 'contact' ? 'active' : ''}>Contact</a>
-            </div>
+            </div> */}
 
             <div className="HomeHeaderLogin">
               <button onClick={onLoginClick}>Login</button>

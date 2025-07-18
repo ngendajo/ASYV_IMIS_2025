@@ -5,11 +5,16 @@ const AreasOfStudyList = ({ data }) => {
     return <p>No data available.</p>;
   }
 
+  // Sort descending by count and take top 10
+  const top20 = data
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 20);
+
   return (
     <ul>
-      {data.map(({ area_name, count }) => (
+      {top20.map(({ area_name, count }) => (
         <li key={area_name}>
-          {area_name}: {count}
+          <strong>{area_name}</strong>: {count}
         </li>
       ))}
     </ul>

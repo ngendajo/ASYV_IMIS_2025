@@ -5,6 +5,8 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import baseUrl from '../../api/baseUrl';
 import ProfileCard from '../profile/profile-card';
+import ContactCard from '../profile/contact-card';
+
 
 const AlumniDetail = ({ selectedAlumni, handleClear }) => {
   const navigate = useNavigate();
@@ -27,6 +29,18 @@ const AlumniDetail = ({ selectedAlumni, handleClear }) => {
     <div className="alumni-detail-content">
       {isStaff ? (
         <>
+          <ContactCard
+            user={{
+              data: {
+                id: selectedAlumni.user_id,
+                first_name: selectedAlumni.first_name || selectedAlumni.firstName,
+                rwandan_name: selectedAlumni.rwandan_name || selectedAlumni.lastName,
+                email: selectedAlumni.email,
+                phone: selectedAlumni.phone
+              }
+            }}
+            editable={true}
+          />
           <ProfileCard propId={selectedAlumni.user_id} />
         </>
       ) : (

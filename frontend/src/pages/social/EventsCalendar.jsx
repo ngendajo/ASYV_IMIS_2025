@@ -154,6 +154,9 @@ const EventsCalendar = () => {
                   alumni='true'
                   title={event.title}
                   e_datetime={event.e_datetime}
+                  location={event.location}
+                  description={event.description}
+                  image_url={event.image_url}
                   buttonText={event.buttonText}
                   link={() => handleDetail(event)}
                   timeFunction={(x) => getDateFromDateISOString(x)}
@@ -173,6 +176,9 @@ const EventsCalendar = () => {
                       alumni='true'
                       title={event.title}
                       e_datetime={event.e_datetime}
+                      location={event.location}
+                      description={event.description}
+                      image_url={event.image_url}
                       buttonText={event.buttonText}
                       link={() => handleDetail(event)}
                       timeFunction={(x) => getDateFromDateISOString(x)}

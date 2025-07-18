@@ -24,11 +24,11 @@
   .summary-card .count {
     font-size: 1.6rem;
     font-weight: bold;
-    color: #007bff;
+    color: var(--green);
   }
   
   .summary-card .percent {
-    font-size: 1rem;
+    font-size: 1.25rem;
     color: #666;
   }
   

@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import useAuth from "../../hooks/useAuth";
 import "./events-cards.css";
-import EventModal from "./event-modal"; // make sure to create and import this
+import EventModal from "./event-modal";
+import baseUrl from '../../api/baseUrl';
+import axios from "axios";
+// import RSVPList from './rsvp-list';
 
 export const Event = ({
+  event_id,
   alumni,
   title,
   e_datetime,
@@ -14,9 +18,39 @@ export const Event = ({
   onDelete,
   onSave,
   isNew,
-  timeFunction
+  timeFunction,
+  rsvped: initialRsvped
 }) => {
   const { auth } = useAuth();
+
+  // RSVP status state
+  // const [rsvped, setRsvped] = useState(false);
+  // useEffect(() => {
+  //   setRsvped(initialRsvped); // update local state when prop changes
+  // }, [initialRsvped]);
+
+  const [showModal, setShowModal] = useState(false);
+  const [modalEditMode, setModalEditMode] = useState(false);
+
+  // Fetch RSVP status on mount or event_id/auth change
+  // useEffect(() => {
+  //   const fetchRSVPStatus = async () => {
+  //     try {
+  //       const res = await axios.get(`${baseUrl}/rsvps/?event=${event_id}`, {
+  //         headers: {
+  //           Authorization: `Bearer ${auth.accessToken}`
+  //         }
+  //       });
+  //       if (res.data.length > 0) {
+  //         setRsvped(true);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching RSVP status:", error.response?.data || error.message);
+  //     }
+  //   };
+
+  //   if (auth.user && event_id) fetchRSVPStatus();
+  // }, [auth.user, auth.accessToken, event_id]);
 
   const formatDateTime = (dateTime) => {
     if (!dateTime) return '';
@@ -32,8 +66,6 @@ export const Event = ({
   const [newLocation, setNewLocation] = useState(location);
   const [newImage, setNewImage] = useState(null);
   const [newDescription, setNewDescription] = useState(description);
-  const [rsvped, setRsvped] = useState(false);
-  const [showModal, setShowModal] = useState(false);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -82,88 +114,107 @@ export const Event = ({
   };
 
   return (
-    <>
-      <div
-        className={`events-card-container ${alumni === 'true' ? 'alumni' : ''}`}
-        onClick={() => setShowModal(true)}
-      >
-        {isEditing || isNew ? (
-          <form onSubmit={handleSave}>
-            <input
-              className="events-card-container-title"
-              type="text"
-              placeholder="Title"
-              value={newTitle}
-              onChange={(e) => setNewTitle(e.target.value)}
-            />
-            <input
-              type="datetime-local"
-              value={newEDateTime}
-              onChange={(e) => setNewEDateTime(e.target.value)}
-            />
-            <input
-              type="text"
-              placeholder="Location"
-              value={newLocation}
-              onChange={(e) => setNewLocation(e.target.value)}
-            />
-            <input type="file" accept="image/*" onChange={handleFileChange} />
-            <textarea
-              placeholder="Description"
-              value={newDescription}
-              onChange={(e) => setNewDescription(e.target.value)}
-            />
-            <div className="event-char-count">
-              Character Count: {newDescription.length}/2000
-            </div>
-            <div className="event-admin-actions">
-              <button type="submit" className="eventpost">Post</button>
-              <button onClick={handleCancel} className="eventedit">Cancel</button>
-            </div>
-          </form>
-        ) : (
-          <>
-            <div className="events-card-title">
-              <p>{title}</p>
-            </div>
-            <p className="events-card-date">{timeFunction(e_datetime)}</p>
-            {rsvped ? (
-              <div className="events-card-btn" style={{ color: "var(--brown)", cursor: "default" }}>
-                RSVP'd
-              </div>
-            ) : (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation(); // prevent opening modal
-                  setRsvped(true);
-                }}
-                className="events-card-btn"
-              >
-                RSVP
-              </button>
-            )}
-            {(auth.user.is_crc || auth.user.is_superuser) && alumni === 'false' && (
-              <div className="event-admin-actions">
-                <button onClick={(e) => { e.stopPropagation(); onDelete(); }} className="eventremove">Delete</button>
-                <button onClick={(e) => { e.stopPropagation(); handleEdit(); }} className="eventedit">Edit</button>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-
-      {showModal && (
-        <EventModal
-          event={{
-            title,
-            e_datetime,
-            location,
-            description,
-            image_url
-          }}
-          onClose={() => setShowModal(false)}
-        />
+  <>
+    <div
+      className={`events-card-container ${alumni === 'true' ? 'alumni' : ''}`}
+      onClick={() => {
+        if (!isNew) {
+          setShowModal(true);
+          setModalEditMode(false);
+        }
+      }}
+    >
+      {image_url && (
+        <img src={image_url} alt={title} className="event-image" />
       )}
-    </>
-  );
+      <div className="events-card-title">
+        <p>{title}</p>
+      </div>
+      <p className="events-card-date">{timeFunction(e_datetime)}</p>
+      <p className="events-card-location">{location}</p>
+
+      {/* RSVP Button */}
+      {/* {rsvped ? (
+        <div className="events-card-btn" style={{ color: "var(--brown)", cursor: "default" }}>
+          RSVP'd
+        </div>
+      ) : (
+        <button
+          onClick={async (e) => {
+            e.stopPropagation(); // Prevent opening modal
+            console.log("RSVP event_id:", event_id);
+            try {
+              await axios.post(`${baseUrl}/rsvps/`, {
+                event_id: event_id,
+                response: 'yes',
+              }, {
+                headers: {
+                  Authorization: `Bearer ${auth.accessToken}`,
+                  'Content-Type': 'application/json',
+                }
+              });
+              setRsvped(true);
+            } catch (error) {
+              console.error("RSVP failed:", error.response?.data || error.message);
+              alert("RSVP failed: " + (error.response?.data?.detail || "Unknown error"));
+            }
+          }}
+          className="events-card-btn"
+        >
+          RSVP
+        </button>
+      )} */}
+
+      {(auth.user.is_crc || auth.user.is_superuser) && alumni === 'false' && (
+        <>
+          <div className="event-admin-actions">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+              className="eventremove"
+            >
+              Delete
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowModal(true);
+                setModalEditMode(true);
+              }}
+              className="eventedit"
+            >
+              Edit
+            </button>
+          </div>
+          {/* <div>
+            <RSVPList event_id={event_id} />
+          </div> */}
+        </>
+      )}
+    </div>
+
+    {showModal && (
+      <EventModal
+        event={{
+          event_id,
+          title,
+          e_datetime,
+          location,
+          description,
+          image_url
+        }}
+        isEditing={modalEditMode || isNew}
+        isNew={isNew}
+        auth={auth}
+        onSave={onSave}
+        onChange={onChange}
+        onClose={() => setShowModal(false)}
+      />
+    )}
+  </>
+);
+
+
 };

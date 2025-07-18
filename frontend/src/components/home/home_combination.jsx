@@ -1,161 +1,139 @@
 import React, { useRef, useState, useEffect } from 'react';
-// npm install styled-components
 import styled from 'styled-components';
+import baseUrl from '../../api/baseUrl';
 
 const BarChartContainer = styled.div`
-    // display
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    // box
-    margin-top: 150px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-top: 150px;
 `;
 
 const BarTitle = styled.div`
-    // font
-    color: var(--brown);
-    font-family: Bold;
-    font-size: 24px;
-    letter-spacing: 0.9px;
-    // box
-    margin-bottom: -250px;
+  color: var(--brown);
+  font-family: Bold;
+  font-size: 24px;
+  letter-spacing: 0.9px;
+  margin-bottom: 20px;
 `;
 
 const Chart = styled.div`
-    // display
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    // box
-    width: 1000px;
-    height: 500px;
-    padding: 0 50px;
-    border-bottom: 2px solid var(--brown);
-    transition: height 0.5s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  width: 1000px;
+  height: 500px;
+  padding: 0 50px;
+  border-bottom: 2px solid var(--brown);
 `;
 
 const Bar = styled.div`
-    // color block
-    background-color: ${props => props.color || 'var(--black)'};
-    position: relative;
-    // box
-    width: 500px;
-    height: 100%;
-    margin: 0 12px;
-    transition: height 1s ease;
+  background-color: ${(props) => props.color || 'var(--black)'};
+  position: relative;
+  width: 80px;
+  margin: 0 12px;
+  transition: height 1s ease;
+  height: ${(props) => props.height};
+  min-height: 5px;
 `;
 
 const BarShort = styled.span`
-    // font
-    color: var(--brown);
-    font-family: Medium;
-    font-size: 18px;
-    text-align: center;
-    // box
-    position: absolute;
-    bottom: -40px;
-    left: 50%;
-    transform: translateX(-50%);
-`;
-
-const BarFull = styled.span`
-    // font
-    color: var(--brown);
-    font-family: Regular;
-    font-size: 14px;
-    text-align: center;
-    // box
-    position: absolute;
-    bottom: -105px;
-    left: 50%;
-    transform: translateX(-50%);
+  color: var(--brown);
+  font-family: Medium;
+  font-size: 18px;
+  text-align: center;
+  position: absolute;
+  bottom: -40px;
+  left: 50%;
+  transform: translateX(-50%);
 `;
 
 const BarNumber = styled.span`
-    // font
-    color: var(--brown);
-    font-family: Regular;
-    font-size: 16px;
-    // box
-    position: absolute;
-    top: -25px;
-    left: 50%;
-    transform: translateX(-50%);
-`;  
+  color: var(--brown);
+  font-family: Regular;
+  font-size: 16px;
+  position: absolute;
+  top: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+`;
 
-const CombinationChart = ({ data }) => {
+const colors = ['var(--green)', 'var(--brown)', 'var(--orange)', 'var(--coffee)', 'var(--yellow)'];
 
-    // Set color
-    const getBarColor = (combination) => {
-        const colors = ['var(--green)', 'var(--brown)', 'var(--orange)', 'var(--coffee)', 'var(--yellow)'];
-        const index = percentageData.findIndex(item => item.combination === combination);
-        return colors[index % colors.length];
-    }
+const CombinationChart = () => {
+  const [data, setData] = useState({});
+  const [isVisible, setIsVisible] = useState(false);
+  const chartRef = useRef(null);
 
-    // Change name
-    const regexS = /\(([^)]+)\)/;
-    const getShort = (combination) => {
-        const match = regexS.exec(combination);
-        return match ? match[1] : 'N/A';
-    };
-    const regexF = /^([\w\s-]+)\s+\([^)]+\)$/;
-    const getFull = (combination) => {
-        const match = regexF.exec(combination);
-        if (!match) return combination;
-        const noDash = match[1].replace(/-/g, ' ');
-        const noSci = noDash.replace(/\s+Science/g, '');
-        const noEng = noSci.replace(/\s+in\s+English/g, '');
-        return noEng;
-    };
-    
-    // Calculate the height
-    const totalCount = Object.values(data).reduce((acc, count) => acc + count, 0);
-    const percentageData = Object.entries(data).map(([key, count]) => ({
-      combination: key,
-      count: count,
-      percentage: (count / totalCount) * 100
-    }));
-    
-    // Growing effect
-    const [isVisible, setIsVisible] = useState(false);
-    const chartRef = useRef(null);
-    useEffect(() => {
-      const chartElement = chartRef.current;
-      const observer = new IntersectionObserver(entries => {
-        entries.forEach(entry => {
+  // Fetch data from API
+  useEffect(() => {
+    fetch(baseUrl + '/combination-counts')  
+      .then((res) => res.json())
+      .then((apiData) => {
+        const transformed = apiData.reduce((acc, item) => {
+          acc[item.combination__abbreviation] = item.alumni_count;
+          return acc;
+        }, {});
+        setData(transformed);
+      })
+      .catch((err) => {
+        console.error('Failed to fetch data:', err);
+      });
+  }, []);
+
+  // Intersection observer for animation
+  useEffect(() => {
+    const chartElement = chartRef.current;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
           if (entry.isIntersecting) {
             setIsVisible(true);
-            observer.unobserve(entry.target); // Stop observing once visible
+            observer.unobserve(entry.target);
           }
         });
-      }, {
-        threshold: 0.8 // Trigger when 80% of the element is in view
-      });
-      if (chartElement) {
-        observer.observe(chartElement);
-      }
-      return () => {
-        if (chartElement) {
-          observer.unobserve(chartElement);
-        }
-      };
-    }, []);
-  
-    return (
-      <BarChartContainer ref={chartRef}>
-        <BarTitle>Combination Distribution</BarTitle>
-        <Chart>
-          {percentageData.map(({ combination, count, percentage }) => (
-            <Bar key={combination} color={getBarColor(combination)} style={{ height: isVisible ? `${percentage}%` : '0%' }}>
-              <BarShort>{getShort(combination)}</BarShort>
-              <BarFull>{getFull(combination)}</BarFull>
+      },
+      { threshold: 0.8 }
+    );
+    if (chartElement) observer.observe(chartElement);
+
+    return () => {
+      if (chartElement) observer.unobserve(chartElement);
+    };
+  }, []);
+
+  const totalCount = Object.values(data).reduce((acc, count) => acc + count, 0);
+  const percentageData = Object.entries(data).map(([combination, count]) => ({
+    combination,
+    count,
+    percentage: totalCount ? (count / totalCount) * 100 : 0,
+  }));
+
+  const getBarColor = (index) => colors[index % colors.length];
+
+  return (
+    <BarChartContainer ref={chartRef}>
+      <BarTitle>Combination Distribution</BarTitle>
+      <Chart>
+        {percentageData.length > 0 ? (
+          percentageData.map(({ combination, count, percentage }, index) => (
+            <Bar
+              key={combination}
+              color={getBarColor(index)}
+              height={isVisible ? `${percentage}%` : '0%'}
+              title={`${combination}: ${count}`}
+            >
+              <BarShort>{combination}</BarShort>
               <BarNumber>{count}</BarNumber>
             </Bar>
-          ))}
-        </Chart>
-      </BarChartContainer>
-    );
-  };
-  
-  export default CombinationChart;
+          ))
+        ) : (
+          <div>Loading data...</div>
+        )}
+      </Chart>
+    </BarChartContainer>
+  );
+};
+
+export default CombinationChart;

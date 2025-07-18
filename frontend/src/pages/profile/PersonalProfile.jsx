@@ -7,6 +7,9 @@ import ProfileImage from '../../components/dashboard/ProfileImage.jsx';
 import useAuth from '../../hooks/useAuth';
 import baseUrl from '../../api/baseUrl';
 import '../../App.css';
+import ContactCard from '../../components/profile/contact-card';
+import ChangePasswordFlow from '../../components/profile/ChangePasswordFlow';
+
 
 const Profile = () => {
   const { auth } = useAuth();
@@ -18,7 +21,7 @@ const Profile = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get(`${baseUrl}/users/?id=${selectedID}`, {
+        const res = await axios.get(`${baseUrl}/users/${selectedID}`, {
           headers: {
             Authorization: `Bearer ${auth.accessToken}`,
             'Content-Type': 'multipart/form-data',
@@ -26,6 +29,7 @@ const Profile = () => {
           withCredentials: true,
         });
         setUser(res.data);
+        console.log("user", user)
       } catch (err) {
         console.error(err);
       }
@@ -34,16 +38,26 @@ const Profile = () => {
   }, [selectedID, auth]);
 
   return (
-    <div className="ProfileWrapper">
-      {/* {user && (
-        <ProfileImage user={user} size={100} canEdit={auth.user.id === user.id} />
+  <div className="ProfileWrapper">
+    {user && (
+      <ContactCard
+        user={user}
+        editable={auth.user?.id === selectedID}
+        onEditPicture={() => alert("Open profile picture edit modal")}
+      />
+    )}
 
-      )} */}
+    {auth.user.is_alumni ? (
+      <>
+        <ProfileCard propId={selectedID} />
+        <Link to="/personal_profile-resume" className="toResume">Generate Resume &gt;</Link>
+      </>
+    ) : (
+      <ChangePasswordFlow />
+    )}
+  </div>
+);
 
-      <ProfileCard propId={selectedID} />
-      <Link to="/personal_profile-resume" className="toResume">Generate Resume &gt;</Link>
-    </div>
-  );
 };
 
 export default Profile;

@@ -146,6 +146,7 @@ const AlumniOutcomesDashboard = () => {
   });
   const [selectedYears, setSelectedYears] = useState([]);
   const [alumniLocations, setAlumniLocations] = useState([]);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   const [hasLoadedInitially, setHasLoadedInitially] = useState(false);
   const [showChart, setShowChart] = useState(true);
@@ -194,6 +195,9 @@ const AlumniOutcomesDashboard = () => {
         setSummaryData(trendsRes.data.overall_summary);
         setAlumniLocations(locationsRes.data);
         setHasLoadedInitially(true);
+        if (trendsRes.data.last_updated) {
+          setLastUpdated(new Date(trendsRes.data.last_updated));
+        }
       } catch (err) {
         console.error('Error fetching data:', err);
       }
@@ -246,36 +250,55 @@ const AlumniOutcomesDashboard = () => {
     },
   ];
 
+  const selectedYearLabels = selectedYears.map(y => y.label).join(', ');
+  const genderLabel = selectedGender.label;
+
+  const captionText = `Alumni outcomes by graduation year${selectedYears.length ? ` for ${selectedYearLabels}` : ''}${genderLabel !== 'All' ? `, filtered by ${genderLabel}` : ''}.`;
+
+  const formattedUpdateTime = lastUpdated
+  ? lastUpdated.toLocaleDateString(undefined, {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  : 'N/A';
+
+const chartDescription = `This is a stacked bar chart showing alumni outcomes by graduation year.
+It provides a snapshot in time, based on data last updated on ${formattedUpdateTime}.`;
   return (
     <div className="trends-wrapper">
       {/* Year Selector */}
-      <div className="select-container">
-        <label htmlFor="year-select" className="select-label">
-          Select Graduation Year(s)
-        </label>
-        <Select
-          inputId="year-select"
-          isMulti
-          options={yearOptions}
-          value={selectedYears}
-          onChange={setSelectedYears}
-          placeholder="Select one or more years..."
-          classNamePrefix="react-select"
-          noOptionsMessage={() => "No years available"}
-        />
-      </div>
-      <div className="select-container" style={{ marginTop: '1rem' }}>
-        <label htmlFor="gender-select" className="select-label">
-          Filter by Gender
-        </label>
-        <Select
-          inputId="gender-select"
-          options={genderOptions}
-          value={selectedGender}
-          onChange={setSelectedGender}
-          placeholder="Select gender..."
-          classNamePrefix="react-select"
-        />
+      <div className="filters-row">
+        <div className="select-container">
+          <label htmlFor="year-select" className="select-label">
+            Select Graduation Year(s)
+          </label>
+          <Select
+            inputId="year-select"
+            isMulti
+            options={yearOptions}
+            value={selectedYears}
+            onChange={setSelectedYears}
+            placeholder="Select one or more years..."
+            classNamePrefix="react-select"
+            noOptionsMessage={() => "No years available"}
+          />
+        </div>
+        <div className="select-container" style={{ marginTop: '1rem' }}>
+          <label htmlFor="gender-select" className="select-label">
+            Filter by Gender
+          </label>
+          <Select
+            inputId="gender-select"
+            options={genderOptions}
+            value={selectedGender}
+            onChange={setSelectedGender}
+            placeholder="Select gender..."
+            classNamePrefix="react-select"
+          />
+        </div>
       </div>
 
       <OutcomeSummaryGrid summary={summaryData} />
@@ -295,21 +318,26 @@ const AlumniOutcomesDashboard = () => {
             role="img"
             aria-label="Stacked bar chart showing employment and education percentages by year"
           >
-            <ResponsiveContainer width="100%" height={320}>
-              <BarChart
-                data={filteredData}
-                margin={{ top: 20, right: 40, bottom: 20, left: 0 }}
-              >
-                <XAxis dataKey="graduation_year" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip formatter={(value) => `${value}%`} />
-                <Legend verticalAlign="top" height={36} />
-                <Bar dataKey="employment_only_percent" stackId="a" fill="#4f81bd" name="Employment Only (%)" />
-                <Bar dataKey="further_edu_only_percent" stackId="a" fill="#9bbb59" name="Further Edu Only (%)" />
-                <Bar dataKey="both_percent" stackId="a" fill="#ffbb55" name="Both (%)" />
-                <Bar dataKey="neither_percent" stackId="a" fill="#e84c3d" name="Neither (%)" />
-              </BarChart>
-            </ResponsiveContainer>
+            <figure className="chart-figure">
+              <figcaption className="chart-description">
+                {chartDescription}
+              </figcaption>
+              <ResponsiveContainer width="100%" height={320}>
+                <BarChart
+                  data={filteredData}
+                  margin={{ top: 20, right: 40, bottom: 20, left: 0 }}
+                >
+                  <XAxis dataKey="graduation_year" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip formatter={(value) => `${value}%`} />
+                  <Legend verticalAlign="top" height={36} />
+                  <Bar dataKey="employment_only_percent" stackId="a" fill="#4f81bd" name="Employment Only (%)" />
+                  <Bar dataKey="further_edu_only_percent" stackId="a" fill="#9bbb59" name="Further Edu Only (%)" />
+                  <Bar dataKey="both_percent" stackId="a" fill="#ffbb55" name="Both (%)" />
+                  <Bar dataKey="neither_percent" stackId="a" fill="#e84c3d" name="Neither (%)" />
+                </BarChart>
+              </ResponsiveContainer>
+            </figure>
           </div>
         ) : (
           <div
@@ -317,10 +345,18 @@ const AlumniOutcomesDashboard = () => {
             tabIndex={0}
             style={{ overflowX: 'auto', marginTop: '1rem' }}
           >
-            <table className="trend-table" role="grid" aria-describedby="table-description">
-              <caption id="table-description" className="sr-only">
-                Alumni outcomes counts and percentages by graduation year
+            <table
+              className="trend-table"
+              role="grid"
+              aria-describedby="table-description table-context"
+            >
+              <caption id="table-description" className="table-caption">
+                {captionText}
               </caption>
+              <div id="table-context" className="sr-only">
+                This table presents alumni outcome metrics such as employment only, further education only, both, and neither.
+                Each row represents a metric, and each column shows data for the selected graduation years.
+              </div>
               <thead>
                 <tr>
                   <th scope="col" className="sticky-col sticky-left">Metric</th>
@@ -368,22 +404,43 @@ const AlumniOutcomesDashboard = () => {
       {/* Lists Section */}
       <section className="lists-section">
         <div className="list-card">
-          <h2 className="list-title">Colleges Attended by Country</h2>
-          <CollegesByCountry collegesByCountry={collegeData} />
-        </div>
-
-        <div className="list-card">
           <h2 className="list-title">Employment Status Distribution</h2>
-          <EmploymentDistribution distribution={employmentStatusData} />
+          <p className="chart-description">
+            This chart shows the employment status of alumni, such as full-time, part-time, or unemployed.
+          </p>
+            <EmploymentDistribution distribution={employmentStatusData} />
         </div>
 
         <div className="list-card">
           <h2 className="list-title">Degree Level Distribution</h2>
+          <p className="chart-description">
+            A pie chart showing the distribution of degree levels earned by alumni, such as Bachelor’s, Master’s, or Ph.D.
+          </p>
           <DegreeLevelPieChart distribution={degreeLevelData} />
         </div>
 
         <div className="list-card">
+          <h2 className="list-title">Colleges Attended by Country</h2>
+          <p className="chart-description">
+            A breakdown of colleges attended by alumni, grouped by country. The size of each group reflects the number of alumni who studied in each country. Click on a country to view colleges.
+          </p>
+            <CollegesByCountry collegesByCountry={collegeData} />
+        </div>
+
+        <div className="list-card">
+          <h2 className="list-title">Areas of Study</h2>
+          <p className="chart-description">
+            This list shows the most common academic disciplines alumni pursued.
+          </p>
+          <AreasOfStudyList data={degreeNameData}
+          />
+        </div>
+
+        <div className="list-card">
           <h2 className="list-title">Industry Distribution</h2>
+          <p className="chart-description">
+            Shows the distribution of industries alumni are employed in.
+          </p>
           <DistributionList
             title=""
             distribution={industryData}
@@ -391,16 +448,15 @@ const AlumniOutcomesDashboard = () => {
           />
         </div>
         <div className="list-card">
-          <h2 className="list-title">Top Employers</h2>
+          <h2 className="list-title">Top 10 Employers</h2>
+          <p className="chart-description">
+            Lists the companies that employ the highest number of alumni.
+          </p>
           <TopEmployers data={employerData}
           />
         </div>
 
-        <div className="list-card">
-          <h2 className="list-title">Areas of Study</h2>
-          <AreasOfStudyList data={degreeNameData}
-          />
-        </div>
+
       </section>
     </div>
   );
