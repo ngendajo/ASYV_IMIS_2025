@@ -56,29 +56,27 @@ class Migration(migrations.Migration):
                 "ordering": ["-created_at"],
             },
         ),
-        # --- Start of the corrected CheckConstraint operations ---
-        migrations.AddConstraint( # This was missing for the first constraint
+        migrations.AddConstraint(
             model_name="user",
             constraint=models.CheckConstraint(
-                condition=~models.Q(email=models.F("email1")), # Changed line
+                condition=models.Q(("email", models.F("email1")), _negated=True),
                 name="email_email1_unique",
             ),
         ),
-        migrations.AddConstraint( # This was missing for the second constraint
+        migrations.AddConstraint(
             model_name="user",
             constraint=models.CheckConstraint(
-                condition=~models.Q(phone=models.F("phone1")), # Changed line
+                condition=models.Q(("phone", models.F("phone1")), _negated=True),
                 name="phone_phone1_unique",
             ),
         ),
-        migrations.AddConstraint( # This was missing for the third constraint
+        migrations.AddConstraint(
             model_name="user",
             constraint=models.CheckConstraint(
-                condition=~models.Q(username=models.F("reg_number")), # Changed line
+                condition=models.Q(("username", models.F("reg_number")), _negated=True),
                 name="username_regnumber_unique",
             ),
         ),
-        # --- End of the corrected CheckConstraint operations ---
         migrations.AddField(
             model_name="family",
             name="mother",
