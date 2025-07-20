@@ -59,24 +59,25 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="user",
             constraint=models.CheckConstraint(
-                condition=models.Q(("email", models.F("email1")), _negated=True),
+                condition=~models.Q(email=models.F("email1")),
                 name="email_email1_unique",
             ),
         ),
         migrations.AddConstraint(
             model_name="user",
             constraint=models.CheckConstraint(
-                condition=models.Q(("phone", models.F("phone1")), _negated=True),
+                condition=~models.Q(phone=models.F("phone1")),
                 name="phone_phone1_unique",
             ),
         ),
         migrations.AddConstraint(
             model_name="user",
             constraint=models.CheckConstraint(
-                condition=models.Q(("username", models.F("reg_number")), _negated=True),
+                condition=~models.Q(username=models.F("reg_number")),
                 name="username_regnumber_unique",
             ),
         ),
+
         migrations.AddField(
             model_name="family",
             name="mother",
