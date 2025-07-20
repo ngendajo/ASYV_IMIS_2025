@@ -3,7 +3,7 @@
 from django.db import migrations, models
 from django.conf import settings
 import django.db.models.deletion
-from django.db.models import Q, CheckConstraint  # ✅ Add this
+from django.db.models import Q, CheckConstraint
 
 class Migration(migrations.Migration):
 
@@ -17,21 +17,21 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="user",
             constraint=CheckConstraint(
-                condition=~Q(email=models.F("email1")),
+                check=~Q(email=models.F("email1")),  # Changed from 'condition' to 'check'
                 name="email_email1_unique",
             ),
         ),
         migrations.AddConstraint(
             model_name="user",
             constraint=CheckConstraint(
-                condition=~Q(phone=models.F("phone1")),
+                check=~Q(phone=models.F("phone1")),  # Changed from 'condition' to 'check'
                 name="phone_phone1_unique",
             ),
         ),
         migrations.AddConstraint(
             model_name="user",
             constraint=CheckConstraint(
-                condition=~Q(username=models.F("reg_number")),
+                check=~Q(username=models.F("reg_number")),  # Changed from 'condition' to 'check'
                 name="username_regnumber_unique",
             ),
         ),
