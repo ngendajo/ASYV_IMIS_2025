@@ -2144,6 +2144,16 @@ class AlumniListView(APIView):
 
         serializer = AlumniListSerializer(queryset, many=True)
         return Response(serializer.data)
+    
+#view staff list 
+class StaffListView(APIView):
+    #permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        queryset = User.objects.filter(is_staff=True)
+
+        serializer = UserSerializer(queryset, many=True)
+        return Response(serializer.data)
         
 
 #alumni gender distribution
