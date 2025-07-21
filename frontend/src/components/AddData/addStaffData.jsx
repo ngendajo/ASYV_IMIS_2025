@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import baseUrl from '../../api/baseUrl'; // adjust this path as needed
+import baseUrl from '../../api/baseUrl';
 
-const AddStaff = () => {
+const AddStaff = ({ item, onSuccess, onCancel }) => {
   const initialFormData = {
     username: '',
     reg_number: '',     
@@ -20,7 +20,41 @@ const AddStaff = () => {
     position: '',
     is_superuser: false,
   };
-  const [formData, setFormData] = useState(initialFormData)
+
+  const [formData, setFormData] = useState(initialFormData);
+
+  // ✅ Load form data from item when editing
+  useEffect(() => {
+    if (item) {
+      setFormData({
+        username: item.username || '',
+        reg_number: item.reg_number || '',
+        first_name: item.first_name || '',
+        middle_name: item.middle_name || '',
+        rwandan_name: item.rwandan_name || '',
+        gender: item.gender || '',
+        dob: item.dob || '',
+        phone: item.phone || '',
+        alt_phone: item.alt_phone || '',
+        email: item.email || '',
+        alt_email: item.alt_email || '',
+        password: '',              // don't populate password
+        password_confirm: '',
+        position: getPositionFromRoles(item),
+        is_superuser: item.is_superuser || false,
+      });
+    } else {
+      setFormData(initialFormData);
+    }
+  }, [item]);
+
+  const getPositionFromRoles = (item) => {
+    if (item.is_teacher) return 'teacher';
+    if (item.is_crc) return 'crc';
+    if (item.is_librarian) return 'librarian';
+    if (item.is_mama) return 'mother';
+    return '';
+  };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -29,9 +63,9 @@ const AddStaff = () => {
       [name]: type === 'checkbox' ? checked : value,
     }));
   };
-  
+
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
     const {
       username,
@@ -40,12 +74,11 @@ const AddStaff = () => {
       position,
     } = formData;
 
-    if (!username || !password || password !== password_confirm) {
+    if (!username || (!item && !password) || (password && password !== password_confirm)) {
       alert("Please fill all required fields and ensure passwords match.");
       return;
     }
 
-      // Create a mapping of position to boolean fields
     const roleFlags = {
       is_teacher: position === 'teacher',
       is_crc: position === 'crc',
@@ -59,24 +92,32 @@ const AddStaff = () => {
     const payload = {
       ...formData,
       ...roleFlags,
-      position: undefined,
-      dob: formData.dob || null, 
+      dob: formData.dob || null,
       email: formData.email || null,
       phone: formData.phone || null,
-      alt_email: formData.email1 || null,
-      alt_phone: formData.phone1 || null,
+      alt_email: formData.alt_email || null,
+      alt_phone: formData.alt_phone || null,
     };
 
     delete payload.position;
-    console.log(payload);
+    delete payload.password_confirm;
 
     try {
-      const res = await axios.post(`${baseUrl}/users/`, payload);
-      alert("Staff added successfully!");
+      if (item && item.id) {
+        // ✅ PUT (edit)
+        await axios.put(`${baseUrl}/users/${item.id}/`, payload);
+        alert("Staff updated successfully!");
+      } else {
+        // ✅ POST (add)
+        await axios.post(`${baseUrl}/users/`, payload);
+        alert("Staff added successfully!");
+      }
+
       setFormData(initialFormData);
+      onSuccess?.();
     } catch (err) {
       console.error(err);
-      alert("Failed to add staff. Check inputs or try again.");
+      alert("Failed to save staff. Check inputs or try again.");
     }
   };
 
@@ -89,11 +130,11 @@ const AddStaff = () => {
         ['Middle Name', 'middle_name', 'text', false],
         ['Rwandan Name', 'rwandan_name', 'text', true],
         ['Phone', 'phone', 'tel', false],
-        ['Alternate Phone', 'phone1', 'tel', false],
+        ['Alternate Phone', 'alt_phone', 'tel', false],
         ['Email', 'email', 'email', false],
-        ['Alternate Email', 'email1', 'email', false],
-        ['Password', 'password', 'password', true],
-        ['Confirm Password', 'password_confirm', 'password', true],
+        ['Alternate Email', 'alt_email', 'email', false],
+        ['Password', 'password', 'password', !item],
+        ['Confirm Password', 'password_confirm', 'password', !item],
       ].map(([label, name, type, required]) => (
         <React.Fragment key={name}>
           <label className={required ? 'required' : ''}>{label}</label>
@@ -137,8 +178,12 @@ const AddStaff = () => {
         />
       </div>
 
-      <button type="submit">Add Staff</button>
+      <button type="submit">{item ? 'Update' : 'Add'} Staff</button>
+      {onCancel && (
+        <button type="button" onClick={onCancel}>Cancel</button>
+      )}
     </form>
-  )}
+  );
+};
 
 export default AddStaff;

@@ -138,7 +138,11 @@ const AddData = () => {
                         fetchDataForSection(key);
                         setEditingItem(null);
                       }}
-                      onCancel={() => setEditingItem(null)}
+                      onCancel={() => {
+                        setEditingItem(null);
+                        setViewMode('list');
+                      }
+                      }
                     />
                     {ListComponent && (
                       <button
