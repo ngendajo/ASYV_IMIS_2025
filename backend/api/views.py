@@ -173,15 +173,20 @@ class UserViewSet(viewsets.ModelViewSet):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def update_user_image(request, pk):
-    user = User.objects.get(pk=pk)
-    data = UpdateUserImageUrlSerializer(instance=user, data=request.data)
+    try:
+        user = User.objects.get(pk=pk)
+    except User.DoesNotExist:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 
-    if data.is_valid():
-        data.save()
-        return Response(data.data)
+    serializer = UpdateUserImageUrlSerializer(instance=user, data=request.data, partial=True)
+
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
     else:
-        print(data.errors)
-        return Response(error=data.errors,status=status.HTTP_404_NOT_FOUND)
+        print(serializer.errors)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
             
 #Upload staff with .xlsx file
 class StaffExcelUploadView(APIView):
