@@ -92,6 +92,11 @@ const StudentDirectory = () => {
     fetchAlumni();
   }, [auth, pagination.current_page, pagination.page_size, searchTerm, appliedFilters]);
 
+    useEffect(() => {
+      setPagination((prev) => ({ ...prev, current_page: 1 }));
+      setAlumniData([]); // clear existing results so new ones will replace them
+    }, [searchTerm]);
+
   useEffect(() => {
     const isDesktop = window.innerWidth >= 768;
     const scrollContainer = isDesktop 
@@ -106,43 +111,26 @@ const StudentDirectory = () => {
       if (throttleTimeout) return;
   
       throttleTimeout = setTimeout(() => {
-        let scrollTop, clientHeight, scrollHeight;
+        const scrollTop = scrollContainer === window
+          ? window.scrollY || document.documentElement.scrollTop
+          : scrollContainer.scrollTop;
   
-        if (scrollContainer === window) {
-          scrollTop = window.scrollY || document.documentElement.scrollTop;
-          clientHeight = window.innerHeight;
-          scrollHeight = document.documentElement.scrollHeight;
-        } else {
-          scrollTop = scrollContainer.scrollTop;
-          clientHeight = scrollContainer.clientHeight;
-          scrollHeight = scrollContainer.scrollHeight;
-        }
+        const clientHeight = scrollContainer === window
+          ? window.innerHeight
+          : scrollContainer.clientHeight;
   
-        if (scrollTop + clientHeight >= scrollHeight - 20) {
-          if (pagination.has_next && !loading) {
-            setPagination(prev => ({ ...prev, current_page: prev.current_page + 1 }));
-          }
+        const scrollHeight = scrollContainer === window
+          ? document.documentElement.scrollHeight
+          : scrollContainer.scrollHeight;
+  
+        if (scrollTop + clientHeight >= scrollHeight - 20 && pagination.has_next && !loading) {
+          setPagination((prev) => ({ ...prev, current_page: prev.current_page + 1 }));
         }
   
         throttleTimeout = null;
-      }, 250); // 250ms throttle
+      }, 250);
     };
   
-    scrollContainer.addEventListener('scroll', onScroll);
-    return () => scrollContainer.removeEventListener('scroll', onScroll);
-  }, [pagination.has_next, loading]);
-  
-  
-    const onScroll = () => {
-      const scrollTop = scrollContainer.scrollTop ?? window.scrollY;
-      const clientHeight = scrollContainer.clientHeight ?? window.innerHeight;
-      const scrollHeight = scrollContainer.scrollHeight ?? document.documentElement.scrollHeight;
-
-      if (scrollTop + clientHeight >= scrollHeight - 20 && pagination.has_next && !loading) {
-        setPagination((prev) => ({ ...prev, current_page: prev.current_page + 1 }));
-      }
-    };
-
     scrollContainer.addEventListener('scroll', onScroll);
     return () => scrollContainer.removeEventListener('scroll', onScroll);
   }, [pagination.has_next, loading]);
