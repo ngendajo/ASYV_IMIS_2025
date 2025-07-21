@@ -291,3 +291,17 @@ button {
   }
 }
 
+.filter-summary-preview {
+  font-size: 14px;
+  color: #555;
+  margin-top: 6px;
+  margin-bottom: 12px;
+  max-width: 100%;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+

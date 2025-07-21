@@ -40,12 +40,17 @@ const FilterPanel = ({ filters, filterUI, toggleCheckbox, applyFilters }) => {
       setUnsavedChanges(true);
     };
 
-
+    const selectedCount = filterUI[key]?.length || 0;
 
     return (
       <div className="filter-group">
         <div className="filter-group-header">
-          <p><strong>{title}</strong></p>
+          <p>
+            <strong>{title}</strong>
+            {selectedCount > 0 && (
+              <span className="active-count"> • {selectedCount} selected</span>
+            )}
+          </p>
           <button className="clear-link" onClick={() => clearGroup(key)}>Clear</button>
         </div>
         <input
@@ -76,6 +81,7 @@ const FilterPanel = ({ filters, filterUI, toggleCheckbox, applyFilters }) => {
       </div>
     );
   };
+
 
   return (
     <div className="filter-panel-wrapper">
