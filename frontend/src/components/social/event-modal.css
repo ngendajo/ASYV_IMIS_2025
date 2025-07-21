@@ -207,3 +207,8 @@
     width: 100%;
   }
 }
+
+.required-asterisk {
+  color: red;
+  margin-left: 4px;
+}

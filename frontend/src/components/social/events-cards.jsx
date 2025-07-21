@@ -111,7 +111,16 @@ export const Event = ({
       setNewLocation(location);
       setNewDescription(description);
     }
+    setShowModal(false);
   };
+
+  useEffect(() => {
+    if (isNew) {
+      setShowModal(true);
+      setModalEditMode(true);
+    }
+  }, [isNew]);
+  
 
   return (
   <>
@@ -210,7 +219,7 @@ export const Event = ({
         auth={auth}
         onSave={onSave}
         onChange={onChange}
-        onClose={() => setShowModal(false)}
+        onClose={handleCancel}
       />
     )}
   </>

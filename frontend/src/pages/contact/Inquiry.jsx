@@ -100,13 +100,13 @@ const Inquiry = () => {
     {
       id: 'alumni-1',
       question: 'How do I contact CRC?',
-      answer: 'Reach out via the alumni portal or email the CRC directly.',
+      answer: 'Reach out via email to Julius: julius@asyv.org or Isaac: isaac@asyv.org .',
       open: false,
     },
     {
       id: 'alumni-2',
       question: 'How can I update my employment or education?',
-      answer: 'Go to your profile and click the "Edit" button.',
+      answer: 'Go to your profile and click the "Edit" button in Academic and Employment section.',
       open: false,
     },
   ];
