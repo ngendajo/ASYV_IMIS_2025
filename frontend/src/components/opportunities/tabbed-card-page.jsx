@@ -89,6 +89,9 @@ const TabbedCardPage = ({
         </div>
       )}
       */}
+      <div>        
+        <p className="section-subtext">Click on an opportunity to view more details. Click on the button to view the application link.</p>
+      </div>
       <div className="opportunity-cards-container">
         {content}
       </div>

@@ -67,13 +67,6 @@ const GivingBack = () => {
         <li>Sustainability Plan: January 2027-2028 Develop sustainability to ensure initiative continues for many years ahead</li>
       </ul>
 
-      <h3>The team / photos</h3>
-      <p>Add photos</p>
-
-      <p>Information on this page comes from the Alumni Giving Back Committee</p>
-
-      <br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
-
       <p><strong>With 1,400 alumni and  79% employed</strong></p>
       <ul>
         <li>If 20% donate $500 a year</li>
@@ -118,6 +111,7 @@ const GivingBack = () => {
 
       <h3>Appreciation:</h3>
       <p>To contribute or for further clarifications, contact Gilbert Musonera, Alumni Guild VP: 0785093107</p>
+      <p>Information on this page comes from the Alumni Giving Back Committee</p>
     </div>
   );
 };
