@@ -85,6 +85,7 @@ const ProfileCard = ({ propId }) => {
         ...userRes.data,
         academic_combinations: normalizeAcademicCombinations(userRes.data.academic_combinations || [])
       };
+      console.log("normalizeduser", normalizedUser);
   
       setUser(normalizedUser);
       setOriginalUser(normalizedUser);

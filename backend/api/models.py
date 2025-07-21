@@ -576,9 +576,11 @@ class Opportunity(models.Model):
     title = models.CharField(max_length=5000)
     op_type = models.CharField(max_length=100, default="Full Time")
     description = models.CharField(max_length=1000)
-    deadline = models.CharField(max_length=1000, default="2024-08-23")
+    deadline = models.CharField(max_length=1000, blank=True)
     link = models.CharField(max_length=200, default="asyv.ac.rw")
     approved = models.BooleanField(default=False)
+    organization = models.CharField(max_length=500, default="ASYV")
+    location = models.CharField(max_length=500, default="Kigali, Rwanda")
 
     post_time = models.CharField(default=timezone.now)
 

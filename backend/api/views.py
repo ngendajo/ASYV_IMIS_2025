@@ -173,15 +173,20 @@ class UserViewSet(viewsets.ModelViewSet):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def update_user_image(request, pk):
-    user = User.objects.get(pk=pk)
-    data = UpdateUserImageUrlSerializer(instance=user, data=request.data)
+    try:
+        user = User.objects.get(pk=pk)
+    except User.DoesNotExist:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 
-    if data.is_valid():
-        data.save()
-        return Response(data.data)
+    serializer = UpdateUserImageUrlSerializer(instance=user, data=request.data, partial=True)
+
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
     else:
-        print(data.errors)
-        return Response(error=data.errors,status=status.HTTP_404_NOT_FOUND)
+        print(serializer.errors)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
             
 #Upload staff with .xlsx file
 class StaffExcelUploadView(APIView):
@@ -2144,6 +2149,16 @@ class AlumniListView(APIView):
 
         serializer = AlumniListSerializer(queryset, many=True)
         return Response(serializer.data)
+    
+#view staff list 
+class StaffListView(APIView):
+    #permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        queryset = User.objects.filter(is_staff=True)
+
+        serializer = UserSerializer(queryset, many=True)
+        return Response(serializer.data)
         
 
 #alumni gender distribution
@@ -3281,7 +3296,7 @@ class AlumniEmploymentView(APIView):
         try:
             # Get the graduated Kid linked to this User
             print(user_id)
-            kid = Kid.objects.get(user__id=user_id, graduation_status = "graduated")
+            kid = Kid.objects.get(user__id=user_id)
         except Kid.DoesNotExist:
             return Response({'error': 'Graduated Kid not found for this user'}, status=404)
 
@@ -3296,7 +3311,7 @@ class AlumniEmploymentView(APIView):
             return Response({'error': 'Missing user ID'}, status=400)
 
         try:
-            kid = Kid.objects.get(user__id=user_id, graduation_status="graduated")
+            kid = Kid.objects.get(user__id=user_id)
         except Kid.DoesNotExist:
             return Response({'error': 'Graduated Kid not found for this user'}, status=404)
 
@@ -3360,7 +3375,7 @@ class AlumniAcademicView(APIView):
         try:
             # Get the graduated Kid linked to this User
             print(user_id)
-            kid = Kid.objects.get(user__id=user_id, graduation_status = "graduated")
+            kid = Kid.objects.get(user__id=user_id)
         except Kid.DoesNotExist:
             return Response({'error': 'No graduated kid found for this user'}, status=404)
 
@@ -3375,7 +3390,7 @@ class AlumniAcademicView(APIView):
             return Response({'error': 'Missing user ID'}, status=400)
 
         try:
-            kid = Kid.objects.get(user__id=user_id, graduation_status="graduated")
+            kid = Kid.objects.get(user__id=user_id)
         except Kid.DoesNotExist:
             return Response({'error': 'Graduated Kid not found for this user'}, status=404)
 
@@ -5932,25 +5947,25 @@ class DeleteOpportunityView(APIView):
         return Response({'msg': 'Opportunity deleted successfully'}, status=status.HTTP_200_OK)
 
 
-# class UpdateOpportunityView(RetrieveUpdateAPIView):
-#     queryset = Opportunity.objects.all()
-#     serializer_class = UpdateOpportunitySerializer
-#     lookup_field = 'pk'
+class UpdateOpportunityView(RetrieveUpdateAPIView):
+    queryset = Opportunity.objects.all()
+    serializer_class = UpdateOpportunitySerializer
+    lookup_field = 'pk'
 
-#     def update(self, request, *args, **kwargs):
-#         instance = self.get_object()
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
 
-#         # check is user is alumni
-#         if request.user.is_authenticated and request.user.is_alumni:
-#             raise PermissionDenied("Opportunity has been approved so cannot modify.")
+        # check is user is alumni
+        if request.user.is_authenticated and request.user.is_alumni:
+            raise PermissionDenied("Opportunity has been approved so cannot modify.")
 
-#         # update
-#         partial = kwargs.pop('partial', False)
-#         serializer = self.get_serializer(instance, data=request.data, partial=partial)
-#         serializer.is_valid(raise_exception=True)
-#         self.perform_update(serializer)
+        # update
+        partial = kwargs.pop('partial', False)
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
 
-#         return Response(serializer.data)
+        return Response(serializer.data)
 
 
 class ApproveOpportunityView(RetrieveUpdateAPIView):

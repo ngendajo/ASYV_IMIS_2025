@@ -99,7 +99,8 @@ urlpatterns = [
     path('', views.getRoutes),
 
     #visualizations
-    path('alumnilist/', views.AlumniListView.as_view(), name='alumini'), #It is used in new ams
+    path('stafflist/', views.StaffListView.as_view(), name='staff'),
+    path('alumnilist/', views.AlumniListView.as_view(), name='alumni'), #It is used in new ams
     path('gender-distribution/', views.gender_distribution, name='gender_distribution'),
     path('combination-counts/', views.combination_counts, name='combination_counts'),
     path('alumni-outcomes-percentage/', views.alumni_outcome_percentages, name='general report'),
@@ -130,7 +131,7 @@ urlpatterns = [
     path('opportunity/create/', views.create_opportunity, name='create-opportunity'),
     path('opportunity/', views.read_opportunity, name='read-opportunity'),
     path('opportunity/<int:pk>/delete/', views.DeleteOpportunityView.as_view(), name='delete-opportunity'),
-    # path('opportunity/<int:pk>/update/', views.UpdateOpportunityView.as_view(), name='update-opportunity'),
+    path('opportunity/<int:pk>/update/', views.UpdateOpportunityView.as_view(), name='update-opportunity'),
     path('opportunity/<int:pk>/approve', views.ApproveOpportunityView.as_view(), name='approve-opportunity'),
 
 ]

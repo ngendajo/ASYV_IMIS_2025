@@ -130,6 +130,7 @@ const FieldRenderer = ({
 
                             if (isAcademicSection && f.value === 'college') {
                               const locationInfo = collegeLookup[newValue];
+                              console.log("trying to find college location for", newValue, locationInfo)
                               updatedItem = { ...updatedItem, location: locationInfo || "" };
                             }
 

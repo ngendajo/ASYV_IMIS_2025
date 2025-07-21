@@ -38,17 +38,17 @@ const OpportunityModal = ({
         {editing ? (
           <>
             <div className="modal-field-row">
-              <label>Title:</label>
+              <label className="required">Title:</label>
               <input name="title" value={form.title} onChange={handleChange} />
             </div>
 
             <div className="modal-field-row">
-              <label>Company:</label>
+              <label className="required">Company:</label>
               <input name="organization" value={form.organization} onChange={handleChange} />
             </div>
 
             <div className="modal-field-row">
-              <label>Description:</label>
+              <label className="required">Description:</label>
               <textarea name="description" value={form.description} onChange={handleChange} />
             </div>
 
@@ -58,12 +58,12 @@ const OpportunityModal = ({
             </div>
 
             <div className="modal-field-row">
-              <label>Location:</label>
+              <label className="required">Location:</label>
               <input name="location" value={form.location} onChange={handleChange} />
             </div>
 
             <div className="modal-field-row">
-              <label>Application Link:</label>
+              <label className="required">Application Link:</label>
               <input name="link" value={form.link} onChange={handleChange} />
             </div>
 

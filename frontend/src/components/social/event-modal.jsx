@@ -64,29 +64,48 @@ const EventModal = ({
         <div className="event-modal-content">
           {isEditing || isNew ? (
             <form onSubmit={handleSubmit} className="event-form">
-              <input
-                type="text"
-                placeholder="Title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
-              <input
-                type="datetime-local"
-                value={e_datetime}
-                onChange={(e) => setEDatetime(e.target.value)}
-              />
-              <input
-                type="text"
-                placeholder="Location"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-              />
-              <textarea
-                placeholder="Description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-              />
-              <input type="file" accept="image/*" onChange={handleFileChange} />
+               <label>
+                Title<span className="required-asterisk">*</span>
+                <input
+                  type="text"
+                  placeholder="Title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  required
+                />
+              </label>
+              <label>
+                Date & Time<span className="required-asterisk">*</span>
+                <input
+                  type="datetime-local"
+                  value={e_datetime}
+                  onChange={(e) => setEDatetime(e.target.value)}
+                  required
+                />
+              </label>
+              <label>
+                Location<span className="required-asterisk">*</span>
+                <input
+                  type="text"
+                  placeholder="Location"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  required
+                />
+              </label>
+              <label>
+                Description<span className="required-asterisk">*</span>
+                <textarea
+                  placeholder="Description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  required
+                />
+              </label>
+              <label>
+                Event Image (optional)
+                <input type="file" accept="image/*" onChange={handleFileChange} />
+              </label>
               <div className="event-char-count">
                 Character Count: {description.length}/2000
               </div>

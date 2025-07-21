@@ -94,9 +94,45 @@ const StudentDirectory = () => {
 
   useEffect(() => {
     const isDesktop = window.innerWidth >= 768;
-    const scrollContainer = isDesktop ? document.querySelector('.desktop-table-wrapper') : window;
+    const scrollContainer = isDesktop 
+      ? document.querySelector('.desktop-table-wrapper') 
+      : window;
+  
     if (!scrollContainer) return;
-
+  
+    let throttleTimeout = null;
+  
+    const onScroll = () => {
+      if (throttleTimeout) return;
+  
+      throttleTimeout = setTimeout(() => {
+        let scrollTop, clientHeight, scrollHeight;
+  
+        if (scrollContainer === window) {
+          scrollTop = window.scrollY || document.documentElement.scrollTop;
+          clientHeight = window.innerHeight;
+          scrollHeight = document.documentElement.scrollHeight;
+        } else {
+          scrollTop = scrollContainer.scrollTop;
+          clientHeight = scrollContainer.clientHeight;
+          scrollHeight = scrollContainer.scrollHeight;
+        }
+  
+        if (scrollTop + clientHeight >= scrollHeight - 20) {
+          if (pagination.has_next && !loading) {
+            setPagination(prev => ({ ...prev, current_page: prev.current_page + 1 }));
+          }
+        }
+  
+        throttleTimeout = null;
+      }, 250); // 250ms throttle
+    };
+  
+    scrollContainer.addEventListener('scroll', onScroll);
+    return () => scrollContainer.removeEventListener('scroll', onScroll);
+  }, [pagination.has_next, loading]);
+  
+  
     const onScroll = () => {
       const scrollTop = scrollContainer.scrollTop ?? window.scrollY;
       const clientHeight = scrollContainer.clientHeight ?? window.innerHeight;

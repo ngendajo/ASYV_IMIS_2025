@@ -53,6 +53,7 @@ const CareerOpportunityStaff = () => {
           headers: { Authorization: `Bearer ${auth.accessToken}` }
         });
       } else {
+        console.log("updating opportunity", data)
         await axios.put(`${baseUrl}/opportunity/${data.id}/update/`, data, {
           headers: { Authorization: `Bearer ${auth.accessToken}` }
         });

@@ -686,11 +686,12 @@ class OpportunitySerializer(serializers.ModelSerializer):
         model = Opportunity
         fields = '__all__'
         read_only_fields = ['user']
+        deadline = serializers.CharField(required=False, allow_blank=True)
 
 class UpdateOpportunitySerializer(serializers.ModelSerializer):
     class Meta:
         model = Opportunity
-        fields = ['title','op_type', 'description','deadline','link']
+        fields = ['title','op_type', 'description','deadline','link', 'location', 'organization']
  
 
 class ApproveOpportunitySerializer(serializers.ModelSerializer):
