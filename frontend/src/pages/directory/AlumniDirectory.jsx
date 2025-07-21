@@ -117,9 +117,13 @@ const [appliedFilters, setAppliedFilters] = useState({
           is_alumni: element.is_alumni,
         }));
         console.log("sample alumni data", alumnilist);
-        setAlumniData((prevData) =>
+        if (window.innerWidth >= 768) {
+          setAlumniData((prevData) =>
             pagination.current_page === 1 ? alumnilist : [...prevData, ...alumnilist]
           );
+        } else {
+          setAlumniData(alumnilist); // mobile replaces list
+        }
         setFilters(response.data.filters);
         setOutcomeSummary(response.data.outcome_summary);
         setPagination((prev) => ({
@@ -144,11 +148,9 @@ const [appliedFilters, setAppliedFilters] = useState({
 
   useEffect(() => {
     const isDesktop = window.innerWidth >= 768;
-    const scrollContainer = isDesktop 
-      ? document.querySelector('.desktop-table-wrapper') 
-      : window;
+    if (!isDesktop) return; // Don't attach infinite scroll on mobile
   
-    if (!scrollContainer) return;
+    const scrollContainer = document.querySelector('.desktop-table-wrapper') || window;
   
     let throttleTimeout = null;
   
@@ -175,12 +177,14 @@ const [appliedFilters, setAppliedFilters] = useState({
         }
   
         throttleTimeout = null;
-      }, 250); // 250ms throttle
+      }, 250);
     };
   
     scrollContainer.addEventListener('scroll', onScroll);
     return () => scrollContainer.removeEventListener('scroll', onScroll);
   }, [pagination.has_next, loading]);
+  
+  const isMobile = window.innerWidth < 768;
   
 const handleDownload = async () => {
     try {
@@ -314,6 +318,37 @@ const handleDownload = async () => {
         <AlumniList alumni={alumniData} onSelect={setSelectedAlumni} />
         <div ref={loader}></div>
       </div>
+
+      {isMobile && (
+      <div className="pagination-controls">
+        <button
+          disabled={!pagination.has_previous || loading}
+          onClick={() =>
+            setPagination((prev) => ({
+              ...prev,
+              current_page: Math.max(1, prev.current_page - 1),
+            }))
+          }
+        >
+          Previous
+        </button>
+        <span>
+          Page {pagination.current_page} of{' '}
+          {Math.ceil(pagination.total / pagination.page_size)}
+        </span>
+        <button
+          disabled={!pagination.has_next || loading}
+          onClick={() =>
+            setPagination((prev) => ({
+              ...prev,
+              current_page: prev.current_page + 1,
+            }))
+          }
+        >
+          Next
+        </button>
+      </div>
+    )}
 
       {/* MODAL STYLE like responsive-fixed */}
       {selectedAlumni && (
