@@ -108,7 +108,7 @@ const AddStudents = () => {
   
     const endpoints = {
       marks: `${baseUrl}/upload-marks/`,
-      combination: `${baseUrl}/upload-combination-xlsx/`,
+      combination: `${baseUrl}/kid-academics/import/`,
       leap: `${baseUrl}/upload-leap-xlsx/`,
       employment: `${baseUrl}/upload-employment/`,
       furtherEducation: `${baseUrl}/upload-further-education/`,
@@ -255,7 +255,7 @@ const AddStudents = () => {
               </a>
             </div>
 
-            {/* 4. Upload LEAP Data */}
+            {/* 4. Upload LEAP Data
             <div className="upload-block">
               <label>Upload LEAP Excel File</label>
               <input
@@ -267,7 +267,7 @@ const AddStudents = () => {
               <a href="/templates/leap_template.xlsx" download className="download-template">
                 Download Template
               </a>
-            </div>
+            </div> */}
 
             {/* Employment upload */}
             <div className="upload-block">
