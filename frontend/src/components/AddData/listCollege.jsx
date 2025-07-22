@@ -3,9 +3,14 @@ import React from "react";
 const CollegeList = ({ items, onEdit, onDelete }) => {
   if (!items.length) return <p>No colleges available.</p>;
 
+  // Sort items alphabetically by college_name
+  const sortedItems = [...items].sort((a, b) =>
+    a.college_name.localeCompare(b.college_name)
+  );
+
   return (
     <ul className="data-list">
-      {items.map((college) => (
+      {sortedItems.map((college) => (
         <li key={college.id} className="data-list-item">
           <div>
             <strong>{college.college_name}</strong> — {college.city}, {college.country}
