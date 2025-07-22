@@ -31,7 +31,7 @@ export const SidebarDataCrc = [
   },
 
   {
-    title: 'Add Data',
+    title: 'Manage Data',
     path: '/add_data', 
     cName: 'nav-text'
   },
