@@ -68,6 +68,7 @@ const GradeForm = ({ item, onSuccess, onCancel }) => {
       }
       if (onSuccess) onSuccess();
       resetForm();
+      alert('Grade & Families submitted successfully!');
     } catch (err) {
       console.error('Failed to submit grade:', err.response?.data || err.message);
       alert('Submission failed. Check the console for details.');

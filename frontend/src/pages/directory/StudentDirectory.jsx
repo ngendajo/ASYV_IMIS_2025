@@ -13,6 +13,8 @@ import { saveAs } from 'file-saver';
 import * as XLSX from 'xlsx';
 import qs from 'qs';
 
+const defaultImage = '/media/profiles/default.jpeg';
+
 const StudentDirectory = () => {
   const [selectedAlumni, setSelectedAlumni] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -58,7 +60,9 @@ const StudentDirectory = () => {
         const alumnilist = response.data.data.map((element) => ({
           id: element.id,
           user_id: element.user_id,
-          profilePic: baseUrlforImg + element.image_url,
+          profilePic: element.image_url
+            ? baseUrlforImg + element.image_url
+            : baseUrlforImg + defaultImage,
           email: element.email,
           firstName: element.first_name,
           lastName: element.rwandan_name,

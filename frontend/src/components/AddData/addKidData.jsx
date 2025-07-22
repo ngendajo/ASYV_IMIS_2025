@@ -129,16 +129,16 @@ const AddStudents = () => {
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
   };
-
+  
   const handleUpload = async () => {
     if (!file) {
       alert("Please select an Excel file first.");
       return;
     }
-
+  
     const formData = new FormData();
     formData.append("file", file);
-
+  
     try {
       setUploadStatus("Uploading...");
       const res = await axios.post(`${baseUrl}/kids-data-upload-xlsx/`, formData, {
@@ -147,9 +147,28 @@ const AddStudents = () => {
       setUploadStatus("Upload successful!");
     } catch (err) {
       console.error("Upload failed:", err);
-      setUploadStatus("Upload failed. Check console.");
+  
+      if (err.response && err.response.data) {
+        const data = err.response.data;
+        if (Array.isArray(data.errors) && data.errors.length > 0) {
+          const errorMessages = data.errors
+            .map(e => `Row ${e.row}: ${e.errors.join(", ")}`)
+            .join("\n");
+          alert(`Upload failed with errors:\n${errorMessages}`);
+          setUploadStatus("Upload failed.");
+        } else if (data.message) {
+          alert(`Upload failed: ${data.message}`);
+          setUploadStatus("Upload failed.");
+        } else {
+          alert("Upload failed: Unknown server error.");
+          setUploadStatus("Upload failed.");
+        }
+      } else {
+        alert("Upload failed: Network or unknown error.");
+        setUploadStatus("Upload failed.");
+      }
     }
-  };
+  };  
 
   const handleAddStudent = async () => {
     if (!formData.username || !formData.password || formData.password !== formData.password_confirm) {
