@@ -36,7 +36,7 @@ const Inquiry = () => {
             <strong>To add further education record:</strong>
               <ul>
                 <li> Select 'Edit' then 'Add new' in Academic section of profile and fill in the information about degree, university, and scholarship details. 
-                  If the college is not in the dropdown, it has to be created first in 'College' section of 'Add Data' page. Location will be automatically set based on the location of the selected college. </li>
+                  If the college is not in the dropdown, it has to be created first in 'College' section of 'Manage Data' page. Location will be automatically set based on the location of the selected college. </li>
               </ul>
             <strong>To add employment record:</strong>
               <ul> 
@@ -47,7 +47,7 @@ const Inquiry = () => {
           <strong>For Current Students:</strong>
           <ul>
             <li>Use the current student directory, search or filter for the current student to update their profile</li>
-            <li>Or to update in bulk, select the 'add' button for students in Add Data page and upload an excel sheet</li>
+            <li>Or to update in bulk, select the 'add' button for students in 'Manage Data' page and upload an excel sheet</li>
           </ul>
         </>
       ),
@@ -65,7 +65,7 @@ const Inquiry = () => {
       id: 'staff-3',
       question: 'How do I add new student data?',
       answer: <>
-        In the 'Add Data' page, this is the recommended process: 
+        In the 'Manage Data' page, this is the recommended process: 
         <ol> 
           <li> Add the new grade and families </li>
           <li> Upload students in bulk using template, making sure the family name is spelled correctly </li>

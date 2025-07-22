@@ -108,7 +108,7 @@ const AddData = () => {
 
   return (
     <div className="add-data-container">
-      <h1 className="page-title">Add Data</h1>
+      <h1 className="page-title">Manage Data</h1>
 
       {dataSections
         .filter((section) => !section.requireSuperuser || auth.user?.is_superuser)
