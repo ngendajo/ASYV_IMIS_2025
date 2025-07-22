@@ -17,6 +17,9 @@ const ContactCard = ({ user, editable = false }) => {
   });
 
   const fullName = `${formData.first_name} ${formData.rwandan_name}`.trim();
+  const defaultImage = '/default-profile-picture.jpg';
+  const [profileImageUrl, setProfileImageUrl] = useState(user?.data.image_url || defaultImage);
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -65,7 +68,7 @@ const ContactCard = ({ user, editable = false }) => {
           onMouseEnter={() => setHover(true)}
           onMouseLeave={() => setHover(false)}
         >
-          <ProfileImage user={user} canEdit={editable} size={100} />
+          <ProfileImage user={user} canEdit={editable} size={100} onImageUpdated={(newUrl) => setProfileImageUrl(newUrl)}/>
         </div>
 
         <div className="contact-info">

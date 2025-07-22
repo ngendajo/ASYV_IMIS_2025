@@ -2,6 +2,7 @@
 import React from 'react';
 import './alumni-list.css';
 
+
 const AlumniList = ({ alumni, onSelect }) => {
   const hasAlumni = alumni.some(alum => alum.is_alumni);
   console.log(hasAlumni)

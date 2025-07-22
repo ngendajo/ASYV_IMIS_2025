@@ -108,17 +108,28 @@ const AddStudents = () => {
   
     const endpoints = {
       marks: `${baseUrl}/upload-marks/`,
-      combination: `${baseUrl}/upload-combination-xlsx/`,
+      combination: `${baseUrl}/kid-academics/import/`,
       leap: `${baseUrl}/upload-leap-xlsx/`,
       employment: `${baseUrl}/upload-employment/`,
       furtherEducation: `${baseUrl}/upload-further-education/`,
     };
   
     try {
-      await axios.post(endpoints[type], formData, {
+      setUploadStatus("Uploading...");
+      const res = await axios.post(endpoints[type], formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      alert(`${type.toUpperCase()} upload successful!`);
+      const data = res.data;
+      let message = `${type.toUpperCase()} upload completed. ${data.success_count} records created successfully.`;
+      if (data.skip_count > 0) {
+        message += ` ${data.skip_count} records skipped.`;
+      }
+      if (data.errors && data.errors.length > 0) {
+        message += ` Errors: ${data.errors.length}. Check console for details.`;
+        console.error('Upload errors:', data.errors);
+      }
+      alert(message);
+      setUploadStatus("Upload successful!");
     } catch (err) {
       console.error(err);
       alert(`Failed to upload ${type} file.`);
@@ -129,16 +140,16 @@ const AddStudents = () => {
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
   };
-
+  
   const handleUpload = async () => {
     if (!file) {
       alert("Please select an Excel file first.");
       return;
     }
-
+  
     const formData = new FormData();
     formData.append("file", file);
-
+  
     try {
       setUploadStatus("Uploading...");
       const res = await axios.post(`${baseUrl}/kids-data-upload-xlsx/`, formData, {
@@ -147,9 +158,28 @@ const AddStudents = () => {
       setUploadStatus("Upload successful!");
     } catch (err) {
       console.error("Upload failed:", err);
-      setUploadStatus("Upload failed. Check console.");
+  
+      if (err.response && err.response.data) {
+        const data = err.response.data;
+        if (Array.isArray(data.errors) && data.errors.length > 0) {
+          const errorMessages = data.errors
+            .map(e => `Row ${e.row}: ${e.errors.join(", ")}`)
+            .join("\n");
+          alert(`Upload failed with errors:\n${errorMessages}`);
+          setUploadStatus("Upload failed.");
+        } else if (data.message) {
+          alert(`Upload failed: ${data.message}`);
+          setUploadStatus("Upload failed.");
+        } else {
+          alert("Upload failed: Unknown server error.");
+          setUploadStatus("Upload failed.");
+        }
+      } else {
+        alert("Upload failed: Network or unknown error.");
+        setUploadStatus("Upload failed.");
+      }
     }
-  };
+  };  
 
   const handleAddStudent = async () => {
     if (!formData.username || !formData.password || formData.password !== formData.password_confirm) {
@@ -215,6 +245,7 @@ const AddStudents = () => {
           {/* Bulk Upload Options */}
           <div className="excel-upload-section">
             <h4>Bulk Upload Options</h4>
+            {uploadStatus && <p>{uploadStatus}</p>}
 
             {/* 1. Upload Basic Student Info */}
             <div className="upload-block">
@@ -224,7 +255,7 @@ const AddStudents = () => {
               <a href="/templates/students_template.xlsx" download className="download-template">
                 Download Template
               </a>
-              {uploadStatus && <p>{uploadStatus}</p>}
+              
             </div>
 
             {/* 2. Upload Marks */}
@@ -255,7 +286,7 @@ const AddStudents = () => {
               </a>
             </div>
 
-            {/* 4. Upload LEAP Data */}
+            {/* 4. Upload LEAP Data
             <div className="upload-block">
               <label>Upload LEAP Excel File</label>
               <input
@@ -267,7 +298,7 @@ const AddStudents = () => {
               <a href="/templates/leap_template.xlsx" download className="download-template">
                 Download Template
               </a>
-            </div>
+            </div> */}
 
             {/* Employment upload */}
             <div className="upload-block">

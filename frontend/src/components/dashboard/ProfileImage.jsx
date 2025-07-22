@@ -5,20 +5,22 @@ import useAuth from '../../hooks/useAuth';
 
 const defaultImage = '/default-profile-picture.jpg';
 
-const ProfileImage = ({ user, canEdit = false, size = 120 }) => {
+const ProfileImage = ({ user, canEdit = false, size = 120, onImageUpdated }) => {
+  console.log("passed in user", user)
   const { auth } = useAuth();
-  const [imgSrc, setImgSrc] = useState(user?.image_url || defaultImage);
+  const [imgSrc, setImgSrc] = useState(user?.data.image_url || defaultImage);
   const [msg, setMsg] = useState('');
+  
 
   const handleChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     const formData = new FormData();
-    formData.append('image', file);
+    formData.append('image_url', file);
 
     try {
-      await axios.post(`${baseUrl}/updateuserimage/${user.id}`, formData, {
+      await axios.post(`${baseUrl}/updateuserimage/${user.data.id}`, formData, {
         headers: {
           Authorization: `Bearer ${auth.accessToken}`,
           'Content-Type': 'multipart/form-data',
@@ -28,14 +30,19 @@ const ProfileImage = ({ user, canEdit = false, size = 120 }) => {
       setMsg('Image updated successfully');
 
       // Refresh user image
-      const updated = await axios.get(`${baseUrl}/users/?id=${user.id}`, {
+      const updated = await axios.get(`${baseUrl}/users/${user.data.id}`, {
         headers: { Authorization: `Bearer ${auth.accessToken}` },
         withCredentials: true,
       });
-      setImgSrc(updated.data.image_url || defaultImage);
+
+      console.log("image updated", updated)
+      setImgSrc((updated.data.data.image_url || defaultImage) + '?t=' + new Date().getTime());
+      setTimeout(() => setMsg(''), 1000);
+      if (onImageUpdated) onImageUpdated(updated.data.data.image_url || defaultImage);
     } catch (err) {
       setMsg('Image update failed');
       console.error(err);
+      setTimeout(() => setMsg(''), 1000);
     }
   };
 

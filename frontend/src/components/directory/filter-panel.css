@@ -102,3 +102,14 @@
   width: 100%;
   box-sizing: border-box;
 }
+
+.active-count {
+  background-color: var(--green);       /* light teal background */
+  color: white;                  /* dark green text (match theme) */
+  padding: 2px 8px;
+  margin-left: 6px;
+  border-radius: 999px;            /* fully rounded */
+  font-size: 12px;
+  font-weight: 500;
+  display: inline-block;
+}

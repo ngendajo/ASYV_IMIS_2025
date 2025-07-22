@@ -75,32 +75,34 @@ const AlumniDashboard = () => {
 
       <div className="dashboard-section">
         <h2>Upcoming Events</h2>
+        <p className="section-subtext">Scroll right to see more and click to view details</p>
         <div className="scroll-wrapper">
           <div className="scroll-row">
-          {[...events]
-            .sort((a, b) => new Date(a.e_datetime) - new Date(b.e_datetime))
-            .map((event) => (
-              <div className="card-item" key={event.id}>
-                <Event
-                  event_id={event.id}
-                  alumni="true"
-                  title={event.title}
-                  e_datetime={event.e_datetime}
-                  location={event.location}
-                  description={event.description}
-                  image_url={event.image_url}
-                  buttonText={event.buttonText}
-                  link={() => window.location.href = '/events-detail'}
-                  timeFunction={(x) => new Date(x).toLocaleDateString()}
-                />
-              </div>
-          ))}
+            {[...events]
+              .sort((a, b) => new Date(a.e_datetime) - new Date(b.e_datetime))
+              .map((event) => (
+                <div className="card-item" key={event.id}>
+                  <Event
+                    event_id={event.id}
+                    alumni="true"
+                    title={event.title}
+                    e_datetime={event.e_datetime}
+                    location={event.location}
+                    description={event.description}
+                    image_url={event.image_url}
+                    buttonText={event.buttonText}
+                    link={() => window.location.href = '/events-detail'}
+                    timeFunction={(x) => new Date(x).toLocaleDateString()}
+                  />
+                </div>
+              ))}
           </div>
         </div>
       </div>
 
       <div className="dashboard-section">
         <h2>Career Opportunities For You</h2>
+        <p className="section-subtext">Scroll right to see more and click to view details</p>
         <div className="scroll-wrapper">
           <div className="scroll-row">
             {careerOps.map((job) => (
@@ -114,9 +116,7 @@ const AlumniDashboard = () => {
                   company={job.organization}
                   onSupportRequest={() => requestSupport(job)}
                   renderActions={() => (
-                    <>
-                      <button onClick={() => window.open(job.link, '_blank')}>Apply</button>
-                   </>
+                    <button onClick={() => window.open(job.link, '_blank')}>Apply</button>
                   )}
                 />
               </div>
@@ -127,6 +127,7 @@ const AlumniDashboard = () => {
 
       <div className="dashboard-section">
         <h2>Education Opportunities For You</h2>
+        <p className="section-subtext">Scroll right to see more and click to view details</p>
         <div className="scroll-wrapper">
           <div className="scroll-row">
             {eduOps.map((edu) => (
@@ -140,9 +141,7 @@ const AlumniDashboard = () => {
                   company={edu.organization}
                   onSupportRequest={() => requestSupport(edu)}
                   renderActions={() => (
-                    <>
-                      <button onClick={() => window.open(edu.link, '_blank')}>Learn More</button>
-                    </>
+                    <button onClick={() => window.open(edu.link, '_blank')}>Learn More</button>
                   )}
                   labelOverrides={{
                     organization: 'Institution',
@@ -156,7 +155,8 @@ const AlumniDashboard = () => {
             ))}
           </div>
         </div>
-      </div>
+      </div>  
+
     </div>
   );
 };
