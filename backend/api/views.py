@@ -1371,6 +1371,8 @@ class DataUploadViewSet(viewsets.ViewSet):
                 'dob': self.validate_date(row.get('dob')),
                 'gender': row['gender'].upper() if row.get('gender') else None,
                 'password': make_password(self.DEFAULT_PASSWORD),  # Set a temporary password
+                'is_student': self.safe_convert_to_bool(row.get('is_student')),
+                'is_alumni': self.safe_convert_to_bool(row.get('is_alumni')),
             },
             'kid': {
                 'family': family,
@@ -1444,8 +1446,10 @@ class DataUploadViewSet(viewsets.ViewSet):
             # If there are any errors, return without inserting data
             if errors:
                 return Response({
+                    'success': False,
+                    'total_processed': len(df),
                     'success_count': 0,
-                    'error_count': len(errors),
+                    'skip_count': len(errors),
                     'errors': errors,
                     'message': 'Validation failed. No data was inserted.'
                 }, status=status.HTTP_400_BAD_REQUEST)
@@ -1483,16 +1487,21 @@ class DataUploadViewSet(viewsets.ViewSet):
                 
                 # Return success response
                 return Response({
+                    'success': success_count > 0 and len(insertion_errors) == 0,
+                    'total_processed': len(valid_rows) + len(errors),
                     'success_count': success_count,
-                    'error_count': 0,
+                    'skip_count': len(errors),
+                    'errors': errors if errors else insertion_errors,
                     'message': f'Successfully inserted {success_count} records'
                 }, status=status.HTTP_200_OK)
                 
             except Exception as e:
                 # Return detailed error response
                 return Response({
+                    'success': False,
+                    'total_processed': len(valid_rows) + len(errors),
                     'success_count': 0,
-                    'error_count': len(insertion_errors),
+                    'skip_count': len(errors),
                     'errors': insertion_errors,
                     'message': f'Error during data insertion: {str(e)}'
                 }, status=status.HTTP_400_BAD_REQUEST)
@@ -2133,9 +2142,13 @@ class MarksExcelUpload(APIView):
                 'error': f'Error processing file: {str(e)}'
             }, status=status.HTTP_400_BAD_REQUEST)
             
-        return Response({   
-            'message': f'Update complete. Updated: {success_count}, Missing: {len(not_found)}',
-            'not_found': not_found
+        return Response({
+            'success': success_count > 0 and len(not_found) == 0,
+            'total_processed': df.shape[0],
+            'success_count': success_count,
+            'skip_count': len(not_found),
+            'errors': [{'message': msg} for msg in not_found],
+            'message': f'Update complete. {success_count} records updated. {len(not_found)} skipped or missing.'
         })
         
 #view alumni list
@@ -2356,9 +2369,16 @@ class EmploymentExcelUploadView(APIView):
             
             if errors:
                 return Response({
-                    'message': 'Validation failed. No records were created.',
-                    'errors': errors
-                }, status=status.HTTP_400_BAD_REQUEST)
+                    'success': len(errors) == 0,
+                    'total_processed': len(df),
+                    'success_count': len(valid_employments),
+                    'skip_count': len(errors),
+                    'errors': errors,
+                    'message': (
+                        f'Successfully created {len(valid_employments)} employment records'
+                        if not errors else 'Validation failed. No records were created.'
+                    )
+                }, status=status.HTTP_200_OK if not errors else status.HTTP_400_BAD_REQUEST)
             
             try:
                 with transaction.atomic():
@@ -2367,8 +2387,16 @@ class EmploymentExcelUploadView(APIView):
                         created_employments[idx].contributing_leaps.set(leaps)
                 
                 return Response({
-                    'message': f'Successfully created {len(valid_employments)} employment records',
-                }, status=status.HTTP_200_OK)
+                    'success': len(errors) == 0,
+                    'total_processed': len(df),
+                    'success_count': len(valid_employments),
+                    'skip_count': len(errors),
+                    'errors': errors,
+                    'message': (
+                        f'Successfully created {len(valid_employments)} employment records'
+                        if not errors else 'Validation failed. No records were created.'
+                    )
+                }, status=status.HTTP_200_OK if not errors else status.HTTP_400_BAD_REQUEST)
                 
             except Exception as e:
                 return Response({
@@ -2559,17 +2587,26 @@ class FurtherEducationExcelUploadView(APIView):
             
             if errors:
                 return Response({
-                    'message': 'Validation failed. No records were created.',
-                    'errors': errors
-                }, status=status.HTTP_400_BAD_REQUEST)
+                    'success': len(errors) == 0,
+                    'total_processed': len(df),
+                    'success_count': len(valid_further_education),
+                    'skip_count': len(errors),
+                    'errors': errors,
+                    'message': f'Successfully created {len(valid_further_education)} further education records' if not errors else 'Validation failed. No records were created.',
+                }, status=status.HTTP_200_OK if not errors else status.HTTP_400_BAD_REQUEST)
             
             try: #creates the objects
                 with transaction.atomic():
                     FurtherEducation.objects.bulk_create(valid_further_education)
 
                 return Response({
-                    'message': f'Successfully created {len(valid_further_education)} further education records',
-                }, status=status.HTTP_200_OK)
+                    'success': len(errors) == 0,
+                    'total_processed': len(df),
+                    'success_count': len(valid_further_education),
+                    'skip_count': len(errors),
+                    'errors': errors,
+                    'message': f'Successfully created {len(valid_further_education)} further education records' if not errors else 'Validation failed. No records were created.',
+                }, status=status.HTTP_200_OK if not errors else status.HTTP_400_BAD_REQUEST)
                 
             except Exception as e:
                 return Response({

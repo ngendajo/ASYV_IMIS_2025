@@ -115,10 +115,21 @@ const AddStudents = () => {
     };
   
     try {
-      await axios.post(endpoints[type], formData, {
+      setUploadStatus("Uploading...");
+      const res = await axios.post(endpoints[type], formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      alert(`${type.toUpperCase()} upload successful!`);
+      const data = res.data;
+      let message = `${type.toUpperCase()} upload completed. ${data.success_count} records created successfully.`;
+      if (data.skip_count > 0) {
+        message += ` ${data.skip_count} records skipped.`;
+      }
+      if (data.errors && data.errors.length > 0) {
+        message += ` Errors: ${data.errors.length}. Check console for details.`;
+        console.error('Upload errors:', data.errors);
+      }
+      alert(message);
+      setUploadStatus("Upload successful!");
     } catch (err) {
       console.error(err);
       alert(`Failed to upload ${type} file.`);
@@ -234,6 +245,7 @@ const AddStudents = () => {
           {/* Bulk Upload Options */}
           <div className="excel-upload-section">
             <h4>Bulk Upload Options</h4>
+            {uploadStatus && <p>{uploadStatus}</p>}
 
             {/* 1. Upload Basic Student Info */}
             <div className="upload-block">
@@ -243,7 +255,7 @@ const AddStudents = () => {
               <a href="/templates/students_template.xlsx" download className="download-template">
                 Download Template
               </a>
-              {uploadStatus && <p>{uploadStatus}</p>}
+              
             </div>
 
             {/* 2. Upload Marks */}
