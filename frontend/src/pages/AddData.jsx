@@ -13,6 +13,7 @@ import CombinationList from "../components/AddData/listCombination";
 import useAuth from "../hooks/useAuth";
 import CollegeForm from "../components/AddData/addCollege";
 import CollegeList from "../components/AddData/listCollege";
+import StaffList from "../components/AddData/listStaffData";
 
 const AddData = () => {
   const { auth } = useAuth();
@@ -58,9 +59,13 @@ const AddData = () => {
       key: "staff",
       title: "Staff Account",
       FormComponent: AddStaff,
-      apiEndpoint: "/users",
+      ListComponent: StaffList,
+      apiEndpoint: {
+        form: "/users",        // used for POST/PUT in AddStaff
+        list: "/stafflist",    // used for GET in StaffList
+      },
       requireSuperuser: true,
-    },
+    }
   ];
 
   const [activeSection, setActiveSection] = useState(null); // which key is expanded
@@ -84,8 +89,14 @@ const AddData = () => {
     try {
       const section = dataSections.find((s) => s.key === key);
       if (!section) return;
-
-      const response = await axios.get(`${baseUrl}${section.apiEndpoint}/`);
+  
+      // Handle object-style endpoint with separate list and form URLs
+      let url = typeof section.apiEndpoint === "string"
+        ? `${baseUrl}${section.apiEndpoint}/`
+        : `${baseUrl}${section.apiEndpoint.list}/`;
+  
+      const response = await axios.get(url);
+  
       setDataItems((prev) => ({
         ...prev,
         [key]: response.data,
@@ -127,7 +138,11 @@ const AddData = () => {
                         fetchDataForSection(key);
                         setEditingItem(null);
                       }}
-                      onCancel={() => setEditingItem(null)}
+                      onCancel={() => {
+                        setEditingItem(null);
+                        setViewMode('list');
+                      }
+                      }
                     />
                     {ListComponent && (
                       <button
@@ -150,7 +165,14 @@ const AddData = () => {
                       }}
                       onDelete={async (id) => {
                         try {
-                          await axios.delete(`${baseUrl}${dataSections.find((s) => s.key === key).apiEndpoint}/${id}/`);
+                          const section = dataSections.find((s) => s.key === key);
+                          if (!section) return;
+                      
+                          const deleteEndpoint = typeof section.apiEndpoint === "string"
+                            ? section.apiEndpoint
+                            : section.apiEndpoint.form; // 👈 Use form endpoint for deletes too
+                      
+                          await axios.delete(`${baseUrl}${deleteEndpoint}/${id}/`);
                           fetchDataForSection(key);
                         } catch (error) {
                           console.error(`Delete error in ${key}:`, error);

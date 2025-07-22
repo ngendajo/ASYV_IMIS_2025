@@ -15,6 +15,7 @@ import * as XLSX from 'xlsx';
 import qs from 'qs';
 
 import OutcomePieChart from '../../components/directory/outcome-pie-chart.jsx';
+// ... (imports remain unchanged)
 
 const AlumniDirectory = () => {
   const [selectedAlumni, setSelectedAlumni] = useState(null);
@@ -32,25 +33,23 @@ const AlumniDirectory = () => {
     college: [],
   });
 
-  // UI filter selections
-const [filterUI, setFilterUI] = useState({
-  gender: [],
-  graduation_year: [],
-  family: [],
-  combination: [],
-  industry: [],
-  college: [],
-});
+  const [filterUI, setFilterUI] = useState({
+    gender: [],
+    graduation_year: [],
+    family: [],
+    combination: [],
+    industry: [],
+    college: [],
+  });
 
-// Filters used in the actual request
-const [appliedFilters, setAppliedFilters] = useState({
-  gender: [],
-  graduation_year: [],
-  family: [],
-  combination: [],
-  industry: [],
-  college: [],
-});
+  const [appliedFilters, setAppliedFilters] = useState({
+    gender: [],
+    graduation_year: [],
+    family: [],
+    combination: [],
+    industry: [],
+    college: [],
+  });
 
   const [pagination, setPagination] = useState({
     current_page: 1,
@@ -66,25 +65,23 @@ const [appliedFilters, setAppliedFilters] = useState({
   const loader = useRef(null);
 
   const handleClear = () => setSelectedAlumni(null);
+
   useEffect(() => {
-    console.log("Fetching alumni with searchTerm:", searchTerm);
     const fetchAlumni = async () => {
       setLoading(true);
       const params = {
         page: pagination.current_page,
         page_size: pagination.page_size,
       };
-      if (appliedFilters.gender.length > 0) params.gender = appliedFilters.gender;
-      if (appliedFilters.graduation_year.length > 0) params.year = appliedFilters.graduation_year;
-      if (appliedFilters.family.length > 0) params.family = appliedFilters.family;
-      if (appliedFilters.combination.length > 0) params.combination = appliedFilters.combination;
-      if (appliedFilters.industry.length > 0) params.industry = appliedFilters.industry;
-      if (appliedFilters.college.length > 0) params.college = appliedFilters.college;
-
+      if (appliedFilters.gender.length) params.gender = appliedFilters.gender;
+      if (appliedFilters.graduation_year.length) params.year = appliedFilters.graduation_year;
+      if (appliedFilters.family.length) params.family = appliedFilters.family;
+      if (appliedFilters.combination.length) params.combination = appliedFilters.combination;
+      if (appliedFilters.industry.length) params.industry = appliedFilters.industry;
+      if (appliedFilters.college.length) params.college = appliedFilters.college;
       if (searchTerm) params.search = searchTerm;
 
       try {
-        console.log("Request params:", params);
         const response = await axios.get(baseUrl + '/alumni-directory/', {
           params,
           paramsSerializer: params => qs.stringify(params, { arrayFormat: 'repeat' }),
@@ -94,8 +91,6 @@ const [appliedFilters, setAppliedFilters] = useState({
           },
           withCredentials: true,
         });
-        console.log(response.data);  
-        console.log(response.data.data)
 
         const alumnilist = response.data.data.map((element) => ({
           id: element.id,
@@ -116,10 +111,15 @@ const [appliedFilters, setAppliedFilters] = useState({
           further_education: element.further_education?.[0]?.college_name || '',
           is_alumni: element.is_alumni,
         }));
+
         console.log("sample alumni data", alumnilist);
-        setAlumniData((prevData) =>
+        if (window.innerWidth >= 768) {
+          setAlumniData((prevData) =>
             pagination.current_page === 1 ? alumnilist : [...prevData, ...alumnilist]
           );
+        } else {
+          setAlumniData(alumnilist); // mobile replaces list
+        }
         setFilters(response.data.filters);
         setOutcomeSummary(response.data.outcome_summary);
         setPagination((prev) => ({
@@ -144,11 +144,9 @@ const [appliedFilters, setAppliedFilters] = useState({
 
   useEffect(() => {
     const isDesktop = window.innerWidth >= 768;
-    const scrollContainer = isDesktop 
-      ? document.querySelector('.desktop-table-wrapper') 
-      : window;
+    if (!isDesktop) return; // Don't attach infinite scroll on mobile
   
-    if (!scrollContainer) return;
+    const scrollContainer = document.querySelector('.desktop-table-wrapper') || window;
   
     let throttleTimeout = null;
   
@@ -175,26 +173,24 @@ const [appliedFilters, setAppliedFilters] = useState({
         }
   
         throttleTimeout = null;
-      }, 250); // 250ms throttle
+      }, 250);
     };
   
     scrollContainer.addEventListener('scroll', onScroll);
     return () => scrollContainer.removeEventListener('scroll', onScroll);
   }, [pagination.has_next, loading]);
   
+  const isMobile = window.innerWidth < 768;
+  
 const handleDownload = async () => {
     try {
-      const params = {
-        page_size: 10000,
-      };
-      if (appliedFilters.gender.length > 0) params.gender = appliedFilters.gender;
-      if (appliedFilters.graduation_year.length > 0) params.year = appliedFilters.graduation_year;
-      if (appliedFilters.family.length > 0) params.family = appliedFilters.family;
-      if (appliedFilters.combination.length > 0) params.combination = appliedFilters.combination;
-      if (appliedFilters.industry.length > 0) params.industry = appliedFilters.industry;
-      if (appliedFilters.college.length > 0) params.college = appliedFilters.college;
-
-      console.log("Download Params:", params);
+      const params = { page_size: 10000 };
+      if (appliedFilters.gender.length) params.gender = appliedFilters.gender;
+      if (appliedFilters.graduation_year.length) params.year = appliedFilters.graduation_year;
+      if (appliedFilters.family.length) params.family = appliedFilters.family;
+      if (appliedFilters.combination.length) params.combination = appliedFilters.combination;
+      if (appliedFilters.industry.length) params.industry = appliedFilters.industry;
+      if (appliedFilters.college.length) params.college = appliedFilters.college;
 
       const response = await axios.get(baseUrl + '/alumni-directory/', {
         params,
@@ -205,8 +201,6 @@ const handleDownload = async () => {
         },
         withCredentials: true,
       });
-
-      console.log(response.data.data)
 
       const allAlumni = response.data.data.map((element) => ({
         id: element.id,
@@ -230,39 +224,34 @@ const handleDownload = async () => {
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Alumni');
       const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
       const data = new Blob([excelBuffer], { type: 'application/octet-stream' });
-      const getFilterFilenamePart = (filters) => {
-        return Object.entries(filters)
+
+      const getFilterFilenamePart = (filters) =>
+        Object.entries(filters)
           .filter(([_, value]) => value.length > 0)
           .map(([key, value]) => `${key}-${value.join('-')}`)
           .join('_');
-      };
-      
+
       const filterString = getFilterFilenamePart(appliedFilters);
       const filename = `alumni_list${filterString ? '_' + filterString : ''}.xlsx`;
-      
+
       saveAs(data, filename);
     } catch (err) {
       console.error('Download error:', err);
     }
   };
 
-  const handleSearchChange = (value) => {
-    setSearchTerm(value);
-  };
+  const handleSearchChange = (value) => setSearchTerm(value);
 
   const applyFilters = () => {
     setAppliedFilters(filterUI);
     setPagination((prev) => ({ ...prev, current_page: 1 }));
-    setAlumniData([]); // Clear current data to load fresh results
+    setAlumniData([]);
     setShowFilters(false);
   };
 
   const toggleCheckbox = (filterKey, value) => {
     if (value === '__CLEAR_ALL__') {
-      setFilterUI((prev) => ({
-        ...prev,
-        [filterKey]: [],
-      }));
+      setFilterUI((prev) => ({ ...prev, [filterKey]: [] }));
     } else {
       setFilterUI((prev) => {
         const current = prev[filterKey];
@@ -276,6 +265,23 @@ const handleDownload = async () => {
     }
   };
 
+  const getActiveFilterSummary = () => {
+    const summaries = [];
+    if (filterUI.gender.length)
+      summaries.push(`Gender: ${filterUI.gender.join(', ')}`);
+    if (filterUI.graduation_year.length)
+      summaries.push(`Year: ${filterUI.graduation_year.join(', ')}`);
+    if (filterUI.family.length)
+      summaries.push(`Family: ${filterUI.family.length} selected`);
+    if (filterUI.combination.length)
+      summaries.push(`Combination: ${filterUI.combination.length} selected`);
+    if (filterUI.industry.length)
+      summaries.push(`Industry: ${filterUI.industry.join(', ')}`);
+    if (filterUI.college.length)
+      summaries.push(`College: ${filterUI.college.length} selected`);
+
+    return summaries.join(' • ');
+  };
 
   return (
     <div className="DirectoryWrapper">
@@ -284,9 +290,15 @@ const handleDownload = async () => {
       </div>
 
       <div className="directory-controls">
-        <button onClick={() => setShowFilters(!showFilters)} >
+        <button onClick={() => setShowFilters(!showFilters)}>
           {showFilters ? 'Hide Filters' : 'Show Filters'}
         </button>
+
+        {!showFilters && getActiveFilterSummary() && (
+          <div className="filter-summary-preview" title={getActiveFilterSummary()}>
+            {getActiveFilterSummary()}
+          </div>
+        )}
 
         {(auth?.user?.is_superuser || auth?.user?.is_crc) && (
           <button onClick={handleDownload} className="download-btn">
@@ -296,24 +308,50 @@ const handleDownload = async () => {
       </div>
 
       {showFilters && (
-      <FilterPanel
-        filters={filters}
-        filterUI={filterUI}
-        toggleCheckbox={toggleCheckbox}
-        applyFilters={applyFilters}
-      />
-)}
-      
-
-      {/* <div className="directory-title">
-        Search Results:
-        <button onClick={handleDownload}>Download Excel</button>
-      </div> */}
+        <FilterPanel
+          filters={filters}
+          filterUI={filterUI}
+          toggleCheckbox={toggleCheckbox}
+          applyFilters={applyFilters}
+        />
+      )}
 
       <div className="directory-content">
         <AlumniList alumni={alumniData} onSelect={setSelectedAlumni} />
         <div ref={loader}></div>
       </div>
+
+
+      {isMobile && (
+      <div className="pagination-controls">
+        <button
+          disabled={!pagination.has_previous || loading}
+          onClick={() =>
+            setPagination((prev) => ({
+              ...prev,
+              current_page: Math.max(1, prev.current_page - 1),
+            }))
+          }
+        >
+          Previous
+        </button>
+        <span>
+          Page {pagination.current_page} of{' '}
+          {Math.ceil(pagination.total / pagination.page_size)}
+        </span>
+        <button
+          disabled={!pagination.has_next || loading}
+          onClick={() =>
+            setPagination((prev) => ({
+              ...prev,
+              current_page: prev.current_page + 1,
+            }))
+          }
+        >
+          Next
+        </button>
+      </div>
+    )}
 
       {/* MODAL STYLE like responsive-fixed */}
       {selectedAlumni && (

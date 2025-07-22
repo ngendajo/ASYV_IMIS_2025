@@ -74,7 +74,7 @@ const Sidebar = ({ className }) => {
   useEffect(() => {
     const getUsers = async () => {
       try {
-        const response = await axios.get(`${baseUrl}/users/?id=${auth.user.id}`, {
+        const response = await axios.get(`${baseUrl}/users/${auth.user.id}`, {
           headers: {
             Authorization: `Bearer ${auth.accessToken}`,
             "Content-Type": "multipart/form-data"
@@ -104,7 +104,6 @@ const Sidebar = ({ className }) => {
     <div className={`Sidebar ${className || ""}`}>
       <div className="SidebarWrap">
         <div className="Profile">
-          {user && <ProfileImage user={user} size={48} canEdit={false} />}
           <div className="ProfileText">
             <ProfileName>{auth.user.first_name}</ProfileName>
             {auth.user.is_alumni && <ProfileRole>Alumni</ProfileRole>}

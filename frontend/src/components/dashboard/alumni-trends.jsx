@@ -406,7 +406,7 @@ It provides a snapshot in time, based on data last updated on ${formattedUpdateT
         <div className="list-card">
           <h2 className="list-title">Employment Status Distribution</h2>
           <p className="chart-description">
-            This chart shows the employment status of alumni, such as full-time, part-time, or unemployed.
+            The distribution of type of employment for alumni who are employeed.
           </p>
             <EmploymentDistribution distribution={employmentStatusData} />
         </div>
@@ -414,7 +414,7 @@ It provides a snapshot in time, based on data last updated on ${formattedUpdateT
         <div className="list-card">
           <h2 className="list-title">Degree Level Distribution</h2>
           <p className="chart-description">
-            A pie chart showing the distribution of degree levels earned by alumni, such as Bachelor’s, Master’s, or Ph.D.
+            The distribution of degree levels persued by alumni, such as Bachelor’s, Master’s, or Ph.D for alumni who persued further education.
           </p>
           <DegreeLevelPieChart distribution={degreeLevelData} />
         </div>
